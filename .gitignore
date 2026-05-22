@@ -1,6 +1,10 @@
 # Maven
 backend/target/
 backend/.mvn/
+
+# Variables de entorno — nunca commitear
+backend/.env
+.env
 *.class
 *.jar
 *.war
