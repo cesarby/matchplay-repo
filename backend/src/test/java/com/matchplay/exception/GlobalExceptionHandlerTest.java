@@ -1,26 +1,48 @@
 package com.matchplay.exception;
 
 import com.matchplay.config.LocaleConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+
+import java.util.List;
+import java.util.Locale;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = GlobalExceptionHandlerTest.TestController.class)
-@Import({GlobalExceptionHandler.class, LocaleConfig.class})
+@ExtendWith(SpringExtension.class)
+@Import(LocaleConfig.class)
 class GlobalExceptionHandlerTest {
 
     @Autowired
+    MessageSource messageSource;
+
     MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
+        localeResolver.setDefaultLocale(new Locale("es"));
+        localeResolver.setSupportedLocales(List.of(new Locale("es"), Locale.ENGLISH));
+
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(new TestController())
+                .setControllerAdvice(new GlobalExceptionHandler(messageSource))
+                .setLocaleResolver(localeResolver)
+                .build();
+    }
 
     @RestController
     @RequestMapping("/test")
@@ -43,7 +65,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @WithMockUser
     void whenSessionNotFound_returns404WithSpanishMessage() throws Exception {
         mockMvc.perform(get("/test/session-not-found")
                         .header("Accept-Language", "es"))
@@ -56,7 +77,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @WithMockUser
     void whenSessionNotFound_returns404WithEnglishMessage() throws Exception {
         mockMvc.perform(get("/test/session-not-found")
                         .header("Accept-Language", "en"))
@@ -65,7 +85,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @WithMockUser
     void whenUnauthorizedAction_returns403() throws Exception {
         mockMvc.perform(get("/test/unauthorized")
                         .header("Accept-Language", "es"))
@@ -76,7 +95,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @WithMockUser
     void whenSessionFull_returns409() throws Exception {
         mockMvc.perform(get("/test/session-full")
                         .header("Accept-Language", "es"))
