@@ -9,6 +9,9 @@ public record CurrentUserResponse(
         String email,
         String username,
         Role role,
+        String provinceCode,
+        String cityCode,
+        String areaCode,
         BigDecimal ratingAvg,
         int rewardPoints,
         String selectedAvatarCode

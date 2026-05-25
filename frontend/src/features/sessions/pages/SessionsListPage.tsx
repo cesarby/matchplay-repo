@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -34,8 +35,25 @@ type UrlState = {
  */
 export default function SessionsListPage() {
   const { t } = useTranslation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { filters, setFilters, clearFilters } = useUrlFilters<UrlState>()
+
+  // Pre-fill con la localización del usuario autenticado SOLO en el primer
+  // mount y SOLO si el URL no trae filtros ya. Si el user limpia filtros
+  // estando dentro de la página, no auto-rellenamos.
+  const didAutoFill = useRef(false)
+  useEffect(() => {
+    if (didAutoFill.current) return
+    didAutoFill.current = true
+    if (!user) return
+    if (filters.provinceCode || filters.cityCode) return
+    if (!user.provinceCode && !user.cityCode) return
+    setFilters({
+      provinceCode: user.provinceCode ?? undefined,
+      cityCode: user.cityCode ?? undefined,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId])
 
   const page = parseIntSafe(filters.page, 0)
   const status = isSessionStatus(filters.status) ? filters.status : undefined

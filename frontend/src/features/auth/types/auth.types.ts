@@ -5,6 +5,10 @@ export interface CurrentUser {
   email: string
   username: string
   role: Role
+  /** Localización del usuario — útil para pre-rellenar filtros de búsqueda. */
+  provinceCode: string | null
+  cityCode: string | null
+  areaCode: string | null
   ratingAvg: number
   rewardPoints: number
   selectedAvatarCode: string

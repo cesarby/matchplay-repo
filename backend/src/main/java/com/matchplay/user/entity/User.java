@@ -33,7 +33,13 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(nullable = false, unique = true, length = 50)
+    /**
+     * Display/handle del usuario (único, inmutable). NO es el "principal" de
+     * Spring Security — la interfaz {@link UserDetails#getUsername()} devuelve
+     * email (login se hace por email). Para acceder al handle de display
+     * desde código de aplicación usar {@link #getUsernameValue()}.
+     */
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(name = "password_hash", nullable = false)
@@ -109,9 +115,20 @@ public class User implements UserDetails {
         return passwordHash;
     }
 
+    /**
+     * Contract de Spring Security: el "principal" es el email (login por email).
+     * <p>Lombok @Getter NO genera un getter para el field {@code username}
+     * porque este método ya existe con la misma signatura. Para acceder al
+     * field real del display username, usar {@link #getUsernameValue()}.</p>
+     */
     @Override
     public String getUsername() {
         return email;
+    }
+
+    /** Display/handle username — el field real, no el principal de Spring. */
+    public String getUsernameValue() {
+        return username;
     }
 
     @Override

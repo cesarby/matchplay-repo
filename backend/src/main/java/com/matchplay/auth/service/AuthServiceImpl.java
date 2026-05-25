@@ -131,8 +131,11 @@ public class AuthServiceImpl implements AuthService {
         return new CurrentUserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getUsername(),
+                user.getUsernameValue(),
                 user.getRole(),
+                user.getProvince() != null ? user.getProvince().getCode() : null,
+                user.getCity() != null ? user.getCity().getCode() : null,
+                user.getArea() != null ? user.getArea().getCode() : null,
                 user.getRatingAvg(),
                 user.getRewardPoints(),
                 user.getSelectedAvatar() != null ? user.getSelectedAvatar().getCode() : null
@@ -145,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
         return new AuthIssuance(
                 user.getId(),
                 user.getEmail(),
-                user.getUsername(),
+                user.getUsernameValue(),
                 user.getRole(),
                 access.token(),
                 access.expiresAt(),

@@ -53,7 +53,17 @@ export function LoginForm() {
     mutation.mutate(parsed.data, {
       onSuccess: () => {
         const from = params.get('from')
-        navigate(from && from.startsWith('/') ? from : '/', { replace: true })
+        // Solo aceptamos rutas internas que NO sean /login ni /register para
+        // evitar bucles. Por defecto la pantalla principal del usuario
+        // autenticado es el listado de partidas.
+        const safeFrom =
+          from &&
+          from.startsWith('/') &&
+          !from.startsWith('/login') &&
+          !from.startsWith('/register')
+            ? from
+            : '/sessions'
+        navigate(safeFrom, { replace: true })
       },
       onError: (err) => {
         if (!isApiError(err)) {

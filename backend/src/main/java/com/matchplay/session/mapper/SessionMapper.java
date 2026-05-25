@@ -40,7 +40,7 @@ public class SessionMapper {
                 waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
-                session.getCreator() != null ? session.getCreator().getUsername() : null
+                session.getCreator() != null ? session.getCreator().getUsernameValue() : null
         );
     }
 
@@ -71,7 +71,7 @@ public class SessionMapper {
                 waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
-                session.getCreator() != null ? session.getCreator().getUsername() : null,
+                session.getCreator() != null ? session.getCreator().getUsernameValue() : null,
                 players,
                 yourRole,
                 session.getCreatedAt(),
@@ -82,7 +82,7 @@ public class SessionMapper {
     public SessionPlayerResponse toPlayer(SessionParticipant participant) {
         return new SessionPlayerResponse(
                 participant.getUser().getId(),
-                participant.getUser().getUsername(),
+                participant.getUser().getUsernameValue(),
                 participant.getRole(),
                 participant.getPosition(),
                 participant.getJoinedAt()

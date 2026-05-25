@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
@@ -7,8 +8,20 @@ import { LoginForm } from '../components/LoginForm'
 
 export default function LoginPage() {
   const { t } = useTranslation()
-  const [params] = useSearchParams()
-  const sessionExpired = params.get('reason') === 'session-expired'
+  const [params, setParams] = useSearchParams()
+  // Capturamos el reason en estado al montar. El banner se muestra solo en
+  // esta navegación; tras un refresh ya no aparece porque limpiamos el
+  // query param justo después.
+  const [sessionExpired] = useState(() => params.get('reason') === 'session-expired')
+
+  useEffect(() => {
+    if (params.get('reason') === 'session-expired') {
+      const next = new URLSearchParams(params)
+      next.delete('reason')
+      setParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="space-y-6">
