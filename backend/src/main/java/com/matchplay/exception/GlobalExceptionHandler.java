@@ -69,6 +69,38 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
     }
 
+    @ExceptionHandler(SessionJoinOwnException.class)
+    public ResponseEntity<ErrorResponse> handleSessionJoinOwn(
+            SessionJoinOwnException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionScheduledInPastException.class)
+    public ResponseEntity<ErrorResponse> handleSessionScheduledPast(
+            SessionScheduledInPastException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleSessionStatusTransition(
+            SessionStatusTransitionException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionMaxPlayersBelowCurrentException.class)
+    public ResponseEntity<ErrorResponse> handleSessionMaxBelow(
+            SessionMaxPlayersBelowCurrentException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
     @ExceptionHandler(UnauthorizedActionException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedAction(
             UnauthorizedActionException ex, HttpServletRequest request, Locale locale) {
