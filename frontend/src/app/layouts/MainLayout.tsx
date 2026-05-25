@@ -1,16 +1,8 @@
-import { useTranslation } from 'react-i18next'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
-import { Button } from '@/shared/components/Button'
-import { Logo } from '@/shared/components/Logo'
+import { SiteHeader } from './SiteHeader'
 
 export function MainLayout() {
-  const { t } = useTranslation()
-  const { isAuthenticated, user } = useAuth()
-  const logout = useLogoutMutation()
-
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Skip-link a11y — invisible hasta recibir focus */}
@@ -21,39 +13,7 @@ export function MainLayout() {
         Saltar al contenido
       </a>
 
-      <header className="border-b bg-card">
-        <div className="container flex h-14 items-center justify-between">
-          <Link to="/" aria-label="Matchplay — inicio">
-            <Logo variant="text-only" className="h-7" />
-          </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link to="/sessions" className="text-foreground hover:underline">
-              {t('nav.sessions')}
-            </Link>
-            {isAuthenticated && user ? (
-              <>
-                <span className="text-muted-foreground">{user.username}</span>
-                <Button
-                  variant="ghost"
-                  onClick={() => logout.mutate()}
-                  isLoading={logout.isPending}
-                >
-                  {t('nav.logout')}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="text-foreground hover:underline">
-                  {t('nav.login')}
-                </Link>
-                <Link to="/register" className="font-medium text-red hover:underline">
-                  {t('nav.register')}
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main id="main" className="flex-1">
         <Outlet />

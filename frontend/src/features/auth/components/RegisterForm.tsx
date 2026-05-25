@@ -19,7 +19,6 @@ const registerSchema = z.object({
   email: z.string().email('auth.email.invalid').max(150),
   username: z.string().min(3, 'auth.username.min').max(50),
   password: z.string().regex(PASSWORD_REGEX, 'auth.password.weak'),
-  name: z.string().min(1, 'auth.name.required').max(100),
   provinceCode: z.string().min(1, 'auth.province.required'),
   cityCode: z.string().min(1, 'auth.city.required'),
   areaCode: z.string().min(1, 'auth.area.required'),
@@ -33,7 +32,6 @@ const ALLOWED_FIELDS: RegisterFieldName[] = [
   'email',
   'username',
   'password',
-  'name',
   'provinceCode',
   'cityCode',
   'areaCode',
@@ -131,12 +129,6 @@ export function RegisterForm() {
         autoComplete="new-password"
         {...register('password')}
         error={errors.password?.message ? t(errors.password.message) : undefined}
-      />
-      <TextField
-        label={t('auth.name.label')}
-        autoComplete="name"
-        {...register('name')}
-        error={errors.name?.message ? t(errors.name.message) : undefined}
       />
 
       <SelectField

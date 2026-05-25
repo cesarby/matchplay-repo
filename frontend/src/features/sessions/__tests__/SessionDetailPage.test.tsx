@@ -41,7 +41,6 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
       {
         userId: 1,
         username: 'alice',
-        name: 'Alice',
         role: 'PLAYER',
         position: null,
         joinedAt: '2026-01-01T10:00:00Z',
@@ -49,7 +48,6 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
       {
         userId: 2,
         username: 'bob',
-        name: 'Bob',
         role: 'PLAYER',
         position: null,
         joinedAt: '2026-01-01T11:00:00Z',
@@ -92,8 +90,8 @@ describe('<SessionDetailPage>', () => {
       await screen.findByRole('heading', { level: 1, name: 'Catan Night' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/Partida de Catan/)).toBeInTheDocument()
-    expect(screen.getByText('Alice')).toBeInTheDocument()
-    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(screen.getByText('@alice')).toBeInTheDocument()
+    expect(screen.getByText('@bob')).toBeInTheDocument()
   })
 
   it('shows a join CTA pointing to login when anonymous', async () => {
@@ -157,7 +155,6 @@ describe('<SessionDetailPage>', () => {
               {
                 userId: 3,
                 username: 'carol',
-                name: 'Carol',
                 role: 'PLAYER',
                 position: null,
                 joinedAt: '2026-01-01T12:00:00Z',
@@ -165,7 +162,6 @@ describe('<SessionDetailPage>', () => {
               {
                 userId: 4,
                 username: 'dave',
-                name: 'Dave',
                 role: 'PLAYER',
                 position: null,
                 joinedAt: '2026-01-01T13:00:00Z',
@@ -173,7 +169,6 @@ describe('<SessionDetailPage>', () => {
               {
                 userId: 5,
                 username: 'eve',
-                name: 'Eve',
                 role: 'WAITLIST',
                 position: 1,
                 joinedAt: '2026-01-01T14:00:00Z',
@@ -181,7 +176,6 @@ describe('<SessionDetailPage>', () => {
               {
                 userId: 6,
                 username: 'frank',
-                name: 'Frank',
                 role: 'WAITLIST',
                 position: 2,
                 joinedAt: '2026-01-01T15:00:00Z',
@@ -194,8 +188,8 @@ describe('<SessionDetailPage>', () => {
     renderDetail()
     // El heading de la sección, no el contador de la barra de meta
     expect(await screen.findByRole('heading', { name: /lista de espera/i })).toBeInTheDocument()
-    expect(screen.getByText('Eve')).toBeInTheDocument()
-    expect(screen.getByText('Frank')).toBeInTheDocument()
+    expect(screen.getByText('@eve')).toBeInTheDocument()
+    expect(screen.getByText('@frank')).toBeInTheDocument()
     expect(screen.getByLabelText('Posición 1')).toBeInTheDocument()
     expect(screen.getByLabelText('Posición 2')).toBeInTheDocument()
   })

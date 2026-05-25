@@ -1,10 +1,15 @@
+import { Calendar, MapPin, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 /**
- * SessionCard hardcoded con datos del i18n para el visual del hero.
- * No recibe datos reales — es marketing copy fijo.
- * Tiene cinta lateral roja via CSS ::before.
+ * SessionCard "mock" del visual del hero. Hardcoded desde i18n: el contenido
+ * es marketing copy controlado, NO una sesión real de BD. Decisión consciente:
+ * si fuera real, podría 404 al hacer click o quedar desactualizada constantemente.
+ *
+ * Diseñado para verse igual que un <SessionCard> real (cinta lateral por status,
+ * chips de status, meta con iconos) pero más compacto: sin board grid decorativo,
+ * paddings reducidos.
  */
 export function HeroSessionPreview() {
   const { t } = useTranslation()
@@ -13,63 +18,51 @@ export function HeroSessionPreview() {
     <article
       className="relative overflow-hidden rounded bg-card shadow-[var(--shadow)]"
       style={{
-        // Cinta lateral roja (6px) via CSS inline — más portable que un pseudoelemento en JSX
-        borderLeft: '6px solid rgb(var(--p-red))',
+        // Cinta lateral verde (status OPEN) — mismo patrón que SessionCard real.
+        borderLeft: '6px solid rgb(var(--p-green))',
       }}
     >
-      <div className="p-5">
-        {/* Chips */}
-        <div className="mb-4 flex gap-2">
-          <span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
-            {t('landing.hero.visual.ownChip')}
-          </span>
-          <span className="rounded-full bg-green-soft px-3 py-1 text-xs font-semibold text-foreground">
+      <div className="flex flex-col gap-3 p-4">
+        {/* Chips: status + "tu partida" */}
+        <div className="flex items-center justify-between gap-2">
+          <span className="rounded-full bg-green-soft px-2.5 py-0.5 text-xs font-semibold text-foreground">
             {t('landing.hero.visual.openChip')}
           </span>
-        </div>
-
-        {/* Título */}
-        <h3 className="font-display text-xl font-bold text-foreground">
-          {t('landing.hero.visual.title')}
-        </h3>
-        <p className="mb-4 mt-1 text-sm text-muted-foreground">{t('landing.hero.visual.meta')}</p>
-
-        {/* Board preview (grid de colores) */}
-        <div
-          role="img"
-          aria-label={t('landing.hero.visual.ariaLabel')}
-          className="mb-4 grid grid-cols-4 gap-1 overflow-hidden rounded-xl"
-        >
-          {/* 12 celdas con colores semánticos — decorativas */}
-          <div aria-hidden="true" className="aspect-square rounded bg-yellow-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-red-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-green-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-blue-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-green-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-blue-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-yellow-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-red-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-red-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-green-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-blue-soft" />
-          <div aria-hidden="true" className="aspect-square rounded bg-yellow-soft" />
-        </div>
-
-        {/* Footer: ciudad + fecha + plazas */}
-        <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            {t('landing.hero.visual.city')} · {t('landing.hero.visual.date')} ·{' '}
-            {t('landing.hero.visual.time')}
-          </span>
-          <span className="rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold text-foreground">
-            {t('landing.hero.visual.spots')}
+          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            {t('landing.hero.visual.ownChip')}
           </span>
         </div>
+
+        {/* Título + juego */}
+        <div>
+          <h3 className="font-display text-lg font-bold leading-tight text-foreground">
+            {t('landing.hero.visual.title')}
+          </h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('landing.hero.visual.meta')}</p>
+        </div>
+
+        {/* Meta inline con iconos a la izquierda */}
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
+          <li className="flex items-center gap-2">
+            <Calendar size={14} aria-hidden="true" className="shrink-0" />
+            <span>
+              {t('landing.hero.visual.date')} · {t('landing.hero.visual.time')}
+            </span>
+          </li>
+          <li className="flex items-center gap-2">
+            <MapPin size={14} aria-hidden="true" className="shrink-0" />
+            <span>{t('landing.hero.visual.city')}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Users size={14} aria-hidden="true" className="shrink-0" />
+            <span>{t('landing.hero.visual.spots')} plazas</span>
+          </li>
+        </ul>
 
         {/* CTA */}
         <Link
           to="/sessions"
-          className="inline-flex w-full items-center justify-center rounded-sm bg-red px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+          className="mt-1 inline-flex w-full items-center justify-center rounded-sm bg-red px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
         >
           {t('landing.cta.join')}
         </Link>

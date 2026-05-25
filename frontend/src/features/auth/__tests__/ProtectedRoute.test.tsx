@@ -54,7 +54,6 @@ describe('<ProtectedRoute>', () => {
         userId: 1,
         email: 'a@b.c',
         username: 'a',
-        name: 'A',
         role: 'USER',
         ratingAvg: 0,
         rewardPoints: 0,

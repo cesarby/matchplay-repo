@@ -63,7 +63,6 @@ describe('<LoginForm>', () => {
           userId: 1,
           email: 'ana@example.com',
           username: 'ana',
-          name: 'Ana',
           role: 'USER',
           ratingAvg: 0,
           rewardPoints: 0,

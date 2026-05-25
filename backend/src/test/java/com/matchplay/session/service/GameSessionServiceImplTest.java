@@ -520,7 +520,6 @@ class GameSessionServiceImplTest {
         User u = new User();
         u.setId(id);
         u.setUsername(username);
-        u.setName(username);
         return u;
     }
 }

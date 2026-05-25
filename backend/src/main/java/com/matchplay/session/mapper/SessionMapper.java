@@ -83,7 +83,6 @@ public class SessionMapper {
         return new SessionPlayerResponse(
                 participant.getUser().getId(),
                 participant.getUser().getUsername(),
-                participant.getUser().getName(),
                 participant.getRole(),
                 participant.getPosition(),
                 participant.getJoinedAt()

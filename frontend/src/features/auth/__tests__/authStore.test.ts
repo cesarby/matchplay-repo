@@ -7,7 +7,6 @@ const sampleUser: CurrentUser = {
   userId: 1,
   email: 'a@b.c',
   username: 'ana',
-  name: 'Ana',
   role: 'USER',
   ratingAvg: 0,
   rewardPoints: 0,

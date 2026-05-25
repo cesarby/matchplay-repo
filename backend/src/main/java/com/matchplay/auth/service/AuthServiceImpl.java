@@ -74,7 +74,6 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(request.email());
         user.setUsername(request.username());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setName(request.name());
         user.setProvince(province);
         user.setCity(city);
         user.setArea(area);
@@ -133,7 +132,6 @@ public class AuthServiceImpl implements AuthService {
                 user.getId(),
                 user.getEmail(),
                 user.getUsername(),
-                user.getName(),
                 user.getRole(),
                 user.getRatingAvg(),
                 user.getRewardPoints(),

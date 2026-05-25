@@ -8,7 +8,6 @@ public record CurrentUserResponse(
         Long userId,
         String email,
         String username,
-        String name,
         Role role,
         BigDecimal ratingAvg,
         int rewardPoints,

@@ -61,7 +61,6 @@ Body (`RegisterRequest`):
   "email": "ana@example.com",
   "username": "anagamer",
   "password": "Secreta1",
-  "name": "Ana Pérez",
   "provinceCode": "08",
   "cityCode": "08019",
   "areaCode": "08019-001"
@@ -72,8 +71,11 @@ Validaciones:
 - `email`: `@Email`, `@NotBlank`, único en BD.
 - `username`: `@NotBlank`, `@Size(min=3, max=50)`, único en BD.
 - `password`: `@NotBlank`, `@Pattern("^(?=.*[A-Za-z])(?=.*\\d).{8,}$")`.
-- `name`: `@NotBlank`, `@Size(max=100)`.
 - `provinceCode` / `cityCode` / `areaCode`: existir en BD.
+
+> **Nota (V6, 2026-05):** se eliminó el campo `name` (display name) — fricción
+> innecesaria para el MVP. Si en una fase futura se quiere "display name" se añade
+> como nullable en perfil, no en signup. La columna también se eliminó de la tabla.
 
 Respuesta `201 Created` (`AuthResponse`, body):
 ```json

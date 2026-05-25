@@ -22,10 +22,7 @@ export function SessionPlayerRow({ player, showPosition = false }: SessionPlayer
             {player.position}
           </span>
         )}
-        <div className="leading-tight">
-          <p className="text-sm font-medium text-foreground">{player.name}</p>
-          <p className="text-xs text-muted-foreground">@{player.username}</p>
-        </div>
+        <p className="text-sm font-medium text-foreground">@{player.username}</p>
       </div>
     </li>
   )

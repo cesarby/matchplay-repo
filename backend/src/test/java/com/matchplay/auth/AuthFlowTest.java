@@ -80,7 +80,6 @@ class AuthFlowTest {
                   "email": "ana@example.com",
                   "username": "anagamer",
                   "password": "Secreta1",
-                  "name": "Ana Pérez",
                   "provinceCode": "08",
                   "cityCode": "08019",
                   "areaCode": "08019-001"
@@ -186,7 +185,6 @@ class AuthFlowTest {
                   "email": "dup@example.com",
                   "username": "user1",
                   "password": "Secreta1",
-                  "name": "Dup",
                   "provinceCode": "08",
                   "cityCode": "08019",
                   "areaCode": "08019-001"
@@ -210,7 +208,6 @@ class AuthFlowTest {
                   "email": "x@example.com",
                   "username": "userx",
                   "password": "Secreta1",
-                  "name": "X",
                   "provinceCode": "99",
                   "cityCode": "08019",
                   "areaCode": "08019-001"
@@ -229,7 +226,6 @@ class AuthFlowTest {
                   "email": "ok@example.com",
                   "username": "okuser",
                   "password": "Secreta1",
-                  "name": "OK",
                   "provinceCode": "08",
                   "cityCode": "08019",
                   "areaCode": "08019-001"
@@ -255,7 +251,6 @@ class AuthFlowTest {
                   "email": "weak@example.com",
                   "username": "weak",
                   "password": "soloLetras",
-                  "name": "Weak",
                   "provinceCode": "08",
                   "cityCode": "08019",
                   "areaCode": "08019-001"

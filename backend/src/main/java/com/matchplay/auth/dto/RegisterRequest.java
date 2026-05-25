@@ -12,7 +12,6 @@ public record RegisterRequest(
                 regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$",
                 message = "{error.auth.password.weak}"
         ) String password,
-        @NotBlank @Size(max = 100) String name,
         @NotBlank @Size(max = 2) String provinceCode,
         @NotBlank @Size(max = 8) String cityCode,
         @NotBlank @Size(max = 16) String areaCode

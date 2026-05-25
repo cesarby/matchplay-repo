@@ -4,7 +4,6 @@ export interface CurrentUser {
   userId: number
   email: string
   username: string
-  name: string
   role: Role
   ratingAvg: number
   rewardPoints: number
@@ -35,7 +34,6 @@ export interface RegisterPayload {
   email: string
   username: string
   password: string
-  name: string
   provinceCode: string
   cityCode: string
   areaCode: string

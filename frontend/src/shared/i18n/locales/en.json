@@ -54,7 +54,6 @@
       "min": "At least 3 characters",
       "duplicate": "That username is already taken"
     },
-    "name": { "label": "Name", "required": "Name is required" },
     "province": { "label": "Province", "required": "Select a province" },
     "city": { "label": "City", "required": "Select a city" },
     "area": { "label": "Area", "required": "Select an area" },

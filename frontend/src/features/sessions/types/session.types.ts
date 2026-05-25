@@ -28,7 +28,6 @@ export interface SessionSummary {
 export interface SessionPlayer {
   userId: number
   username: string
-  name: string
   role: ParticipantRole
   position: number | null // FIFO en cola; null para PLAYER
   joinedAt: string

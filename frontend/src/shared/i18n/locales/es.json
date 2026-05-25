@@ -54,7 +54,6 @@
       "min": "Mínimo 3 caracteres",
       "duplicate": "Ese nombre de usuario ya está en uso"
     },
-    "name": { "label": "Nombre", "required": "El nombre es obligatorio" },
     "province": { "label": "Provincia", "required": "Selecciona una provincia" },
     "city": { "label": "Localidad", "required": "Selecciona una localidad" },
     "area": { "label": "Zona", "required": "Selecciona una zona" },
