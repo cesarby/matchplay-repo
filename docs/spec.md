@@ -11,6 +11,29 @@
 | Backend | [docs/backend/spec.md](backend/spec.md) | Activo |
 | Frontend | [docs/frontend/spec.md](frontend/spec.md) | Activo |
 
+### Módulos por estado (actualizado tras Fase 1 + 1.1 de sessions)
+
+**Backend** — implementados y documentados:
+
+- `auth` — JWT access + refresh httpOnly, rate limit
+- `geo` — provincias / ciudades / zonas
+- `games` — búsqueda BGG cacheada
+- `sessions` — CRUD + waitlist sin límite + auto-promote (Fase 1 + 1.1)
+- `stats` — `/api/v1/stats/public` para el trust strip de la landing
+
+**Frontend** — implementados y documentados:
+
+- `auth` — boot sequence, refresh scheduler, broadcast multi-tab
+- `geo` — hooks de provincias / ciudades / zonas
+- `landing` — `/` con hero + QuickSearch + trust strip + carousel
+- `sessions` — `/sessions`, `/sessions/:id`, `/sessions/new` (Fase 1)
+- `games` — `<GameTypeahead>` (consumido por crear partida)
+
+**Pendientes próximas fases:**
+
+- Backend: `/sessions/mine`, chat por sesión (Fase 2), ratings (Fase 3), notificaciones, módulo usuarios, admin
+- Frontend: `EditSessionPage`, `MySessionsPage`, perfil de usuario, panel admin
+
 ---
 
 ## Stack tecnológico

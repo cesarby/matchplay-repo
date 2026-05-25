@@ -11,11 +11,11 @@ Referencia global: [../spec.md](../spec.md)
 
 | Módulo | Archivo | Estado |
 |--------|---------|--------|
-| Landing pública (`/`) | [modules/landing-spec.md](modules/landing-spec.md) | Definido |
-| Auth (cliente) | [modules/auth-spec.md](modules/auth-spec.md) | Definido |
-| Partidas | [modules/sessions-spec.md](modules/sessions-spec.md) | Pendiente |
+| Landing pública (`/`) | [modules/landing-spec.md](modules/landing-spec.md) | Definido + implementado |
+| Auth (cliente) | [modules/auth-spec.md](modules/auth-spec.md) | Definido + implementado |
+| Partidas (sessions) | [modules/sessions-spec.md](modules/sessions-spec.md) | Definido + implementado (Fase 1 + 1.1) |
+| Búsqueda de juegos | [modules/games-spec.md](modules/games-spec.md) | Definido + implementado (typeahead BGG) |
 | Perfil de usuario | [modules/users-spec.md](modules/users-spec.md) | Pendiente |
-| Búsqueda de juegos | [modules/games-spec.md](modules/games-spec.md) | Pendiente |
 | Panel Admin | [modules/admin-spec.md](modules/admin-spec.md) | Pendiente |
 
 ---

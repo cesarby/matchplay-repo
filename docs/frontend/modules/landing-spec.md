@@ -183,8 +183,9 @@ interface QuickSearchState {
 - Botón submit construye query string y navega:
   ```ts
   const params = new URLSearchParams()
-  if (provinceCode) params.set('province', provinceCode)
-  if (cityCode) params.set('city', cityCode)
+  // camelCase alineado con backend y con SessionsListPage
+  if (provinceCode) params.set('provinceCode', provinceCode)
+  if (cityCode) params.set('cityCode', cityCode)
   if (game.trim()) params.set('q', game.trim())
   navigate(`/sessions?${params.toString()}`)
   ```
@@ -640,7 +641,7 @@ Reglas:
 | Test | Cubre |
 |------|-------|
 | `LandingPage.test.tsx` | Redirect a `/sessions` si `authenticated`. Render de `<LandingContent>` si `anonymous`. AuthBootSplash si `idle`/`booting`. |
-| `QuickSearch.test.tsx` | Submit con province+city construye `/sessions?province=X&city=Y`. Submit vacío navega a `/sessions`. City deshabilitada hasta seleccionar provincia. |
+| `QuickSearch.test.tsx` | Submit con province+city construye `/sessions?provinceCode=X&cityCode=Y`. Submit vacío navega a `/sessions`. City deshabilitada hasta seleccionar provincia. |
 | `TrustStrip.test.tsx` | Loading muestra skeleton. Error oculta el strip. Success renderiza los 3 stats. |
 | `DiscoveryCards.test.tsx` | 3 cards con cintas correctas. Pasa axe. |
 | `CommunityCarousel.test.tsx` | Click en next avanza index. Click en indicador 3 va al slide 3. Prev en slide 1 va al último (wrap). |
