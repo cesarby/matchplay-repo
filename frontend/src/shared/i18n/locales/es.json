@@ -63,5 +63,98 @@
       "rateLimited": "Demasiados intentos. Vuelve a probar en unos minutos.",
       "generic": "Algo salió mal. Vuelve a intentarlo."
     }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Jugadores, partidas y quedadas cerca de ti",
+      "title": "Partidas de juegos de mesa <1>cerca de ti</1>",
+      "subtitle": "MatchPlay te ayuda a descubrir partidas abiertas, conectar con jugadores de tu zona y organizar quedadas para tus juegos favoritos.",
+      "visual": {
+        "ownChip": "Tu Partida",
+        "openChip": "Abierto",
+        "title": "Noche de Catan",
+        "meta": "Mesa de esta Noche · + 1 Expansión",
+        "city": "Madrid",
+        "date": "Hoy",
+        "time": "20:00",
+        "spots": "3/4",
+        "ariaLabel": "Vista previa del tablero de la partida"
+      }
+    },
+    "quickSearch": {
+      "label": "Buscar una partida",
+      "province": "Provincia",
+      "city": "Ciudad",
+      "game": "Juego (opcional)",
+      "submit": "Buscar"
+    },
+    "cta": {
+      "explore": "Explorar partidas",
+      "register": "Crear cuenta",
+      "join": "Unirme a una Partida"
+    },
+    "stats": {
+      "ariaLabel": "Estadísticas de la comunidad",
+      "activeSessions": "partidas activas",
+      "activePlayers": "jugadores en la comunidad",
+      "cities": "ciudades activas"
+    },
+    "discovery": {
+      "eyebrow": "Descubre cómo te ayuda",
+      "title": "Una forma más fácil de encontrar mesa y comunidad",
+      "subtitle": "Si buscas jugadores para juegos de mesa o quieres organizar partidas en tu ciudad, MatchPlay reúne en un mismo sitio el descubrimiento de mesas abiertas, la creación de eventos y la conexión con gente cercana que comparte tus mismos intereses.",
+      "cards": {
+        "one": {
+          "title": "Encuentra jugadores de juegos de mesa en tu zona",
+          "description": "Explora perfiles y partidas activas para encontrar gente con la que jugar cerca de ti, tanto si te apetecen eurogames, fillers, cooperativos o clásicos de siempre."
+        },
+        "two": {
+          "title": "Descubre partidas abiertas y únete a la que encaje contigo",
+          "description": "Consulta partidas de juegos de mesa ya publicadas, revisa la zona, la fecha y el juego, y apúntate a la mesa que mejor encaje con tu horario y tu grupo ideal."
+        },
+        "three": {
+          "title": "Organiza quedadas para tus juegos favoritos",
+          "description": "Publica tus propias quedadas de juegos de mesa, define plazas y ubicación, y deja que otros jugadores de tu comunidad encuentren tu mesa y se unan."
+        }
+      }
+    },
+    "community": {
+      "eyebrow": "Novedades y actualidad",
+      "title": "Descubre noticias, ideas y momentos de la comunidad",
+      "prev": "Slide anterior",
+      "next": "Slide siguiente",
+      "goTo": "Ir al slide {{n}}",
+      "slides": {
+        "one": {
+          "eyebrow": "Comunidad",
+          "title": "Historias y novedades para jugadores de mesa",
+          "description": "Comparte anuncios, novedades del proyecto y contenidos pensados para quienes disfrutan organizando y descubriendo nuevas mesas."
+        },
+        "two": {
+          "eyebrow": "Actualidad",
+          "title": "Noticias, mejoras y vida de la comunidad",
+          "description": "Este espacio puede reunir actualizaciones del producto, novedades destacadas y noticias relacionadas con la comunidad de juegos de mesa."
+        },
+        "three": {
+          "eyebrow": "Contenido",
+          "title": "Ideas, recomendaciones y temas para compartir",
+          "description": "También puede servir para publicar recomendaciones, iniciativas de la comunidad o contenido editorial más allá de las partidas en curso."
+        }
+      }
+    }
+  },
+  "seo": {
+    "landing": {
+      "title": "Encuentra jugadores y partidas cerca de ti | Matchplay",
+      "description": "Descubre partidas abiertas de juegos de mesa, conecta con jugadores de tu zona y organiza tu próxima quedada con Matchplay."
+    },
+    "login": {
+      "title": "Iniciar sesión | Matchplay",
+      "description": "Accede a tu cuenta de Matchplay y encuentra partidas de juegos de mesa cerca de ti."
+    },
+    "register": {
+      "title": "Crear cuenta | Matchplay",
+      "description": "Únete a Matchplay y empieza a descubrir y organizar partidas de juegos de mesa en tu ciudad."
+    }
   }
 }

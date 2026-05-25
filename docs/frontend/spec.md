@@ -11,6 +11,7 @@ Referencia global: [../spec.md](../spec.md)
 
 | Módulo | Archivo | Estado |
 |--------|---------|--------|
+| Landing pública (`/`) | [modules/landing-spec.md](modules/landing-spec.md) | Definido |
 | Auth (cliente) | [modules/auth-spec.md](modules/auth-spec.md) | Definido |
 | Partidas | [modules/sessions-spec.md](modules/sessions-spec.md) | Pendiente |
 | Perfil de usuario | [modules/users-spec.md](modules/users-spec.md) | Pendiente |
@@ -399,9 +400,15 @@ Esto **requiere refactor del backend** ya construido: el refresh token deja de i
 - Idiomas: **es** (por defecto) y **en**.
 - **Selector manual** (no detección por navegador): componente `<LanguageSwitcher>` en el header. Cambio persiste en `localeStore` (Zustand + localStorage).
 - En cada request al backend se manda `Accept-Language: <locale>`. El backend ya está preparado.
-- Claves en `shared/i18n/locales/{es,en}.json`, organizadas por feature: `auth.login.title`, `sessions.create.cta`, etc.
+- **Centralización obligatoria**: claves en `shared/i18n/locales/{es,en}.json`, organizadas por feature: `auth.login.title`, `sessions.create.cta`, etc. **PROHIBIDO** crear `features/<x>/locales/`. Si una feature necesita strings, los añade al JSON central bajo su namespace.
 - Convención: claves en inglés (`auth.login.submit`), valores en cada idioma.
 - Para mensajes que vienen del backend (`ApiError.message`), se usa el texto tal cual (ya localizado).
+- **Resaltado de texto inline** (palabras coloreadas dentro de un H1, H2, párrafo, etc.): usar `<Trans>` de react-i18next con component placeholders, **nunca string-split** en TS.
+  ```tsx
+  // i18n: "landing.hero.title": "Partidas de juegos de mesa <1>cerca de ti</1>"
+  <Trans i18nKey="landing.hero.title" components={{ 1: <span className="text-red"/> }} />
+  ```
+  El traductor decide en qué palabra cae el resaltado por idioma.
 
 ---
 
@@ -577,6 +584,7 @@ Cada componente generado por shadcn se **adapta a las variables CSS** anteriores
 | Pantalla | Archivo | Estado |
 |----------|---------|--------|
 | Home / listado de partidas | `frontend/mockups/home.html` | ✅ Aprobado |
+| Landing pública (`/`) | `frontend/mockups/landing.html` | ✅ Aprobado (2026-05-25) |
 | Login + Registro | — | Pendiente |
 | Detalle de partida | — | Pendiente |
 | Perfil de usuario | — | Pendiente |
@@ -584,6 +592,19 @@ Cada componente generado por shadcn se **adapta a las variables CSS** anteriores
 Los mockups son **HTML estático con Tailwind via CDN**, sin build. Sirven para
 validar look & feel antes de implementar. Se tiran al finalizar el bootstrap del
 proyecto React.
+
+### Reglas de uso de la paleta (contraste y a11y)
+
+| Uso | ¿Permitido? | Notas |
+|-----|-------------|-------|
+| `text-foreground` sobre cualquier `bg-*-soft` | ✅ AAA | Combinación segura por defecto. |
+| Strong color (`text-red`, etc.) sobre `bg-card` / `bg-background` | ✅ AA+ | Ratio ≥4.5 verificado en los 4 colores. |
+| Strong color como **icono decorativo** dentro de `bg-*-soft` | ✅ | Icono va con `aria-hidden="true"` y hay texto descriptivo cercano. Lighthouse no evalúa contraste de iconos decorativos. |
+| Strong color como **texto** sobre su soft (ej. `text-yellow` sobre `bg-yellow-soft`) | ❌ Prohibido | Contraste insuficiente. Usar `text-foreground` siempre. |
+| Texto blanco sobre `bg-red` / `bg-blue` / `bg-green` | ✅ AA | Ratio ≥4.5. |
+| Texto blanco sobre `bg-yellow` | ⚠️ Solo bold ≥18px | Yellow es el menos contrastado. Texto pequeño debe ser `text-foreground` sobre yellow. |
+
+Estas reglas aplican a **toda la app**. Cualquier uso fuera de la tabla debe documentarse y verificarse manualmente con un contrast checker.
 
 ---
 

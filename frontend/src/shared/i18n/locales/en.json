@@ -63,5 +63,98 @@
       "rateLimited": "Too many attempts. Try again in a few minutes.",
       "generic": "Something went wrong. Please try again."
     }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Players, sessions and meetups near you",
+      "title": "Board game sessions <1>near you</1>",
+      "subtitle": "MatchPlay helps you discover open sessions, connect with players in your area and organise meetups for your favourite games.",
+      "visual": {
+        "ownChip": "Your Session",
+        "openChip": "Open",
+        "title": "Catan Night",
+        "meta": "Tonight's Table · + 1 Expansion",
+        "city": "Madrid",
+        "date": "Today",
+        "time": "20:00",
+        "spots": "3/4",
+        "ariaLabel": "Preview of the game board"
+      }
+    },
+    "quickSearch": {
+      "label": "Search for a session",
+      "province": "Province",
+      "city": "City",
+      "game": "Game (optional)",
+      "submit": "Search"
+    },
+    "cta": {
+      "explore": "Explore sessions",
+      "register": "Create account",
+      "join": "Join a Session"
+    },
+    "stats": {
+      "ariaLabel": "Community statistics",
+      "activeSessions": "active sessions",
+      "activePlayers": "players in the community",
+      "cities": "active cities"
+    },
+    "discovery": {
+      "eyebrow": "Discover how it helps you",
+      "title": "An easier way to find a table and community",
+      "subtitle": "Whether you're looking for board game players or want to organise sessions in your city, MatchPlay brings together open table discovery, event creation and connection with nearby people who share your interests.",
+      "cards": {
+        "one": {
+          "title": "Find board game players in your area",
+          "description": "Browse profiles and active sessions to find people to play with near you, whether you're into euros, fillers, co-ops or classic games."
+        },
+        "two": {
+          "title": "Discover open sessions and join the one that fits",
+          "description": "Browse published board game sessions, check the location, date and game, and sign up for the table that best fits your schedule and ideal group."
+        },
+        "three": {
+          "title": "Organise meetups for your favourite games",
+          "description": "Post your own board game meetups, set spots and location, and let other players in your community find your table and join."
+        }
+      }
+    },
+    "community": {
+      "eyebrow": "News and updates",
+      "title": "Discover news, ideas and community moments",
+      "prev": "Previous slide",
+      "next": "Next slide",
+      "goTo": "Go to slide {{n}}",
+      "slides": {
+        "one": {
+          "eyebrow": "Community",
+          "title": "Stories and news for board gamers",
+          "description": "Share announcements, project updates and content designed for those who enjoy organising and discovering new tables."
+        },
+        "two": {
+          "eyebrow": "Updates",
+          "title": "News, improvements and community life",
+          "description": "This space can bring together product updates, featured news and stories related to the board game community."
+        },
+        "three": {
+          "eyebrow": "Content",
+          "title": "Ideas, recommendations and topics to share",
+          "description": "It can also be used to publish recommendations, community initiatives or editorial content beyond the current sessions."
+        }
+      }
+    }
+  },
+  "seo": {
+    "landing": {
+      "title": "Find players and sessions near you | Matchplay",
+      "description": "Discover open board game sessions, connect with players in your area and organise your next meetup with Matchplay."
+    },
+    "login": {
+      "title": "Sign in | Matchplay",
+      "description": "Access your Matchplay account and find board game sessions near you."
+    },
+    "register": {
+      "title": "Create account | Matchplay",
+      "description": "Join Matchplay and start discovering and organising board game sessions in your city."
+    }
   }
 }

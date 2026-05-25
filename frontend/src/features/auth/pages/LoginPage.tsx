@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { SeoHead } from '@/shared/components/SeoHead'
+
 import { LoginForm } from '../components/LoginForm'
 
 export default function LoginPage() {
@@ -10,6 +12,7 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6">
+      <SeoHead title={t('seo.login.title')} description={t('seo.login.description')} noindex />
       <header className="space-y-1">
         <h1 className="font-display text-3xl font-semibold">{t('auth.login.title')}</h1>
       </header>
