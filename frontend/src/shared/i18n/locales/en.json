@@ -124,6 +124,8 @@
       }
     },
     "errors": {
+      "required": "Required field",
+      "tooLong": "Text is too long",
       "notFound": "This session no longer exists",
       "full": "Session is full",
       "alreadyJoined": "You have already joined",

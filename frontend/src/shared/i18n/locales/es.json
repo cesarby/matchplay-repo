@@ -124,6 +124,8 @@
       }
     },
     "errors": {
+      "required": "Campo obligatorio",
+      "tooLong": "El texto es demasiado largo",
       "notFound": "Esta partida ya no existe",
       "full": "La partida está completa",
       "alreadyJoined": "Ya estás apuntado",

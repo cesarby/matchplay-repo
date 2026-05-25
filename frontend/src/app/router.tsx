@@ -11,6 +11,7 @@ import { RoleRoute } from '@/features/auth/guards/RoleRoute'
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'))
 const SessionsListPage = lazy(() => import('@/features/sessions/pages/SessionsListPage'))
 const SessionDetailPage = lazy(() => import('@/features/sessions/pages/SessionDetailPage'))
+const CreateSessionPage = lazy(() => import('@/features/sessions/pages/CreateSessionPage'))
 const NotFoundPage = lazy(() => import('@/features/sessions/pages/NotFoundPage'))
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'))
@@ -24,6 +25,14 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <LandingPage /> },
           { path: '/sessions', element: <SessionsListPage /> },
+          {
+            path: '/sessions/new',
+            element: (
+              <ProtectedRoute>
+                <CreateSessionPage />
+              </ProtectedRoute>
+            ),
+          },
           { path: '/sessions/:id', element: <SessionDetailPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
