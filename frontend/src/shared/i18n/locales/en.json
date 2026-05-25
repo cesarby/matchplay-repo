@@ -1,0 +1,67 @@
+{
+  "common": {
+    "appName": "Matchplay",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "submit": "Submit"
+  },
+  "nav": {
+    "home": "Home",
+    "sessions": "Sessions",
+    "profile": "Profile",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "register": "Create account"
+  },
+  "home": {
+    "title": "Open sessions near you",
+    "subtitle": "Join a table or create your own"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "Don't have an account?",
+      "registerCta": "Sign up"
+    },
+    "register": {
+      "title": "Create account",
+      "submit": "Create account",
+      "submitting": "Creating…",
+      "haveAccount": "Already have an account?",
+      "loginCta": "Sign in"
+    },
+    "logout": "Sign out",
+    "forbidden": "You don't have permission to access this page",
+    "session": {
+      "expired": "Your session has expired. Please sign in again."
+    },
+    "email": {
+      "label": "Email",
+      "required": "Email is required",
+      "invalid": "Invalid email",
+      "duplicate": "An account with that email already exists"
+    },
+    "password": {
+      "label": "Password",
+      "required": "Password is required",
+      "weak": "At least 8 characters with letters and numbers"
+    },
+    "username": {
+      "label": "Username",
+      "min": "At least 3 characters",
+      "duplicate": "That username is already taken"
+    },
+    "name": { "label": "Name", "required": "Name is required" },
+    "province": { "label": "Province", "required": "Select a province" },
+    "city": { "label": "City", "required": "Select a city" },
+    "area": { "label": "Area", "required": "Select an area" },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "rateLimited": "Too many attempts. Try again in a few minutes.",
+      "generic": "Something went wrong. Please try again."
+    }
+  }
+}

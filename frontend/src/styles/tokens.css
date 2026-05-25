@@ -1,0 +1,65 @@
+/* Design tokens — board-game-café theme.
+ * Aprobado el 2026-05-24, ver docs/frontend/spec.md.
+ * Colores expresados como "R G B" para usarlos con rgb(var(--x) / <alpha>).
+ */
+
+:root {
+  --radius: 1.25rem;
+  --radius-sm: 0.75rem;
+  --grid-gap: 1.25rem;
+
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ============ LIGHT — crema/papel ============ */
+:root,
+.light {
+  --background: 250 246 238;
+  --foreground: 31 26 20;
+  --card: 255 252 246;
+  --card-foreground: 31 26 20;
+  --muted: 240 234 224;
+  --muted-foreground: 110 97 79;
+  --border: 229 220 201;
+
+  --p-red: 200 54 44;
+  --p-blue: 31 111 178;
+  --p-green: 47 143 79;
+  --p-yellow: 232 169 59;
+
+  --p-red-soft: 252 232 229;
+  --p-blue-soft: 226 240 252;
+  --p-green-soft: 226 245 232;
+  --p-yellow-soft: 253 243 219;
+
+  --shadow: 0 1px 2px rgba(31, 26, 20, 0.04), 0 4px 16px rgba(31, 26, 20, 0.06);
+  --shadow-hover: 0 10px 30px rgba(200, 54, 44, 0.18);
+  --shadow-warm: 0 2px 4px rgba(110, 97, 79, 0.1);
+}
+
+/* ============ DARK — madera ============ */
+.dark {
+  --background: 26 22 17;
+  --foreground: 242 235 221;
+  --card: 37 32 26;
+  --card-foreground: 242 235 221;
+  --muted: 47 41 32;
+  --muted-foreground: 181 168 146;
+  --border: 58 51 40;
+
+  --p-red: 255 107 92;
+  --p-blue: 91 168 224;
+  --p-green: 102 192 121;
+  --p-yellow: 245 200 101;
+
+  --p-red-soft: 64 32 28;
+  --p-blue-soft: 30 56 78;
+  --p-green-soft: 32 64 41;
+  --p-yellow-soft: 66 53 25;
+
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 10px 30px rgba(255, 107, 92, 0.25);
+  --shadow-warm: 0 2px 4px rgba(0, 0, 0, 0.35);
+}

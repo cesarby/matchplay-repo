@@ -1,0 +1,67 @@
+{
+  "common": {
+    "appName": "Matchplay",
+    "loading": "Cargando…",
+    "error": "Algo salió mal",
+    "retry": "Reintentar",
+    "submit": "Enviar"
+  },
+  "nav": {
+    "home": "Inicio",
+    "sessions": "Partidas",
+    "profile": "Perfil",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Crear cuenta"
+  },
+  "home": {
+    "title": "Partidas abiertas cerca de ti",
+    "subtitle": "Únete a una mesa o crea la tuya"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "noAccount": "¿No tienes cuenta?",
+      "registerCta": "Regístrate"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "submit": "Crear cuenta",
+      "submitting": "Creando…",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "loginCta": "Inicia sesión"
+    },
+    "logout": "Cerrar sesión",
+    "forbidden": "No tienes permisos para acceder a esta página",
+    "session": {
+      "expired": "Tu sesión ha expirado. Vuelve a iniciar sesión."
+    },
+    "email": {
+      "label": "Email",
+      "required": "El email es obligatorio",
+      "invalid": "Email inválido",
+      "duplicate": "Ya existe una cuenta con ese email"
+    },
+    "password": {
+      "label": "Contraseña",
+      "required": "La contraseña es obligatoria",
+      "weak": "Mínimo 8 caracteres con letras y números"
+    },
+    "username": {
+      "label": "Nombre de usuario",
+      "min": "Mínimo 3 caracteres",
+      "duplicate": "Ese nombre de usuario ya está en uso"
+    },
+    "name": { "label": "Nombre", "required": "El nombre es obligatorio" },
+    "province": { "label": "Provincia", "required": "Selecciona una provincia" },
+    "city": { "label": "Localidad", "required": "Selecciona una localidad" },
+    "area": { "label": "Zona", "required": "Selecciona una zona" },
+    "errors": {
+      "invalidCredentials": "Email o contraseña incorrectos",
+      "rateLimited": "Demasiados intentos. Vuelve a probar en unos minutos.",
+      "generic": "Algo salió mal. Vuelve a intentarlo."
+    }
+  }
+}

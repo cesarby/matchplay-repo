@@ -1,5 +1,7 @@
 package com.matchplay.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.matchplay.config.LocaleConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -41,7 +44,13 @@ class GlobalExceptionHandlerTest {
                 .standaloneSetup(new TestController())
                 .setControllerAdvice(new GlobalExceptionHandler(messageSource))
                 .setLocaleResolver(localeResolver)
+                .setMessageConverters(jsonConverter())
                 .build();
+    }
+
+    private static MappingJackson2HttpMessageConverter jsonConverter() {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        return new MappingJackson2HttpMessageConverter(mapper);
     }
 
     @RestController

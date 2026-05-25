@@ -1,5 +1,14 @@
 package com.matchplay.exception;
 
+import com.matchplay.auth.exception.EmailAlreadyExistsException;
+import com.matchplay.auth.exception.InvalidCredentialsException;
+import com.matchplay.auth.exception.RateLimitedException;
+import com.matchplay.auth.exception.RefreshTokenInvalidException;
+import com.matchplay.auth.exception.UsernameAlreadyExistsException;
+import com.matchplay.game.exception.BaseGameNotFoundException;
+import com.matchplay.game.exception.BggUnavailableException;
+import com.matchplay.game.exception.InvalidGameSearchException;
+import com.matchplay.geo.exception.GeoCodeNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +19,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +76,106 @@ public class GlobalExceptionHandler {
         log.warn("Unauthorized action attempt: path={}", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponse.of(403, "Forbidden", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(401, "Unauthorized", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(RefreshTokenInvalidException.class)
+    public ResponseEntity<ErrorResponse> handleRefreshInvalid(
+            RefreshTokenInvalidException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(401, "Unauthorized", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailDup(
+            EmailAlreadyExistsException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameDup(
+            UsernameAlreadyExistsException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(RateLimitedException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimited(
+            RateLimitedException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ErrorResponse.of(429, "Too Many Requests", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(GeoCodeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleGeoNotFound(
+            GeoCodeNotFoundException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        log.warn("Geo code not found: key={}", ex.getMessageKey());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(404, "Not Found", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request, Locale locale) {
+        Throwable root = ex.getMostSpecificCause();
+        if (root instanceof MatchplayException me) {
+            String message = resolve(me.getMessageKey(), me.getArgs(), locale);
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.of(400, "Bad Request", me.getMessageKey(), message, request.getRequestURI()));
+        }
+        String message = resolve("error.validation", null, locale);
+        log.warn("Param type mismatch: param={}, value={}", ex.getName(), ex.getValue());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", "error.validation", message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidGameSearchException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidGameSearch(
+            InvalidGameSearchException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        log.warn("Invalid game search: key={}, path={}", ex.getMessageKey(), request.getRequestURI());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(BaseGameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBaseGameNotFound(
+            BaseGameNotFoundException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        log.warn("Base game not found in BGG: bggId={}", ex.getBggId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(404, "Not Found", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(BggUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleBggUnavailable(
+            BggUnavailableException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        log.error("BGG API unavailable: path={}", request.getRequestURI(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ErrorResponse.of(502, "Bad Gateway", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(
+            MissingServletRequestParameterException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve("error.validation", null, locale);
+        log.warn("Missing required parameter: name={}, path={}", ex.getParameterName(), request.getRequestURI());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", "error.validation", message, request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

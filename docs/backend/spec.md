@@ -10,9 +10,11 @@ Referencia global: [../spec.md](../spec.md)
 
 | Módulo | Archivo | Estado |
 |--------|---------|--------|
-| Auth | [modules/auth-spec.md](modules/auth-spec.md) | Pendiente |
+| Auth | [modules/auth-spec.md](modules/auth-spec.md) | Definido |
 | Partidas | [modules/sessions-spec.md](modules/sessions-spec.md) | Pendiente |
 | Usuarios | [modules/users-spec.md](modules/users-spec.md) | Pendiente |
+| Juegos (búsqueda BGG) | [modules/games-spec.md](modules/games-spec.md) | Definido |
+| Geo (provincias/ciudades/zonas) | [modules/geo-spec.md](modules/geo-spec.md) | Definido |
 | Admin | [modules/admin-spec.md](modules/admin-spec.md) | Pendiente |
 
 ---

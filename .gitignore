@@ -10,10 +10,15 @@ backend/.env
 *.war
 
 # Node
-frontend/node_modules/
+node_modules/
 frontend/dist/
 frontend/.vite/
-frontend/.env*
+frontend/.env.local
+frontend/.env.*.local
+frontend/*.tsbuildinfo
+
+# Remember (handoff notes locales)
+.remember/
 
 # IDE
 .vscode/
@@ -23,6 +28,11 @@ frontend/.env*
 # Claude Code local settings
 .claude/
 
+# Agent skills instaladas con `npx skills add ...` (ver CLAUDE.md)
+.agents/
+
 # OS
 .DS_Store
 Thumbs.db
+# Added by code-review-graph
+.code-review-graph/

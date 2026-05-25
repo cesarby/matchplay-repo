@@ -1,0 +1,62 @@
+/* eslint-env node */
+module.exports = {
+  root: true,
+  env: { browser: true, es2022: true, node: true },
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    ecmaFeatures: { jsx: true },
+    project: ['./tsconfig.app.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+  settings: {
+    react: { version: '18.3' },
+    'import/resolver': {
+      typescript: { project: ['./tsconfig.app.json'] },
+      node: true,
+    },
+  },
+  plugins: [
+    '@typescript-eslint',
+    'react',
+    'react-hooks',
+    'react-refresh',
+    'jsx-a11y',
+    'import',
+    'tailwindcss',
+  ],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
+    'plugin:react-hooks/recommended',
+    'plugin:jsx-a11y/recommended',
+    'plugin:tailwindcss/recommended',
+    'prettier',
+  ],
+  ignorePatterns: ['dist', 'node_modules', 'coverage', '.eslintrc.cjs', '*.config.*'],
+  rules: {
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'react/prop-types': 'off',
+    'react/jsx-key': 'error',
+    'jsx-a11y/alt-text': 'error',
+    'react-hooks/exhaustive-deps': 'error',
+    'import/order': [
+      'error',
+      {
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+        pathGroups: [{ pattern: '@/**', group: 'internal', position: 'before' }],
+        pathGroupsExcludedImportTypes: ['builtin'],
+        alphabetize: { order: 'asc', caseInsensitive: true },
+        'newlines-between': 'always',
+      },
+    ],
+    'tailwindcss/no-custom-classname': 'off',
+  },
+}
