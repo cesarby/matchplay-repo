@@ -90,6 +90,50 @@ class GameSearchServiceImplTest {
     }
 
     @Test
+    void search_baseFiltersOutExpansionsThatBggReturned() {
+        // BGG con type=boardgame puede colar expansiones; el service las descarta.
+        BggSearchResult searchResult = new BggSearchResult(2, List.of(
+                new BggSearchResult.Item(13L, "boardgame",
+                        new BggSearchResult.Name("Catan"), new BggSearchResult.YearPublished(1995)),
+                new BggSearchResult.Item(50L, "boardgameexpansion",
+                        new BggSearchResult.Name("Catan: Seafarers"), new BggSearchResult.YearPublished(1997))
+        ));
+        BggThingResult.Item catan = item(13L, "boardgame", "Catan");
+        BggThingResult.Item seafarers = item(50L, "boardgameexpansion", "Catan: Seafarers");
+
+        given(bggClient.search("catan", "boardgame")).willReturn(searchResult);
+        given(bggClient.getThings(List.of(13L, 50L))).willReturn(List.of(catan, seafarers));
+        given(bggGameMapper.toResponse(catan)).willReturn(response(13L, "Catan"));
+        given(bggGameMapper.toResponse(seafarers)).willReturn(expansionResponse(50L, "Catan: Seafarers"));
+
+        PageResponse<GameSearchResponse> result = service.search("catan", GameSearchType.BASE, null, 0, 20);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).bggId()).isEqualTo(13L);
+        assertThat(result.content().get(0).isExpansion()).isFalse();
+    }
+
+    @Test
+    void search_expansionsFiltersOutItemsThatArentExpansions() {
+        // Defensa doble: si BGG marca mal el tipo de un link, el detalle con
+        // isExpansion=false debe descartarse.
+        BggThingResult.Item base = baseWithExpansions(13L, List.of(50L, 99L));
+        BggThingResult.Item exp50 = item(50L, "boardgameexpansion", "Seafarers");
+        BggThingResult.Item bogus = item(99L, "boardgame", "WTF this is a base");
+
+        given(bggClient.getThing(13L)).willReturn(Optional.of(base));
+        given(bggClient.getThings(List.of(50L, 99L))).willReturn(List.of(exp50, bogus));
+        given(bggGameMapper.toResponse(exp50)).willReturn(expansionResponse(50L, "Seafarers"));
+        given(bggGameMapper.toResponse(bogus)).willReturn(response(99L, "WTF this is a base"));
+
+        PageResponse<GameSearchResponse> result = service.search(null, GameSearchType.EXPANSION, 13L, 0, 20);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).bggId()).isEqualTo(50L);
+        assertThat(result.content().get(0).isExpansion()).isTrue();
+    }
+
+    @Test
     void search_baseEmptyResults_returnsEmptyPage() {
         given(bggClient.search("nope", "boardgame"))
                 .willReturn(new BggSearchResult(0, List.of()));
@@ -110,8 +154,10 @@ class GameSearchServiceImplTest {
 
         given(bggClient.getThing(13L)).willReturn(Optional.of(base));
         given(bggClient.getThings(List.of(50L, 51L))).willReturn(List.of(exp50, exp51));
-        given(bggGameMapper.toResponse(exp50)).willReturn(response(50L, "Seafarers"));
-        given(bggGameMapper.toResponse(exp51)).willReturn(response(51L, "Cities & Knights"));
+        // isExpansion=true porque la regla del service descarta los que no lo sean
+        given(bggGameMapper.toResponse(exp50)).willReturn(expansionResponse(50L, "Seafarers"));
+        given(bggGameMapper.toResponse(exp51)).willReturn(expansionResponse(51L, "Cities & Knights"))
+                ;
 
         PageResponse<GameSearchResponse> result = service.search(null, GameSearchType.EXPANSION, 13L, 0, 2);
 
@@ -164,5 +210,10 @@ class GameSearchServiceImplTest {
 
     private static GameSearchResponse response(Long id, String name) {
         return new GameSearchResponse(id, name, null, null, null, null, null, null, null, false, false, null);
+    }
+
+    private static GameSearchResponse expansionResponse(Long id, String name) {
+        // isExpansion=true para satisfacer el filtro de searchExpansions
+        return new GameSearchResponse(id, name, null, null, null, null, null, null, null, true, false, null);
     }
 }

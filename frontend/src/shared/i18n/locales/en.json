@@ -106,6 +106,8 @@
       "city": "City",
       "area": "Area",
       "game": "Game",
+      "gamePlaceholder": "Search game…",
+      "date": "Date",
       "from": "From",
       "to": "To",
       "status": "Status",

@@ -19,6 +19,12 @@ type UrlState = {
   provinceCode?: string
   cityCode?: string
   areaCode?: string
+  /** Día concreto YYYY-MM-DD — se traduce a scheduledFrom/To al consultar. */
+  date?: string
+  /** bggId del juego seleccionado. */
+  gameId?: string
+  /** Nombre del juego — guardado en URL para mostrar el pill sin re-fetch. */
+  gameName?: string
   page?: string
 } & Record<string, string | undefined>
 
@@ -65,11 +71,16 @@ export default function SessionsListPage() {
   }, [isAuthenticated])
 
   const page = parseIntSafe(filters.page, 0)
+  const gameIdNum = filters.gameId ? Number(filters.gameId) : undefined
+  const dayRange = filters.date ? dayToIsoRange(filters.date) : null
 
   const searchParams: SessionSearchParams = {
     provinceCode: filters.provinceCode,
     cityCode: filters.cityCode,
     areaCode: filters.areaCode,
+    gameId: Number.isFinite(gameIdNum) ? gameIdNum : undefined,
+    scheduledFrom: dayRange?.from,
+    scheduledTo: dayRange?.to,
     page,
     size: DEFAULT_PAGE_SIZE,
   }
@@ -139,8 +150,24 @@ export default function SessionsListPage() {
                 provinceCode: filters.provinceCode,
                 cityCode: filters.cityCode,
                 areaCode: filters.areaCode,
+                date: filters.date,
+                gameId: gameIdNum,
+                gameName: filters.gameName,
               }}
-              onChange={(patch) => setFilters({ ...patch, page: undefined })}
+              onChange={(patch) => {
+                // SessionFilters trabaja con gameId numérico; el URL state
+                // los guarda como string. Hacemos la conversión aquí.
+                const urlPatch: Partial<UrlState> = { page: undefined }
+                if ('provinceCode' in patch) urlPatch.provinceCode = patch.provinceCode
+                if ('cityCode' in patch) urlPatch.cityCode = patch.cityCode
+                if ('areaCode' in patch) urlPatch.areaCode = patch.areaCode
+                if ('date' in patch) urlPatch.date = patch.date
+                if ('gameId' in patch) {
+                  urlPatch.gameId = patch.gameId ? String(patch.gameId) : undefined
+                  urlPatch.gameName = patch.gameName ?? undefined
+                }
+                setFilters(urlPatch)
+              }}
               onClear={() => clearFilters()}
             />
           </div>
@@ -308,4 +335,23 @@ function parseIntSafe(value: string | undefined, fallback: number): number {
   if (!value) return fallback
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
+}
+
+/**
+ * Convierte un día (YYYY-MM-DD, asumido en la zona horaria local del navegador)
+ * en un rango ISO Instant [from, to] que cubre las 24h de ese día.
+ *
+ * El backend usa Instant (UTC), así que respeta la zona del cliente: si el user
+ * filtra por "15 ene" en España, verá las partidas con scheduledAt entre las
+ * 00:00 y 23:59 del 15 ene en hora española, no UTC.
+ */
+function dayToIsoRange(yyyyMmDd: string): { from: string; to: string } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(yyyyMmDd)
+  if (!m) return null
+  const year = Number(m[1])
+  const month = Number(m[2]) - 1
+  const day = Number(m[3])
+  const start = new Date(year, month, day, 0, 0, 0, 0)
+  const end = new Date(year, month, day, 23, 59, 59, 999)
+  return { from: start.toISOString(), to: end.toISOString() }
 }

@@ -1,11 +1,11 @@
 package com.matchplay.game.service;
 
+import com.matchplay.common.dto.PageResponse;
 import com.matchplay.game.client.BggClient;
 import com.matchplay.game.client.xml.BggSearchResult;
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.dto.GameSearchResponse;
 import com.matchplay.game.dto.GameSearchType;
-import com.matchplay.common.dto.PageResponse;
 import com.matchplay.game.exception.BaseGameNotFoundException;
 import com.matchplay.game.exception.InvalidGameSearchException;
 import com.matchplay.game.mapper.BggGameMapper;
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -58,7 +59,10 @@ public class GameSearchServiceImpl implements GameSearchService {
 
         BggSearchResult searchResult = bggClient.search(normalized, GameSearchType.BASE.getBggType());
         List<Long> allIds = extractIds(searchResult);
-        return enrichAndPaginate(allIds, page, size);
+        // Regla: type=BASE NUNCA devuelve expansiones. BGG con type=boardgame
+        // puede colar expansiones; filtramos a posteriori usando isExpansion
+        // del detalle enriquecido.
+        return enrichAndPaginate(allIds, page, size, r -> !r.isExpansion());
     }
 
     private PageResponse<GameSearchResponse> searchExpansions(Long baseGameId, int page, int size) {
@@ -77,10 +81,27 @@ public class GameSearchServiceImpl implements GameSearchService {
                         .distinct()
                         .toList();
 
-        return enrichAndPaginate(expansionIds, page, size);
+        // Regla: type=EXPANSION solo devuelve expansiones, nunca el juego base.
+        // Doble seguro: aunque los links boardgameexpansion ya filtran el base,
+        // validamos isExpansion=true en el detalle por si BGG tuviera el tipo mal.
+        return enrichAndPaginate(expansionIds, page, size, GameSearchResponse::isExpansion);
     }
 
-    private PageResponse<GameSearchResponse> enrichAndPaginate(List<Long> allIds, int page, int size) {
+    /**
+     * Pagina sobre {@code allIds}, enriquece con {@code getThings} y aplica un
+     * filtro post-mapeo ({@code keep}) para garantizar que el resultado cumple
+     * la regla del tipo (sin expansiones en BASE, sin juegos base en EXPANSION).
+     *
+     * <p>NOTA: el filtro se aplica DESPUÉS de paginar. Esto puede dejar páginas
+     * con menos elementos que {@code size}, lo cual es aceptable porque BGG
+     * raramente cuela elementos del tipo equivocado. La alternativa (filtrar
+     * antes de paginar) obligaría a traer detalles de TODOS los ids — caro.</p>
+     */
+    private PageResponse<GameSearchResponse> enrichAndPaginate(
+            List<Long> allIds,
+            int page,
+            int size,
+            Predicate<GameSearchResponse> keep) {
         if (allIds.isEmpty()) {
             return new PageResponse<>(Collections.emptyList(), page, size, 0, 0, true);
         }
@@ -99,6 +120,7 @@ public class GameSearchServiceImpl implements GameSearchService {
                 .map(byId::get)
                 .filter(Objects::nonNull)
                 .map(bggGameMapper::toResponse)
+                .filter(keep)
                 .toList();
 
         boolean last = page + 1 >= totalPages;

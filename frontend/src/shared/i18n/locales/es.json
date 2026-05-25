@@ -106,6 +106,8 @@
       "city": "Ciudad",
       "area": "Zona",
       "game": "Juego",
+      "gamePlaceholder": "Buscar juego…",
+      "date": "Fecha",
       "from": "Desde",
       "to": "Hasta",
       "status": "Estado",
