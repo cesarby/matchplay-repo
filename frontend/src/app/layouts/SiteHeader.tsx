@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Button } from '@/shared/components/Button'
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
 import { Logo } from '@/shared/components/Logo'
+import { cn } from '@/shared/lib/cn'
 
 /**
  * Header común a todas las pantallas (Main + Auth). Layout de 3 zonas:
@@ -21,10 +22,13 @@ export function SiteHeader() {
   const { t } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const logout = useLogoutMutation()
+  const location = useLocation()
+
+  const isSessionsActive = location.pathname.startsWith('/sessions')
 
   return (
-    <header className="border-b bg-card">
-      <div className="container flex h-16 items-center gap-4">
+    <header className="border-b border-border bg-card">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-6">
         {/* Izquierda: logo grande */}
         <div className="flex flex-1 items-center">
           <Link to="/" aria-label="Matchplay — inicio">
@@ -32,11 +36,17 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        {/* Centro: Partidas */}
+        {/* Centro: Partidas (pill rojo cuando activo) */}
         <nav className="flex flex-1 items-center justify-center text-sm" aria-label="Principal">
           <Link
             to="/sessions"
-            className="rounded-sm px-3 py-1.5 font-medium text-foreground hover:bg-muted"
+            aria-current={isSessionsActive ? 'page' : undefined}
+            className={cn(
+              'rounded-full px-4 py-1.5 transition',
+              isSessionsActive
+                ? 'bg-red-soft font-semibold text-red'
+                : 'font-medium text-foreground hover:bg-muted',
+            )}
           >
             {t('nav.sessions')}
           </Link>

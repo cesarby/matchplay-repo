@@ -1,4 +1,4 @@
-import { Dices, Info, Plus } from 'lucide-react'
+import { Dices, Plus, Sparkles } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -52,6 +52,18 @@ export default function SessionsListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId])
 
+  // Al hacer logout, limpiar filtros + paginación para que el listado no
+  // se quede mostrando "Madrid · Centro" del user anterior.
+  const wasAuthenticated = useRef(isAuthenticated)
+  useEffect(() => {
+    if (wasAuthenticated.current && !isAuthenticated) {
+      didAutoFill.current = false
+      clearFilters()
+    }
+    wasAuthenticated.current = isAuthenticated
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
+
   const page = parseIntSafe(filters.page, 0)
 
   const searchParams: SessionSearchParams = {
@@ -75,7 +87,7 @@ export default function SessionsListPage() {
       />
 
       {/* HERO con decoración */}
-      <section className="relative overflow-hidden border-b border-border bg-muted/30">
+      <section className="relative overflow-hidden border-b border-border bg-muted">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-20 top-1/2 size-72 -translate-y-1/2 rotate-12 rounded-3xl bg-red opacity-[0.08]" />
           <div className="absolute -bottom-12 right-1/3 size-32 -rotate-12 rounded-2xl bg-yellow opacity-[0.12]" />
@@ -86,9 +98,9 @@ export default function SessionsListPage() {
           </div>
         </div>
 
-        <div className="container relative py-12">
+        <div className="relative mx-auto max-w-7xl px-6 py-12">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <div className="max-w-2xl">
+            <div className="min-w-0 flex-1">
               {data && (
                 <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-red">
                   {t('sessions.list.heroEyebrow', { count: totalCount })}
@@ -102,7 +114,7 @@ export default function SessionsListPage() {
                   components={{ 1: <span className="text-red" /> }}
                 />
               </h1>
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-3 max-w-2xl text-muted-foreground">
                 {t(
                   isAuthenticated
                     ? 'sessions.list.heroSubtitleAuth'
@@ -135,30 +147,28 @@ export default function SessionsListPage() {
             />
           </div>
 
-          {/* Hint anónimo: invita a login para auto-fill */}
+          {/* Hint anónimo: tip amistoso, NO requisito */}
           {!isAuthenticated && (
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-blue/30 bg-blue-soft px-4 py-2.5 text-sm">
-              <Info size={18} aria-hidden="true" className="shrink-0 text-blue" />
-              <p className="text-foreground">
-                <Trans
-                  i18nKey="sessions.list.anonHint"
-                  components={{
-                    1: (
-                      <Link
-                        to="/login"
-                        className="font-semibold text-blue underline-offset-2 hover:underline"
-                      />
-                    ),
-                  }}
-                />
-              </p>
-            </div>
+            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles size={14} aria-hidden="true" className="shrink-0 text-yellow" />
+              <Trans
+                i18nKey="sessions.list.anonHint"
+                components={{
+                  1: (
+                    <Link
+                      to="/login"
+                      className="font-semibold text-blue underline-offset-2 hover:underline"
+                    />
+                  ),
+                }}
+              />
+            </p>
           )}
         </div>
       </section>
 
       {/* LISTADO */}
-      <main className="container py-12">
+      <main className="mx-auto max-w-7xl px-6 py-12">
         {isLoading && <SkeletonGrid />}
 
         {isError && (
