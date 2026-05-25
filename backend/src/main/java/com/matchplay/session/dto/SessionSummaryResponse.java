@@ -20,6 +20,7 @@ public record SessionSummaryResponse(
         Instant scheduledAt,
         int maxPlayers,
         int registeredPlayers,
+        int waitlistCount,
         SessionStatus status,
         Long creatorId,
         String creatorUsername

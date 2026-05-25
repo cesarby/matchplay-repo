@@ -5,12 +5,12 @@ package com.matchplay.session.entity;
  *
  * <ul>
  *   <li>{@code PLAYER} — apuntado a las plazas confirmadas.</li>
+ *   <li>{@code WAITLIST} — en lista de espera; promociona a {@code PLAYER}
+ *       automáticamente cuando un {@code PLAYER} se sale o el organizador
+ *       aumenta {@code maxPlayers}.</li>
  * </ul>
- *
- * <p>Se modela como enum (en lugar de boolean) para permitir extensión
- * posterior con roles {@code WAITLIST}, {@code RESERVE}, etc. sin migración
- * de columnas.</p>
  */
 public enum ParticipantRole {
-    PLAYER
+    PLAYER,
+    WAITLIST
 }

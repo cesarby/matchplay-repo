@@ -22,11 +22,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 
 /**
- * Participante de una partida (usuario que se ha apuntado).
+ * Participante de una partida.
  *
- * <p>El creador de la partida no entra aquí salvo que decida apuntarse
- * explícitamente como jugador adicional (out of scope v1). Para v1 el
- * creador es siempre "organizador" implícito.</p>
+ * <p>Puede estar en plaza confirmada ({@code role = PLAYER}) o en cola
+ * ({@code role = WAITLIST}). {@code position} solo se rellena para WAITLIST
+ * y define el orden de promoción (FIFO). {@code promotedAt} guarda el
+ * momento en que un WAITLIST pasó a PLAYER — útil para auditar y como base
+ * de futuras notificaciones.</p>
  */
 @Entity
 @Table(
@@ -39,7 +41,9 @@ import java.time.Instant;
         },
         indexes = {
                 @Index(name = "idx_session_participants_session", columnList = "session_id"),
-                @Index(name = "idx_session_participants_user",    columnList = "user_id")
+                @Index(name = "idx_session_participants_user",    columnList = "user_id"),
+                @Index(name = "idx_session_participants_role_position",
+                        columnList = "session_id, role, position")
         }
 )
 @Getter
@@ -67,9 +71,25 @@ public class SessionParticipant {
     @Column(nullable = false, length = 16)
     private ParticipantRole role = ParticipantRole.PLAYER;
 
+    /** Solo se usa cuando role == WAITLIST. Orden FIFO en la cola. */
+    @Column
+    private Integer position;
+
+    /** Timestamp en el que un WAITLIST se promocionó a PLAYER. Null si nunca. */
+    @Column(name = "promoted_at")
+    private Instant promotedAt;
+
     public SessionParticipant(GameSession session, User user) {
         this.session = session;
         this.user = user;
         this.role = ParticipantRole.PLAYER;
+    }
+
+    /** Constructor para alta directa como WAITLIST. */
+    public SessionParticipant(GameSession session, User user, int waitlistPosition) {
+        this.session = session;
+        this.user = user;
+        this.role = ParticipantRole.WAITLIST;
+        this.position = waitlistPosition;
     }
 }

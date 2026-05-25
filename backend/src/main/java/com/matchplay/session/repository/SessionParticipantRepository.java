@@ -1,7 +1,10 @@
 package com.matchplay.session.repository;
 
+import com.matchplay.session.entity.ParticipantRole;
 import com.matchplay.session.entity.SessionParticipant;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,7 +21,7 @@ public interface SessionParticipantRepository extends JpaRepository<SessionParti
 
     /**
      * Busca un participante concreto por (session, user). Útil para el join/leave
-     * — si está presente, el usuario ya está apuntado.
+     * — si está presente, el usuario ya está apuntado (sea como PLAYER o WAITLIST).
      */
     Optional<SessionParticipant> findBySessionIdAndUserId(Long sessionId, Long userId);
 
@@ -34,4 +37,22 @@ public interface SessionParticipantRepository extends JpaRepository<SessionParti
     boolean existsBySessionIdAndUserId(Long sessionId, Long userId);
 
     long countBySessionId(Long sessionId);
+
+    long countBySessionIdAndRole(Long sessionId, ParticipantRole role);
+
+    /**
+     * Primer waitlist (orden FIFO) de una partida. Se usa para promocionar
+     * cuando un PLAYER se sale o el organizador aumenta {@code maxPlayers}.
+     */
+    Optional<SessionParticipant> findFirstBySessionIdAndRoleOrderByPositionAsc(
+            Long sessionId, ParticipantRole role);
+
+    /**
+     * Posición máxima usada actualmente en la cola; sirve para asignar la
+     * siguiente posición a un nuevo WAITLIST.
+     */
+    @Query("SELECT COALESCE(MAX(p.position), 0) FROM SessionParticipant p " +
+           "WHERE p.session.id = :sessionId AND p.role = :role")
+    int findMaxPositionBySessionIdAndRole(@Param("sessionId") Long sessionId,
+                                          @Param("role") ParticipantRole role);
 }

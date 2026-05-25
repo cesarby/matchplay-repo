@@ -77,7 +77,7 @@ class GameSessionControllerTest {
         SessionSummaryResponse s = new SessionSummaryResponse(
                 1L, "Catan", 13L, "Catan",
                 "MAD01", "Madrid", null, null,
-                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1,
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
                 SessionStatus.OPEN, 1L, "creator");
 
         given(service.search(any(), any())).willReturn(
@@ -122,8 +122,8 @@ class GameSessionControllerTest {
         SessionDetailResponse created = new SessionDetailResponse(
                 42L, "Catan Night", "Desc", 13L, "Catan",
                 "MAD01", "Madrid", null, null,
-                future, 4, 0, SessionStatus.OPEN,
-                1L, "creator", List.of(), Instant.now(), Instant.now());
+                future, 4, 0, 0, SessionStatus.OPEN,
+                1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.create(any())).willReturn(created);
 
@@ -139,8 +139,8 @@ class GameSessionControllerTest {
         SessionDetailResponse d = new SessionDetailResponse(
                 10L, "Catan", null, 13L, "Catan",
                 "MAD01", "Madrid", null, null,
-                Instant.now().plus(1, ChronoUnit.DAYS), 4, 2,
-                SessionStatus.OPEN, 1L, "creator", List.of(), Instant.now(), Instant.now());
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0,
+                SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.join(eq(10L))).willReturn(d);
 
@@ -154,8 +154,8 @@ class GameSessionControllerTest {
         SessionDetailResponse d = new SessionDetailResponse(
                 10L, "Catan", null, 13L, "Catan",
                 "MAD01", "Madrid", null, null,
-                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1,
-                SessionStatus.OPEN, 1L, "creator", List.of(), Instant.now(), Instant.now());
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
+                SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.leave(eq(10L))).willReturn(d);
 

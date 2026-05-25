@@ -4,6 +4,7 @@ import com.matchplay.session.dto.SessionDetailResponse;
 import com.matchplay.session.dto.SessionPlayerResponse;
 import com.matchplay.session.dto.SessionSummaryResponse;
 import com.matchplay.session.entity.GameSession;
+import com.matchplay.session.entity.ParticipantRole;
 import com.matchplay.session.entity.SessionParticipant;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +13,18 @@ import java.util.List;
 /**
  * Mapea entidades a DTOs de respuesta.
  *
- * <p>Mantiene las clases entity libres de dependencias de presentación.
- * Toda la traducción entidad→DTO vive aquí para facilitar el cambio futuro
- * (paginación, MapStruct si crece, etc.).</p>
+ * <p>El mapper es puro: no inyecta repositorios ni el current user.
+ * Los datos calculados ({@code waitlistCount}, {@code yourRole}) se pasan
+ * como argumentos desde el service, que es quien tiene contexto.</p>
  */
 @Component
 public class SessionMapper {
 
     public SessionSummaryResponse toSummary(GameSession session) {
+        return toSummary(session, 0);
+    }
+
+    public SessionSummaryResponse toSummary(GameSession session, int waitlistCount) {
         return new SessionSummaryResponse(
                 session.getId(),
                 session.getTitle(),
@@ -32,16 +37,23 @@ public class SessionMapper {
                 session.getScheduledAt(),
                 session.getMaxPlayers(),
                 session.getRegisteredPlayers(),
+                waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
                 session.getCreator() != null ? session.getCreator().getUsername() : null
         );
     }
 
-    public SessionDetailResponse toDetail(GameSession session, List<SessionParticipant> participants) {
+    public SessionDetailResponse toDetail(GameSession session,
+                                          List<SessionParticipant> participants,
+                                          ParticipantRole yourRole) {
         List<SessionPlayerResponse> players = participants.stream()
                 .map(this::toPlayer)
                 .toList();
+
+        int waitlistCount = (int) participants.stream()
+                .filter(p -> p.getRole() == ParticipantRole.WAITLIST)
+                .count();
 
         return new SessionDetailResponse(
                 session.getId(),
@@ -56,10 +68,12 @@ public class SessionMapper {
                 session.getScheduledAt(),
                 session.getMaxPlayers(),
                 session.getRegisteredPlayers(),
+                waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
                 session.getCreator() != null ? session.getCreator().getUsername() : null,
                 players,
+                yourRole,
                 session.getCreatedAt(),
                 session.getUpdatedAt()
         );
@@ -71,6 +85,7 @@ public class SessionMapper {
                 participant.getUser().getUsername(),
                 participant.getUser().getName(),
                 participant.getRole(),
+                participant.getPosition(),
                 participant.getJoinedAt()
         );
     }

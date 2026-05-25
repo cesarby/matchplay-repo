@@ -1,11 +1,13 @@
 package com.matchplay.session.service;
 
 import com.matchplay.exception.SessionAlreadyJoinedException;
-import com.matchplay.exception.SessionFullException;
 import com.matchplay.exception.SessionJoinOwnException;
+import com.matchplay.exception.SessionMaxPlayersAboveGameException;
+import com.matchplay.exception.SessionMaxPlayersBelowGameMinException;
 import com.matchplay.exception.SessionNotFoundException;
 import com.matchplay.exception.SessionScheduledInPastException;
 import com.matchplay.exception.SessionStatusTransitionException;
+import com.matchplay.exception.SessionWaitlistFullException;
 import com.matchplay.exception.UnauthorizedActionException;
 import com.matchplay.game.entity.Game;
 import com.matchplay.game.repository.GameRepository;
@@ -16,7 +18,9 @@ import com.matchplay.security.CurrentUserProvider;
 import com.matchplay.session.dto.ChangeStatusRequest;
 import com.matchplay.session.dto.CreateSessionRequest;
 import com.matchplay.session.dto.SessionDetailResponse;
+import com.matchplay.session.dto.UpdateSessionRequest;
 import com.matchplay.session.entity.GameSession;
+import com.matchplay.session.entity.ParticipantRole;
 import com.matchplay.session.entity.SessionParticipant;
 import com.matchplay.session.entity.SessionStatus;
 import com.matchplay.session.mapper.SessionMapper;
@@ -26,6 +30,7 @@ import com.matchplay.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,9 +44,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class GameSessionServiceImplTest {
@@ -58,6 +63,7 @@ class GameSessionServiceImplTest {
 
     User creator;
     User joiner;
+    User secondJoiner;
     Game game;
     City city;
 
@@ -65,15 +71,18 @@ class GameSessionServiceImplTest {
     void setUp() {
         creator = user(1L, "creator");
         joiner = user(2L, "joiner");
+        secondJoiner = user(3L, "joiner2");
         game = new Game();
         game.setBggId(13L);
         game.setName("Catan");
+        game.setMinPlayers(3);
+        game.setMaxPlayers(4);
         city = new City();
         city.setCode("MAD01");
         city.setName("Madrid");
     }
 
-    // ----- CREATE -----
+    // ---------- CREATE ----------
 
     @Test
     void create_withFutureDate_persistsAndReturnsDetail() {
@@ -89,7 +98,7 @@ class GameSessionServiceImplTest {
             s.setId(99L);
             return s;
         });
-        given(mapper.toDetail(any(GameSession.class), any())).willReturn(detail(99L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(GameSession.class), any(), any())).willReturn(detail(99L, SessionStatus.OPEN));
 
         SessionDetailResponse result = service.create(req);
 
@@ -111,7 +120,61 @@ class GameSessionServiceImplTest {
         verify(sessionRepository, never()).save(any());
     }
 
-    // ----- FIND -----
+    @Test
+    void create_maxAboveGameMax_throws() {
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan Night", "Desc", 13L, "MAD01", null, future, 6); // game.max = 4
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameRepository.findById(13L)).willReturn(Optional.of(game));
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionMaxPlayersAboveGameException.class);
+
+        verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void create_maxBelowGameMin_throws() {
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan Night", "Desc", 13L, "MAD01", null, future, 2); // game.min = 3
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameRepository.findById(13L)).willReturn(Optional.of(game));
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionMaxPlayersBelowGameMinException.class);
+    }
+
+    @Test
+    void create_gameWithoutLimits_skipsValidation() {
+        // Si BGG no aporta min/max, no se valida ese lado
+        Game cooperative = new Game();
+        cooperative.setBggId(50L);
+        cooperative.setName("Pandemic Legacy");
+        cooperative.setMinPlayers(null);
+        cooperative.setMaxPlayers(null);
+
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Pandemic", "Desc", 50L, "MAD01", null, future, 10);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameRepository.findById(50L)).willReturn(Optional.of(cooperative));
+        given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
+        given(sessionRepository.save(any())).willAnswer(inv -> {
+            GameSession s = inv.getArgument(0);
+            s.setId(7L);
+            return s;
+        });
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(7L, SessionStatus.OPEN));
+
+        service.create(req); // no debe lanzar
+    }
+
+    // ---------- FIND ----------
 
     @Test
     void findById_whenMissing_throws() {
@@ -121,16 +184,17 @@ class GameSessionServiceImplTest {
                 .isInstanceOf(SessionNotFoundException.class);
     }
 
-    // ----- JOIN -----
+    // ---------- JOIN ----------
 
     @Test
     void join_happyPath_savesParticipantAndIncrementsCount() {
-        GameSession session = openSession(2, 0);
-
+        GameSession session = openSession(4, 0);
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.join(10L);
 
@@ -142,11 +206,12 @@ class GameSessionServiceImplTest {
     @Test
     void join_transitionsToFullWhenLastSpot() {
         GameSession session = openSession(2, 1);
-
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.join(10L);
 
@@ -175,26 +240,106 @@ class GameSessionServiceImplTest {
                 .isInstanceOf(SessionAlreadyJoinedException.class);
     }
 
+    // ---------- JOIN waitlist ----------
+
     @Test
-    void join_fullSession_throws() {
-        GameSession session = openSession(2, 0);
+    void join_fullSession_addsToWaitlistAtPosition1() {
+        GameSession session = openSession(2, 2);
         session.setStatus(SessionStatus.FULL);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
+        given(participantRepository.countBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(0L);
+        given(participantRepository.findMaxPositionBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(0);
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+
+        service.join(10L);
+
+        ArgumentCaptor<SessionParticipant> captor = ArgumentCaptor.forClass(SessionParticipant.class);
+        verify(participantRepository).save(captor.capture());
+        SessionParticipant saved = captor.getValue();
+        assertThat(saved.getRole()).isEqualTo(ParticipantRole.WAITLIST);
+        assertThat(saved.getPosition()).isEqualTo(1);
+        // registered/status no cambian
+        assertThat(session.getRegisteredPlayers()).isEqualTo(2);
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
+    }
+
+    @Test
+    void join_waitlistFull_throws() {
+        GameSession session = openSession(2, 2);
+        session.setStatus(SessionStatus.FULL);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
+        // ya hay 2 en waitlist (límite = maxPlayers = 2)
+        given(participantRepository.countBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(2L);
+
+        assertThatThrownBy(() -> service.join(10L))
+                .isInstanceOf(SessionWaitlistFullException.class);
+    }
+
+    @Test
+    void join_cancelledSession_throws() {
+        GameSession session = openSession(4, 1);
+        session.setStatus(SessionStatus.CANCELLED);
+
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
 
         assertThatThrownBy(() -> service.join(10L))
-                .isInstanceOf(SessionFullException.class);
+                .isInstanceOf(SessionStatusTransitionException.class);
     }
 
-    // ----- LEAVE -----
+    // ---------- LEAVE ----------
 
     @Test
-    void leave_happyPath_decrementsAndKeepsOpen() {
-        GameSession session = openSession(4, 2);
+    void leave_player_decrementsAndPromotesWaitlist() {
+        GameSession session = openSession(2, 2);
+        session.setStatus(SessionStatus.FULL);
+
+        SessionParticipant me = participant(joiner, ParticipantRole.PLAYER, null);
+        SessionParticipant first = participant(secondJoiner, ParticipantRole.WAITLIST, 1);
+
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-        given(participantRepository.deleteBySessionIdAndUserId(10L, 2L)).willReturn(1L);
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(participantRepository.findBySessionIdAndUserId(10L, 2L)).willReturn(Optional.of(me));
+        given(participantRepository.findFirstBySessionIdAndRoleOrderByPositionAsc(10L, ParticipantRole.WAITLIST))
+                .willReturn(Optional.of(first));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of(first));
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+
+        service.leave(10L);
+
+        // primero en cola fue promovido
+        assertThat(first.getRole()).isEqualTo(ParticipantRole.PLAYER);
+        assertThat(first.getPosition()).isNull();
+        assertThat(first.getPromotedAt()).isNotNull();
+        // registered se quedó igual (decremento + promote)
+        assertThat(session.getRegisteredPlayers()).isEqualTo(2);
+        // status FULL se mantiene porque la plaza vacante se rellenó
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
+    }
+
+    @Test
+    void leave_playerNoWaitlist_transitionsFullToOpen() {
+        GameSession session = openSession(2, 2);
+        session.setStatus(SessionStatus.FULL);
+
+        SessionParticipant me = participant(joiner, ParticipantRole.PLAYER, null);
+        given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(participantRepository.findBySessionIdAndUserId(10L, 2L)).willReturn(Optional.of(me));
+        given(participantRepository.findFirstBySessionIdAndRoleOrderByPositionAsc(10L, ParticipantRole.WAITLIST))
+                .willReturn(Optional.empty());
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.leave(10L);
 
@@ -203,17 +348,25 @@ class GameSessionServiceImplTest {
     }
 
     @Test
-    void leave_fromFull_transitionsBackToOpen() {
+    void leave_waitlistMember_doesNotDecrementOrPromote() {
         GameSession session = openSession(2, 2);
         session.setStatus(SessionStatus.FULL);
+
+        SessionParticipant me = participant(joiner, ParticipantRole.WAITLIST, 1);
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-        given(participantRepository.deleteBySessionIdAndUserId(10L, 2L)).willReturn(1L);
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(participantRepository.findBySessionIdAndUserId(10L, 2L)).willReturn(Optional.of(me));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.leave(10L);
 
-        assertThat(session.getStatus()).isEqualTo(SessionStatus.OPEN);
+        // registered y status sin cambios
+        assertThat(session.getRegisteredPlayers()).isEqualTo(2);
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
+        verify(participantRepository, never())
+                .findFirstBySessionIdAndRoleOrderByPositionAsc(any(), any());
     }
 
     @Test
@@ -221,20 +374,66 @@ class GameSessionServiceImplTest {
         GameSession session = openSession(4, 1);
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-        given(participantRepository.deleteBySessionIdAndUserId(10L, 2L)).willReturn(0L);
+        given(participantRepository.findBySessionIdAndUserId(10L, 2L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.leave(10L))
                 .isInstanceOf(UnauthorizedActionException.class);
     }
 
-    // ----- CHANGE STATUS -----
+    // ---------- UPDATE: max increased promotes waitlist ----------
+
+    @Test
+    void update_increaseMaxPlayers_promotesWaitlistUntilFull() {
+        GameSession session = openSession(2, 2);
+        session.setStatus(SessionStatus.FULL);
+
+        SessionParticipant w1 = participant(secondJoiner, ParticipantRole.WAITLIST, 1);
+        SessionParticipant w2 = participant(user(4L, "j3"), ParticipantRole.WAITLIST, 2);
+
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        // primera llamada devuelve w1, segunda w2, tercera empty
+        given(participantRepository.findFirstBySessionIdAndRoleOrderByPositionAsc(10L, ParticipantRole.WAITLIST))
+                .willReturn(Optional.of(w1))
+                .willReturn(Optional.of(w2))
+                .willReturn(Optional.empty());
+        given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+
+        service.update(10L, new UpdateSessionRequest(null, null, null, null, 4));
+
+        // ambos waitlist promocionados
+        assertThat(w1.getRole()).isEqualTo(ParticipantRole.PLAYER);
+        assertThat(w2.getRole()).isEqualTo(ParticipantRole.PLAYER);
+        assertThat(session.getRegisteredPlayers()).isEqualTo(4);
+        assertThat(session.getMaxPlayers()).isEqualTo(4);
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
+    }
+
+    @Test
+    void update_maxAboveGameMax_throws() {
+        GameSession session = openSession(4, 0);
+        session.setBaseGame(game); // game.max = 4
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+
+        assertThatThrownBy(() ->
+                service.update(10L, new UpdateSessionRequest(null, null, null, null, 6)))
+                .isInstanceOf(SessionMaxPlayersAboveGameException.class);
+    }
+
+    // ---------- CHANGE STATUS ----------
 
     @Test
     void changeStatus_openToCancelled_succeeds() {
         GameSession session = openSession(4, 1);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-        given(currentUserProvider.requireCurrentUserId()).willReturn(1L); // creator
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.CANCELLED));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.CANCELLED));
 
         service.changeStatus(10L, new ChangeStatusRequest(SessionStatus.CANCELLED));
 
@@ -257,7 +456,7 @@ class GameSessionServiceImplTest {
     void changeStatus_byNonOwner_throws() {
         GameSession session = openSession(4, 1);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-        given(currentUserProvider.requireCurrentUserId()).willReturn(999L); // not creator
+        given(currentUserProvider.requireCurrentUserId()).willReturn(999L);
 
         assertThatThrownBy(() ->
                 service.changeStatus(10L, new ChangeStatusRequest(SessionStatus.CANCELLED)))
@@ -269,15 +468,17 @@ class GameSessionServiceImplTest {
         GameSession session = openSession(4, 1);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
         given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
-        given(mapper.toDetail(any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         SessionDetailResponse result = service.changeStatus(10L, new ChangeStatusRequest(SessionStatus.OPEN));
 
         assertThat(result.status()).isEqualTo(SessionStatus.OPEN);
-        verify(sessionRepository, times(0)).save(any()); // no se persiste si no cambia
+        verify(sessionRepository, times(0)).save(any());
     }
 
-    // ----- helpers -----
+    // ---------- helpers ----------
 
     private GameSession openSession(int max, int registered) {
         GameSession s = new GameSession();
@@ -293,11 +494,19 @@ class GameSessionServiceImplTest {
         return s;
     }
 
+    private SessionParticipant participant(User u, ParticipantRole role, Integer position) {
+        SessionParticipant p = new SessionParticipant();
+        p.setUser(u);
+        p.setRole(role);
+        p.setPosition(position);
+        return p;
+    }
+
     private SessionDetailResponse detail(Long id, SessionStatus status) {
         return new SessionDetailResponse(id, "t", null, 13L, "Catan",
                 "MAD01", "Madrid", null, null,
-                Instant.now(), 4, 0, status,
-                1L, "creator", List.of(), Instant.now(), Instant.now());
+                Instant.now(), 4, 0, 0, status,
+                1L, "creator", List.of(), null, Instant.now(), Instant.now());
     }
 
     private User user(Long id, String username) {
