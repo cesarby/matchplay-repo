@@ -17,6 +17,10 @@
 :root,
 .light {
   --background: 250 246 238;
+  /* Tono de la misma familia que background, un escalón más oscuro / cálido.
+     Se usa en hero sections y secciones que necesitan contraste sutil sin
+     romper la jerarquía monocromática. */
+  --background-alt: 244 236 220;
   --foreground: 31 26 20;
   --card: 255 252 246;
   --card-foreground: 31 26 20;
@@ -42,6 +46,9 @@
 /* ============ DARK — madera ============ */
 .dark {
   --background: 26 22 17;
+  /* Un escalón más claro que background en oscuro: jerarquía invertida pero
+     misma idea de "sección hero" con contraste sutil. */
+  --background-alt: 34 28 21;
   --foreground: 242 235 221;
   --card: 37 32 26;
   --card-foreground: 242 235 221;

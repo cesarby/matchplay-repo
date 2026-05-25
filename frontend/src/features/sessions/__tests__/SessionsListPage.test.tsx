@@ -66,7 +66,9 @@ describe('<SessionsListPage>', () => {
       ),
     )
     renderPage()
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/partidas/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      /encuentra tu próxima mesa/i,
+    )
     await waitFor(() => expect(screen.getByLabelText(/provincia/i)).toBeInTheDocument())
   })
 

@@ -17,7 +17,7 @@ export function Hero() {
   const { t } = useTranslation()
 
   return (
-    <section className="relative overflow-hidden py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-background-alt py-16 lg:py-24">
       <HeroDeco />
 
       <div className="container relative z-10">

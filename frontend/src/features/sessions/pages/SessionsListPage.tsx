@@ -87,7 +87,7 @@ export default function SessionsListPage() {
       />
 
       {/* HERO con decoración */}
-      <section className="relative overflow-hidden border-b border-border bg-muted">
+      <section className="relative overflow-hidden border-b border-border bg-background-alt">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-20 top-1/2 size-72 -translate-y-1/2 rotate-12 rounded-3xl bg-red opacity-[0.08]" />
           <div className="absolute -bottom-12 right-1/3 size-32 -rotate-12 rounded-2xl bg-yellow opacity-[0.12]" />
@@ -108,9 +108,7 @@ export default function SessionsListPage() {
               )}
               <h1 className="font-display text-5xl font-bold leading-[0.95] text-foreground lg:text-6xl">
                 <Trans
-                  i18nKey={
-                    isAuthenticated ? 'sessions.list.heroTitleAuth' : 'sessions.list.heroTitleAnon'
-                  }
+                  i18nKey="sessions.list.heroTitle"
                   components={{ 1: <span className="text-red" /> }}
                 />
               </h1>
@@ -258,7 +256,7 @@ function EmptyState({ isAuthenticated }: { isAuthenticated: boolean }) {
 function AnonymousJoinBanner() {
   const { t } = useTranslation()
   return (
-    <div className="relative my-12 overflow-hidden rounded-3xl border border-border bg-muted/40 p-8 text-center">
+    <div className="relative my-12 overflow-hidden rounded-3xl border border-border bg-background-alt p-8 text-center">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-12 -right-12 size-40 rotate-12 rounded-3xl bg-red opacity-[0.07]"

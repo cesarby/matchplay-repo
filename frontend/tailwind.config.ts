@@ -11,7 +11,12 @@ const config: Config = {
     },
     extend: {
       colors: {
-        background: 'rgb(var(--background) / <alpha-value>)',
+        background: {
+          DEFAULT: 'rgb(var(--background) / <alpha-value>)',
+          /** Un escalón más oscuro que background (light) / claro (dark).
+              Para hero sections y bandas que necesitan contraste sutil. */
+          alt: 'rgb(var(--background-alt) / <alpha-value>)',
+        },
         foreground: 'rgb(var(--foreground) / <alpha-value>)',
         card: {
           DEFAULT: 'rgb(var(--card) / <alpha-value>)',
