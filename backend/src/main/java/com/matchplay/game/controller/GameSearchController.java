@@ -2,7 +2,7 @@ package com.matchplay.game.controller;
 
 import com.matchplay.game.dto.GameSearchResponse;
 import com.matchplay.game.dto.GameSearchType;
-import com.matchplay.game.dto.PageResponse;
+import com.matchplay.common.dto.PageResponse;
 import com.matchplay.game.service.GameSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

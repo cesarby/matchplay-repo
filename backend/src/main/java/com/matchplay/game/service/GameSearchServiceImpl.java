@@ -5,7 +5,7 @@ import com.matchplay.game.client.xml.BggSearchResult;
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.dto.GameSearchResponse;
 import com.matchplay.game.dto.GameSearchType;
-import com.matchplay.game.dto.PageResponse;
+import com.matchplay.common.dto.PageResponse;
 import com.matchplay.game.exception.BaseGameNotFoundException;
 import com.matchplay.game.exception.InvalidGameSearchException;
 import com.matchplay.game.mapper.BggGameMapper;

@@ -64,6 +64,79 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "sessions": {
+    "status": {
+      "OPEN": "Open",
+      "FULL": "Full",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "card": {
+      "spots": "{{registered}}/{{max}} spots",
+      "waitlist": "{{count}} on waitlist",
+      "waitlist_one": "{{count}} on waitlist",
+      "waitlist_other": "{{count}} on waitlist",
+      "youArePlayer": "Joined",
+      "youAreWaitlist": "On waitlist (#{{position}})",
+      "byCreator": "Organised by {{username}}"
+    },
+    "list": {
+      "title": "Sessions",
+      "empty": "No sessions match these filters",
+      "loadMore": "Load more"
+    },
+    "filters": {
+      "province": "Province",
+      "city": "City",
+      "area": "Area",
+      "game": "Game",
+      "from": "From",
+      "to": "To",
+      "status": "Status",
+      "apply": "Apply",
+      "clear": "Clear filters"
+    },
+    "detail": {
+      "playersHeading": "Joined",
+      "waitlistHeading": "Waitlist",
+      "descriptionHeading": "Description",
+      "noDescription": "No description",
+      "join": "Join",
+      "leave": "Leave",
+      "cancelSession": "Cancel session",
+      "closeRegistrations": "Close registrations",
+      "reopenRegistrations": "Reopen registrations",
+      "edit": "Edit"
+    },
+    "create": {
+      "title": "Create session",
+      "submit": "Publish session",
+      "submitting": "Publishing…",
+      "fields": {
+        "title": "Title",
+        "description": "Description",
+        "game": "Game",
+        "city": "City",
+        "area": "Area",
+        "scheduledAt": "Date and time",
+        "maxPlayers": "Spots"
+      }
+    },
+    "errors": {
+      "notFound": "This session no longer exists",
+      "full": "Session is full",
+      "alreadyJoined": "You have already joined",
+      "joinOwn": "You cannot join your own session",
+      "notParticipant": "You are not in this session",
+      "notOwner": "Only the organiser can do this",
+      "scheduledInPast": "Date must be in the future",
+      "maxBelowCurrent": "Cannot reduce max below current registrations",
+      "maxAboveGame": "Max exceeds the game's limit",
+      "maxBelowGameMin": "Max is below the game's minimum",
+      "invalidTransition": "Cannot change to that status"
+    }
+  },
   "landing": {
     "hero": {
       "eyebrow": "Players, sessions and meetups near you",

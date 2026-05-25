@@ -7,7 +7,7 @@ import com.matchplay.exception.GlobalExceptionHandler;
 import com.matchplay.game.dto.GameSearchResponse;
 import com.matchplay.game.dto.GameSearchType;
 import com.matchplay.game.dto.GameSearchTypeConverter;
-import com.matchplay.game.dto.PageResponse;
+import com.matchplay.common.dto.PageResponse;
 import com.matchplay.game.exception.BaseGameNotFoundException;
 import com.matchplay.game.exception.BggUnavailableException;
 import com.matchplay.game.exception.InvalidGameSearchException;

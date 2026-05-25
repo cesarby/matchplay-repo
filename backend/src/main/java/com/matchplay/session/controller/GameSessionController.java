@@ -1,5 +1,6 @@
 package com.matchplay.session.controller;
 
+import com.matchplay.common.dto.PageResponse;
 import com.matchplay.session.dto.ChangeStatusRequest;
 import com.matchplay.session.dto.CreateSessionRequest;
 import com.matchplay.session.dto.SessionDetailResponse;
@@ -13,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -53,7 +53,7 @@ public class GameSessionController {
 
     @GetMapping
     @Operation(summary = "Listado paginado y filtrado de partidas")
-    public Page<SessionSummaryResponse> search(
+    public PageResponse<SessionSummaryResponse> search(
             @RequestParam(required = false) String provinceCode,
             @RequestParam(required = false) String cityCode,
             @RequestParam(required = false) String areaCode,
@@ -72,7 +72,7 @@ public class GameSessionController {
 
         SessionSearchCriteria criteria = new SessionSearchCriteria(
                 provinceCode, cityCode, areaCode, gameId, scheduledFrom, scheduledTo, status);
-        return sessionService.search(criteria, pageable);
+        return PageResponse.fromPage(sessionService.search(criteria, pageable));
     }
 
     @GetMapping("/{id}")

@@ -64,6 +64,79 @@
       "generic": "Algo salió mal. Vuelve a intentarlo."
     }
   },
+  "sessions": {
+    "status": {
+      "OPEN": "Abierta",
+      "FULL": "Completa",
+      "IN_PROGRESS": "En curso",
+      "COMPLETED": "Finalizada",
+      "CANCELLED": "Cancelada"
+    },
+    "card": {
+      "spots": "{{registered}}/{{max}} plazas",
+      "waitlist": "{{count}} en lista de espera",
+      "waitlist_one": "{{count}} en lista de espera",
+      "waitlist_other": "{{count}} en lista de espera",
+      "youArePlayer": "Apuntado",
+      "youAreWaitlist": "En lista de espera (#{{position}})",
+      "byCreator": "Organiza {{username}}"
+    },
+    "list": {
+      "title": "Partidas",
+      "empty": "No hay partidas con estos filtros",
+      "loadMore": "Cargar más"
+    },
+    "filters": {
+      "province": "Provincia",
+      "city": "Ciudad",
+      "area": "Zona",
+      "game": "Juego",
+      "from": "Desde",
+      "to": "Hasta",
+      "status": "Estado",
+      "apply": "Aplicar",
+      "clear": "Limpiar filtros"
+    },
+    "detail": {
+      "playersHeading": "Apuntados",
+      "waitlistHeading": "Lista de espera",
+      "descriptionHeading": "Descripción",
+      "noDescription": "Sin descripción",
+      "join": "Unirme",
+      "leave": "Salir",
+      "cancelSession": "Cancelar partida",
+      "closeRegistrations": "Cerrar inscripciones",
+      "reopenRegistrations": "Reabrir inscripciones",
+      "edit": "Editar"
+    },
+    "create": {
+      "title": "Crear partida",
+      "submit": "Publicar partida",
+      "submitting": "Publicando…",
+      "fields": {
+        "title": "Título",
+        "description": "Descripción",
+        "game": "Juego",
+        "city": "Ciudad",
+        "area": "Zona",
+        "scheduledAt": "Fecha y hora",
+        "maxPlayers": "Plazas"
+      }
+    },
+    "errors": {
+      "notFound": "Esta partida ya no existe",
+      "full": "La partida está completa",
+      "alreadyJoined": "Ya estás apuntado",
+      "joinOwn": "No puedes apuntarte a tu propia partida",
+      "notParticipant": "No estás apuntado a esta partida",
+      "notOwner": "Solo el organizador puede hacer esto",
+      "scheduledInPast": "La fecha debe ser futura",
+      "maxBelowCurrent": "No puedes reducir el máximo por debajo de los apuntados",
+      "maxAboveGame": "El máximo supera el límite del juego",
+      "maxBelowGameMin": "El máximo es menor que el mínimo del juego",
+      "invalidTransition": "No se puede cambiar a ese estado"
+    }
+  },
   "landing": {
     "hero": {
       "eyebrow": "Jugadores, partidas y quedadas cerca de ti",
