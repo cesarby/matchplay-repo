@@ -11,7 +11,8 @@ import type {
   UpdateSessionRequest,
 } from '../types/session.types'
 
-const BASE = '/api/v1/sessions'
+// Relativo al baseURL del httpClient (VITE_API_BASE_URL = '/api/v1').
+const BASE = '/sessions'
 
 /**
  * Construye los query params para el search.

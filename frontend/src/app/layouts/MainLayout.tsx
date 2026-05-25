@@ -27,6 +27,9 @@ export function MainLayout() {
             <Logo variant="text-only" className="h-7" />
           </Link>
           <nav className="flex items-center gap-3 text-sm">
+            <Link to="/sessions" className="text-foreground hover:underline">
+              {t('nav.sessions')}
+            </Link>
             {isAuthenticated && user ? (
               <>
                 <span className="text-muted-foreground">{user.username}</span>
