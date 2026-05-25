@@ -71,8 +71,8 @@ describe('<QuickSearch>', () => {
     await user.click(screen.getByRole('button', { name: /buscar/i }))
 
     const location = screen.getByTestId('location').textContent ?? ''
-    expect(location).toContain('province=MAD')
-    expect(location).toContain('city=MAD01')
+    expect(location).toContain('provinceCode=MAD')
+    expect(location).toContain('cityCode=MAD01')
   })
 
   it('includes game query param when text is entered', async () => {

@@ -34,9 +34,14 @@ export function QuickSearch() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Nombres de param alineados con el backend (camelCase) y con
+    // SessionsListPage, que es lo que recoge estos params del URL.
     const params = new URLSearchParams()
-    if (state.provinceCode) params.set('province', state.provinceCode)
-    if (state.cityCode) params.set('city', state.cityCode)
+    if (state.provinceCode) params.set('provinceCode', state.provinceCode)
+    if (state.cityCode) params.set('cityCode', state.cityCode)
+    // `q` es texto libre del juego — no lo filtra el backend todavía,
+    // pero lo preservamos en URL para que el listado lo pueda mostrar como
+    // hint visual y para no perder la intención del usuario.
     if (state.game.trim()) params.set('q', state.game.trim())
     navigate(`/sessions?${params.toString()}`)
   }
