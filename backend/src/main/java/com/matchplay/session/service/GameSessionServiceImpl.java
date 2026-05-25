@@ -8,7 +8,6 @@ import com.matchplay.exception.SessionMaxPlayersBelowGameMinException;
 import com.matchplay.exception.SessionNotFoundException;
 import com.matchplay.exception.SessionScheduledInPastException;
 import com.matchplay.exception.SessionStatusTransitionException;
-import com.matchplay.exception.SessionWaitlistFullException;
 import com.matchplay.exception.UnauthorizedActionException;
 import com.matchplay.game.entity.Game;
 import com.matchplay.game.exception.BaseGameNotFoundException;
@@ -262,12 +261,7 @@ public class GameSessionServiceImpl implements GameSessionService {
             sessionRepository.save(session);
             log.info("User {} joined session {} as PLAYER", user.getId(), sessionId);
         } else {
-            // partida llena → waitlist (si hay hueco)
-            long waitlistCount = participantRepository
-                    .countBySessionIdAndRole(sessionId, ParticipantRole.WAITLIST);
-            if (waitlistCount >= session.getMaxPlayers()) {
-                throw new SessionWaitlistFullException();
-            }
+            // partida llena → waitlist sin límite (FIFO por position)
             int nextPosition = participantRepository
                     .findMaxPositionBySessionIdAndRole(sessionId, ParticipantRole.WAITLIST) + 1;
             SessionParticipant waitlist = new SessionParticipant(session, user, nextPosition);

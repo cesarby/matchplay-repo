@@ -7,7 +7,6 @@ import com.matchplay.exception.SessionMaxPlayersBelowGameMinException;
 import com.matchplay.exception.SessionNotFoundException;
 import com.matchplay.exception.SessionScheduledInPastException;
 import com.matchplay.exception.SessionStatusTransitionException;
-import com.matchplay.exception.SessionWaitlistFullException;
 import com.matchplay.exception.UnauthorizedActionException;
 import com.matchplay.game.entity.Game;
 import com.matchplay.game.repository.GameRepository;
@@ -250,7 +249,6 @@ class GameSessionServiceImplTest {
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
-        given(participantRepository.countBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(0L);
         given(participantRepository.findMaxPositionBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(0);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
@@ -269,18 +267,27 @@ class GameSessionServiceImplTest {
     }
 
     @Test
-    void join_waitlistFull_throws() {
+    void join_waitlistUnlimited_acceptsBeyondMaxPlayers() {
+        // Aunque ya haya 10 en waitlist con maxPlayers=2, se sigue admitiendo
         GameSession session = openSession(2, 2);
         session.setStatus(SessionStatus.FULL);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(joiner);
         given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
-        // ya hay 2 en waitlist (límite = maxPlayers = 2)
-        given(participantRepository.countBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(2L);
+        given(participantRepository.findMaxPositionBySessionIdAndRole(10L, ParticipantRole.WAITLIST))
+                .willReturn(10);
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
-        assertThatThrownBy(() -> service.join(10L))
-                .isInstanceOf(SessionWaitlistFullException.class);
+        service.join(10L);
+
+        ArgumentCaptor<SessionParticipant> captor = ArgumentCaptor.forClass(SessionParticipant.class);
+        verify(participantRepository).save(captor.capture());
+        SessionParticipant saved = captor.getValue();
+        assertThat(saved.getRole()).isEqualTo(ParticipantRole.WAITLIST);
+        assertThat(saved.getPosition()).isEqualTo(11);
     }
 
     @Test
