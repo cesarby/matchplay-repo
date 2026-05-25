@@ -1,14 +1,11 @@
 import { useTranslation } from 'react-i18next'
 
-import { useCitiesQuery, useProvincesQuery } from '@/features/geo/hooks/useGeo'
-import type { SessionStatus } from '@/features/sessions/types/session.types'
-
-const STATUS_OPTIONS: SessionStatus[] = ['OPEN', 'FULL', 'IN_PROGRESS']
+import { useAreasQuery, useCitiesQuery, useProvincesQuery } from '@/features/geo/hooks/useGeo'
 
 export interface SessionFiltersValue {
   provinceCode?: string
   cityCode?: string
-  status?: SessionStatus
+  areaCode?: string
 }
 
 interface SessionFiltersProps {
@@ -18,19 +15,21 @@ interface SessionFiltersProps {
 }
 
 /**
- * Barra de filtros para el listado de partidas.
+ * Barra de filtros del listado de partidas.
  *
- * - Controlled — el padre mantiene el estado (normalmente en URL).
- * - Cambiar provincia limpia ciudad automáticamente.
- * - Mobile: grid 1 col; Desktop ≥md: grid 3 col + acciones a la derecha.
+ * - 100% ubicación: provincia → ciudad → zona, en cascada.
+ * - Cambiar provincia limpia ciudad y zona; cambiar ciudad limpia zona.
+ * - El filtro por status (OPEN/FULL/...) NO se expone al usuario en v1;
+ *   el backend lo soporta pero no es útil aún para el usuario final.
  */
 export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps) {
   const { t } = useTranslation()
 
   const { data: provinces = [] } = useProvincesQuery()
   const { data: cities = [] } = useCitiesQuery(value.provinceCode)
+  const { data: areas = [] } = useAreasQuery(value.cityCode)
 
-  const hasAnyFilter = Boolean(value.provinceCode || value.cityCode || value.status)
+  const hasAnyFilter = Boolean(value.provinceCode || value.cityCode || value.areaCode)
 
   return (
     <section
@@ -47,7 +46,11 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
             id="filter-province"
             value={value.provinceCode ?? ''}
             onChange={(e) =>
-              onChange({ provinceCode: e.target.value || undefined, cityCode: undefined })
+              onChange({
+                provinceCode: e.target.value || undefined,
+                cityCode: undefined,
+                areaCode: undefined,
+              })
             }
             className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue"
           >
@@ -68,7 +71,9 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
           <select
             id="filter-city"
             value={value.cityCode ?? ''}
-            onChange={(e) => onChange({ cityCode: e.target.value || undefined })}
+            onChange={(e) =>
+              onChange({ cityCode: e.target.value || undefined, areaCode: undefined })
+            }
             disabled={!value.provinceCode}
             className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -81,21 +86,22 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
           </select>
         </div>
 
-        {/* Status */}
+        {/* Zona */}
         <div>
-          <label htmlFor="filter-status" className="mb-1 block text-sm font-medium">
-            {t('sessions.filters.status')}
+          <label htmlFor="filter-area" className="mb-1 block text-sm font-medium">
+            {t('sessions.filters.area')}
           </label>
           <select
-            id="filter-status"
-            value={value.status ?? ''}
-            onChange={(e) => onChange({ status: (e.target.value as SessionStatus) || undefined })}
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue"
+            id="filter-area"
+            value={value.areaCode ?? ''}
+            onChange={(e) => onChange({ areaCode: e.target.value || undefined })}
+            disabled={!value.cityCode}
+            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">{t('sessions.filters.status')}</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {t(`sessions.status.${s}`)}
+            <option value="">{t('sessions.filters.area')}</option>
+            {areas.map((a) => (
+              <option key={a.code} value={a.code}>
+                {a.name}
               </option>
             ))}
           </select>

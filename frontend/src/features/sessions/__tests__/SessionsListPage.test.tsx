@@ -13,6 +13,7 @@ import SessionsListPage from '../pages/SessionsListPage'
 vi.mock('@/features/geo/hooks/useGeo', () => ({
   useProvincesQuery: () => ({ data: [{ code: 'MAD', name: 'Madrid' }] }),
   useCitiesQuery: () => ({ data: [] }),
+  useAreasQuery: () => ({ data: [] }),
 }))
 
 const API = '/api/v1'
@@ -119,12 +120,14 @@ describe('<SessionsListPage>', () => {
         })
       }),
     )
-    renderPage('/sessions?provinceCode=MAD&cityCode=MAD01&status=OPEN')
+    renderPage('/sessions?provinceCode=MAD&cityCode=MAD01&areaCode=MAD01-001')
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     const params = calls[0]!.searchParams
     expect(params.get('provinceCode')).toBe('MAD')
     expect(params.get('cityCode')).toBe('MAD01')
-    expect(params.get('status')).toBe('OPEN')
+    expect(params.get('areaCode')).toBe('MAD01-001')
+    // status NO se manda — la UI ya no expone ese filtro
+    expect(params.get('status')).toBeNull()
   })
 
   it('renders pagination when totalPages > 1', async () => {

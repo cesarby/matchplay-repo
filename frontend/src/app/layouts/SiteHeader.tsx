@@ -42,9 +42,8 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        {/* Derecha: idioma + usuario + logout (o login/register si anónimo) */}
+        {/* Derecha: usuario · logout (o login/register) · idioma al final */}
         <div className="flex flex-1 items-center justify-end gap-3 text-sm">
-          <LanguageSwitcher />
           {isAuthenticated && user ? (
             <>
               <span className="hidden text-muted-foreground sm:inline">{user.username}</span>
@@ -62,6 +61,7 @@ export function SiteHeader() {
               </Link>
             </>
           )}
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

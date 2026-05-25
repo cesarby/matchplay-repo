@@ -11,14 +11,14 @@ import { useUrlFilters } from '@/shared/hooks/useUrlFilters'
 
 import { SessionFilters } from '../components/SessionFilters'
 import { useSessionsQuery } from '../hooks/useSessions'
-import type { SessionSearchParams, SessionStatus } from '../types/session.types'
+import type { SessionSearchParams } from '../types/session.types'
 
 const DEFAULT_PAGE_SIZE = 20
 
 type UrlState = {
   provinceCode?: string
   cityCode?: string
-  status?: string
+  areaCode?: string
   page?: string
 } & Record<string, string | undefined>
 
@@ -46,22 +46,22 @@ export default function SessionsListPage() {
     if (didAutoFill.current) return
     didAutoFill.current = true
     if (!user) return
-    if (filters.provinceCode || filters.cityCode) return
-    if (!user.provinceCode && !user.cityCode) return
+    if (filters.provinceCode || filters.cityCode || filters.areaCode) return
+    if (!user.provinceCode && !user.cityCode && !user.areaCode) return
     setFilters({
       provinceCode: user.provinceCode ?? undefined,
       cityCode: user.cityCode ?? undefined,
+      areaCode: user.areaCode ?? undefined,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId])
 
   const page = parseIntSafe(filters.page, 0)
-  const status = isSessionStatus(filters.status) ? filters.status : undefined
 
   const searchParams: SessionSearchParams = {
     provinceCode: filters.provinceCode,
     cityCode: filters.cityCode,
-    status,
+    areaCode: filters.areaCode,
     page,
     size: DEFAULT_PAGE_SIZE,
   }
@@ -99,7 +99,7 @@ export default function SessionsListPage() {
           value={{
             provinceCode: filters.provinceCode,
             cityCode: filters.cityCode,
-            status,
+            areaCode: filters.areaCode,
           }}
           onChange={(patch) => {
             // Cualquier cambio de filtro vuelve a la primera página
@@ -195,10 +195,4 @@ function parseIntSafe(value: string | undefined, fallback: number): number {
   if (!value) return fallback
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
-}
-
-const SESSION_STATUSES: SessionStatus[] = ['OPEN', 'FULL', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
-
-function isSessionStatus(value: string | undefined): value is SessionStatus {
-  return typeof value === 'string' && (SESSION_STATUSES as string[]).includes(value)
 }

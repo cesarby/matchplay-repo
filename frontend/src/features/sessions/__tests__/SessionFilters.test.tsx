@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { SessionFilters, type SessionFiltersValue } from '../components/SessionFilters'
 
-// Mock geo hooks para no depender de red
+// Mock geo hooks
 vi.mock('@/features/geo/hooks/useGeo', () => ({
   useProvincesQuery: () => ({
     data: [
@@ -15,6 +15,9 @@ vi.mock('@/features/geo/hooks/useGeo', () => ({
   }),
   useCitiesQuery: (code?: string) => ({
     data: code === 'MAD' ? [{ code: 'MAD01', name: 'Madrid ciudad', provinceCode: 'MAD' }] : [],
+  }),
+  useAreasQuery: (code?: string) => ({
+    data: code === 'MAD01' ? [{ code: 'MAD01-001', name: 'Centro', cityCode: 'MAD01' }] : [],
   }),
 }))
 
@@ -29,31 +32,46 @@ function renderFilters(value: SessionFiltersValue = {}, onChange = vi.fn(), onCl
 }
 
 describe('<SessionFilters>', () => {
-  it('disables city select until a province is chosen', () => {
+  it('disables city and area selects until province is chosen', () => {
     renderFilters()
     expect(screen.getByLabelText(/ciudad/i)).toBeDisabled()
+    expect(screen.getByLabelText(/zona/i)).toBeDisabled()
   })
 
-  it('enables city select when province is set', () => {
+  it('enables city when province is set; area still disabled', () => {
     renderFilters({ provinceCode: 'MAD' })
     expect(screen.getByLabelText(/ciudad/i)).not.toBeDisabled()
+    expect(screen.getByLabelText(/zona/i)).toBeDisabled()
   })
 
-  it('changing province emits onChange with province + cityCode=undefined', async () => {
+  it('enables area when city is set', () => {
+    renderFilters({ provinceCode: 'MAD', cityCode: 'MAD01' })
+    expect(screen.getByLabelText(/zona/i)).not.toBeDisabled()
+  })
+
+  it('changing province emits onChange clearing city and area', async () => {
     const user = userEvent.setup()
     const { onChange } = renderFilters({ provinceCode: 'MAD', cityCode: 'MAD01' })
     await user.selectOptions(screen.getByLabelText(/provincia/i), 'BCN')
-    expect(onChange).toHaveBeenCalledWith({ provinceCode: 'BCN', cityCode: undefined })
+    expect(onChange).toHaveBeenCalledWith({
+      provinceCode: 'BCN',
+      cityCode: undefined,
+      areaCode: undefined,
+    })
   })
 
-  it('selecting an empty value emits undefined', async () => {
+  it('changing city emits onChange clearing only area', async () => {
     const user = userEvent.setup()
-    const { onChange } = renderFilters({ provinceCode: 'MAD' })
-    await user.selectOptions(screen.getByLabelText(/provincia/i), '')
-    expect(onChange).toHaveBeenCalledWith({ provinceCode: undefined, cityCode: undefined })
+    const { onChange } = renderFilters({
+      provinceCode: 'MAD',
+      cityCode: 'MAD01',
+      areaCode: 'MAD01-001',
+    })
+    await user.selectOptions(screen.getByLabelText(/ciudad/i), '')
+    expect(onChange).toHaveBeenCalledWith({ cityCode: undefined, areaCode: undefined })
   })
 
-  it('shows clear button only when filters are active', () => {
+  it('shows clear button only when any filter is active', () => {
     const { rerender } = render(
       <QueryClientProvider client={new QueryClient()}>
         <SessionFilters value={{}} onChange={vi.fn()} onClear={vi.fn()} />
@@ -76,10 +94,8 @@ describe('<SessionFilters>', () => {
     expect(onClear).toHaveBeenCalled()
   })
 
-  it('changing status emits the new value', async () => {
-    const user = userEvent.setup()
-    const { onChange } = renderFilters()
-    await user.selectOptions(screen.getByLabelText(/estado/i), 'OPEN')
-    expect(onChange).toHaveBeenCalledWith({ status: 'OPEN' })
+  it('does NOT render a status filter', () => {
+    renderFilters({ provinceCode: 'MAD' })
+    expect(screen.queryByLabelText(/estado/i)).not.toBeInTheDocument()
   })
 })
