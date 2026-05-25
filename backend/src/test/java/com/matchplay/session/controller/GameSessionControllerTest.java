@@ -75,7 +75,7 @@ class GameSessionControllerTest {
     @Test
     void search_returns200WithPage() throws Exception {
         SessionSummaryResponse s = new SessionSummaryResponse(
-                1L, "Catan", 13L, "Catan",
+                1L, "Catan", 13L, "Catan", null,
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
                 SessionStatus.OPEN, 1L, "creator");
@@ -120,7 +120,7 @@ class GameSessionControllerTest {
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan Night", "Desc", 13L, "MAD01", null, future, 4);
         SessionDetailResponse created = new SessionDetailResponse(
-                42L, "Catan Night", "Desc", 13L, "Catan",
+                42L, "Catan Night", "Desc", 13L, "Catan", null,
                 "MAD01", "Madrid", null, null,
                 future, 4, 0, 0, SessionStatus.OPEN,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
@@ -137,7 +137,7 @@ class GameSessionControllerTest {
     @Test
     void join_returns200WithDetail() throws Exception {
         SessionDetailResponse d = new SessionDetailResponse(
-                10L, "Catan", null, 13L, "Catan",
+                10L, "Catan", null, 13L, "Catan", null,
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
@@ -152,7 +152,7 @@ class GameSessionControllerTest {
     @Test
     void leave_returns200WithDetail() throws Exception {
         SessionDetailResponse d = new SessionDetailResponse(
-                10L, "Catan", null, 13L, "Catan",
+                10L, "Catan", null, 13L, "Catan", null,
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());

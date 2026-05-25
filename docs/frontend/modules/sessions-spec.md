@@ -17,10 +17,85 @@ Cubre tres pantallas y todos los flujos derivados:
 
 Estos cuatro componentes shared se diseñaron para reutilizarse desde la landing y futuras vistas (perfil, mis partidas):
 
-- `<SessionCard>` — card del listado con cinta lateral semántica por status.
+- `<SessionCard>` — card del listado con imagen del juego (top half), badges contextuales, progress bar de plazas y animación fade-up.
 - `<SessionStatusBadge>` — píldora con i18n del status.
-- `<Pagination>` — control de paginación.
+- `<Pagination>` — control de paginación circular con next destacado.
 - `<GameTypeahead>` — búsqueda BGG con autocompletar (vive en `features/games/`).
+
+## Diseño visual de `/sessions`
+
+Aprobado en mockup `frontend/mockups/sessions-list-v3.html` (auth) y
+`sessions-list-v3-anonymous.html` (sin auth). Resumen:
+
+| Sección | Auth | Anónimo |
+|---|---|---|
+| Hero eyebrow | `"{count} partidas activas"` (rojo, uppercase tracking widest) | Idem |
+| Hero H1 | "Encuentra tu **próxima mesa**" | "Explora **partidas abiertas**" |
+| Hero subtitle | "Tu ubicación está prefiltrada. Cámbiala cuando quieras." | "Echa un vistazo a las próximas mesas. Para apuntarte o crear la tuya, necesitas una cuenta." |
+| CTA hero | `Crear partida` (rojo, `animate-pulse-soft`, hover scale) | — (sin CTA en hero) |
+| Hint debajo de filtros | — | Banner azul-soft con `Info` icon + link "Inicia sesión" |
+| Cards listado | Iguales (listado es público) | Iguales |
+| Banner CTA al final | — | Banda con "¿Te apetece organizar tu propia mesa?" + dos CTAs (Crear cuenta · Ya tengo cuenta) |
+| Empty state CTA | `Organizar partida` → `/sessions/new` | `Crear cuenta gratis` → `/register` |
+
+Decoración común del hero (con `aria-hidden`): tile rojo rotado a la
+derecha, tile amarillo rotado abajo-derecha, dots foreground arriba-izquierda.
+
+### `<SessionCard>` (shared)
+
+- Altura `h-44` para la imagen del top half. Si `baseGameThumbnailUrl` está
+  presente se renderiza `<img>` con `object-cover`; si no, gradiente
+  determinístico por `bggId` (`FALLBACK_GRADIENTS`).
+- Sobre la imagen: status badge (verde/rojo/azul con dot pulsing si OPEN)
+  arriba-izquierda; badge de fecha contextual arriba-derecha (`urgent`
+  rojo, `warning` amarillo, `info` azul-soft).
+- Overlay `bg-gradient-to-t from-card via-card/30 to-transparent` para
+  fundir la imagen con la card y dar legibilidad al título.
+- Body: H3 Bricolage 2xl + juego (muted) + meta inline (ubicación con icono
+  verde, plazas con icono).
+- Progress bar de plazas: `bg-green` con holgura, `from-green to-yellow`
+  cuando queda ≤1 plaza, `bg-red` si llena.
+- Microcopy: `"Solo 1 plaza"` (yellow) · `"3 plazas"` (green) · `"Plazas
+  llenas · 2 en lista de espera"` (rojo+yellow).
+- Hover: `-translate-y-1 hover:border-red hover:shadow-hover`, imagen
+  `scale-110`, título → rojo.
+- Animación: `animate-fade-up` con `animation-delay` calculado por el
+  padre (`i * 80ms` para efecto secuencial).
+
+### `<SessionFilters>` cards interactivas
+
+- Cada filtro renderiza una "card-pill" con icono coloreado (azul=provincia,
+  verde=ciudad, amarillo=zona) + label arriba + valor seleccionado abajo +
+  chevron a la derecha.
+- Por debajo, un `<select>` real con `appearance-none + absolute inset-0
+  opacity-0` para conservar a11y (teclado, screen reader, mobile native picker).
+- Cascading: cambiar provincia limpia ciudad/zona; cambiar ciudad limpia
+  zona. Selects en cascada se deshabilitan visualmente con `opacity-50`.
+
+### Animaciones registradas en `tailwind.config.ts`
+
+```ts
+keyframes: {
+  fadeUp:    { from: { opacity: '0', transform: 'translateY(16px)' },
+               to:   { opacity: '1', transform: 'translateY(0)' } },
+  pulseSoft: { '0%,100%': { boxShadow: '0 8px 24px rgba(200,54,44,0.25)' },
+               '50%':     { boxShadow: '0 8px 32px rgba(200,54,44,0.45)' } },
+},
+animation: {
+  'fade-up':    'fadeUp 0.5s ease-out backwards',
+  'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
+}
+```
+
+### Helper `relativeDateLabel`
+
+`shared/lib/relativeDateLabel.ts` devuelve `{ key, label, tone }` para
+mostrar fecha contextual:
+
+- hoy → `urgent` (rojo) → `"Hoy · 20:00"`
+- mañana → `warning` (amarillo) → `"Mañana"`
+- esta semana → `info` (azul-soft) → `"Vie · 21 nov"`
+- más lejos → `info` → `"21 nov"`
 
 ---
 
@@ -84,6 +159,8 @@ export interface SessionSummary {
   title: string
   baseGameId: number | null
   baseGameName: string | null
+  /** Thumbnail BGG cacheado en backend (nullable si BGG no aporta). */
+  baseGameThumbnailUrl: string | null
   cityCode: string | null
   cityName: string | null
   areaCode: string | null

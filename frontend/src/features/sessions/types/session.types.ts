@@ -11,6 +11,8 @@ export interface SessionSummary {
   title: string
   baseGameId: number | null
   baseGameName: string | null
+  /** Thumbnail BGG. Nullable si BGG no aportó imagen. */
+  baseGameThumbnailUrl: string | null
   cityCode: string | null
   cityName: string | null
   areaCode: string | null

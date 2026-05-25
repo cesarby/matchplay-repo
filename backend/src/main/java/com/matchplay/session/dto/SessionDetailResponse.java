@@ -21,6 +21,7 @@ public record SessionDetailResponse(
         String description,
         Long baseGameId,
         String baseGameName,
+        String baseGameThumbnailUrl,
         String cityCode,
         String cityName,
         String areaCode,

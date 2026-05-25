@@ -54,6 +54,20 @@ const config: Config = {
         hover: 'var(--shadow-hover)',
         warm: 'var(--shadow-warm)',
       },
+      keyframes: {
+        fadeUp: {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { boxShadow: '0 8px 24px rgba(200, 54, 44, 0.25)' },
+          '50%': { boxShadow: '0 8px 32px rgba(200, 54, 44, 0.45)' },
+        },
+      },
+      animation: {
+        'fade-up': 'fadeUp 0.5s ease-out backwards',
+        'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
+      },
     },
   },
   plugins: [],

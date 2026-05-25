@@ -26,6 +26,7 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
     description: 'Partida de Catan con expansión.',
     baseGameId: 13,
     baseGameName: 'Catan',
+    baseGameThumbnailUrl: null,
     cityCode: 'MAD01',
     cityName: 'Madrid',
     areaCode: null,
@@ -90,7 +91,9 @@ describe('<SessionDetailPage>', () => {
       await screen.findByRole('heading', { level: 1, name: 'Catan Night' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/Partida de Catan/)).toBeInTheDocument()
-    expect(screen.getByText('@alice')).toBeInTheDocument()
+    // @alice puede aparecer múltiples veces (creator + player row); confirmamos
+    // que al menos hay una. @bob solo aparece como player.
+    expect(screen.getAllByText('@alice').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('@bob')).toBeInTheDocument()
   })
 

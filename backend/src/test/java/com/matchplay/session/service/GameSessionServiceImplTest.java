@@ -510,7 +510,7 @@ class GameSessionServiceImplTest {
     }
 
     private SessionDetailResponse detail(Long id, SessionStatus status) {
-        return new SessionDetailResponse(id, "t", null, 13L, "Catan",
+        return new SessionDetailResponse(id, "t", null, 13L, "Catan", null,
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 0, 0, status,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());

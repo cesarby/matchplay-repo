@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mockup v3 anónimo · Sessions list · Matchplay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bg: '#FAF6EE', bgAlt: '#F4ECDC', card: '#FFFCF6', cardHi: '#FFF8E8',
+              border: '#E5DCC9', fg: '#1F1A14', mutedfg: '#6E614F', dim: '#A89274',
+              red:    { DEFAULT: '#C8362C', soft: '#FCE8E5' },
+              blue:   { DEFAULT: '#1F6FB2', soft: '#E2F0FC' },
+              green:  { DEFAULT: '#2F8F4F', soft: '#E2F5E8' },
+              yellow: { DEFAULT: '#E8A93B', soft: '#FDF3DB' },
+            },
+            fontFamily: {
+              display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+              body: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            animation: {
+              'fade-up': 'fadeUp 0.5s ease-out backwards',
+              'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      @keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes pulseSoft { 0%,100% { box-shadow: 0 8px 24px rgba(200,54,44,0.25); } 50% { box-shadow: 0 8px 32px rgba(200,54,44,0.45); } }
+      body { background:#FAF6EE; color:#1F1A14; font-family:Inter, system-ui, sans-serif; }
+      h1,h2,h3 { font-family:'Bricolage Grotesque', system-ui, sans-serif; }
+      .pattern-dots { background-image: radial-gradient(rgba(110,97,79,0.10) 1px, transparent 1.5px); background-size: 24px 24px; }
+      .game-img { background-size:cover; background-position:center; }
+      .game-1 { background: linear-gradient(135deg, #d4a347 0%, #7c4a2a 100%); }
+      .game-2 { background: linear-gradient(135deg, #5b8dba 0%, #1f4b7a 100%); }
+      .game-3 { background: linear-gradient(135deg, #8b4538 0%, #3a1810 100%); }
+      .game-4 { background: linear-gradient(135deg, #4a7f5c 0%, #1f3a2a 100%); }
+      .game-5 { background: linear-gradient(135deg, #c8362c 0%, #5a1812 100%); }
+      .game-6 { background: linear-gradient(135deg, #6a4ba8 0%, #2c1f4d 100%); }
+    </style>
+  </head>
+  <body class="min-h-screen pattern-dots">
+    <!-- Header ANÓNIMO: sin usuario ni logout · "Iniciar sesión" + "Crear cuenta" -->
+    <header class="border-b border-border bg-card">
+      <div class="mx-auto flex h-16 max-w-7xl items-center px-6">
+        <div class="flex flex-1 items-center">
+          <span class="font-display text-xl font-bold">
+            <span class="text-fg">Match</span><span class="text-red">&amp;</span><span class="text-fg">Play</span>
+          </span>
+        </div>
+        <nav class="flex flex-1 items-center justify-center text-sm">
+          <a class="rounded-full bg-red-soft px-4 py-1.5 font-semibold text-red" href="#">Partidas</a>
+        </nav>
+        <div class="flex flex-1 items-center justify-end gap-3 text-sm">
+          <a href="#" class="font-medium text-fg hover:underline">Iniciar sesión</a>
+          <a href="#" class="font-bold text-red hover:underline">Crear cuenta</a>
+          <div class="inline-flex overflow-hidden rounded-full border border-border bg-card">
+            <button class="bg-fg px-2.5 py-1 text-xs font-semibold text-card">ES</button>
+            <button class="px-2.5 py-1 text-xs font-medium text-mutedfg">EN</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO: para anónimo, CTA principal es "Crear cuenta" en lugar de "Crear partida" -->
+    <section class="relative overflow-hidden border-b border-border bg-bgAlt">
+      <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <div class="absolute -right-20 top-1/2 size-72 -translate-y-1/2 rotate-12 rounded-3xl bg-red opacity-[0.08]"></div>
+        <div class="absolute -bottom-12 right-1/3 size-32 -rotate-12 rounded-2xl bg-yellow opacity-[0.12]"></div>
+        <div class="absolute left-12 top-12 grid grid-cols-3 gap-2 opacity-25">
+          <span class="size-2 rounded-full bg-fg"></span><span class="size-2 rounded-full bg-fg"></span><span class="size-2 rounded-full bg-fg"></span>
+          <span class="size-2 rounded-full bg-fg"></span><span class="size-2 rounded-full bg-fg"></span><span class="size-2 rounded-full bg-fg"></span>
+        </div>
+      </div>
+
+      <div class="relative mx-auto max-w-7xl px-6 py-12">
+        <div class="flex flex-wrap items-end justify-between gap-6">
+          <div class="max-w-2xl">
+            <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-red">12 partidas activas</p>
+            <h1 class="font-display text-5xl font-bold leading-[0.95] text-fg lg:text-6xl">
+              Explora <span class="text-red">partidas abiertas</span>
+            </h1>
+            <p class="mt-3 text-mutedfg">
+              Echa un vistazo a las próximas mesas. Para apuntarte o crear la tuya, necesitas una cuenta.
+            </p>
+          </div>
+          <a
+            href="#"
+            class="inline-flex animate-pulse-soft items-center gap-2 rounded-full bg-red px-6 py-3.5 text-sm font-bold text-white transition hover:scale-105"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>
+            Crear cuenta gratis
+          </a>
+        </div>
+
+        <!-- Filtros (idénticos al logado: el listado es público) -->
+        <div class="mt-8 grid grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm md:grid-cols-[1fr_1fr_1fr_auto] md:items-stretch">
+          <label class="group flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5 transition hover:bg-cardHi">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-soft text-blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <div class="flex-1 leading-tight">
+              <p class="text-xs font-medium text-mutedfg">Provincia</p>
+              <p class="text-sm font-semibold text-mutedfg italic">Todas</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-mutedfg"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+          <label class="group flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5 opacity-60">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-green-soft text-green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+            </span>
+            <div class="flex-1 leading-tight">
+              <p class="text-xs font-medium text-mutedfg">Ciudad</p>
+              <p class="text-sm font-semibold text-mutedfg italic">—</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-mutedfg"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+          <label class="group flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5 opacity-60">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-yellow-soft text-yellow">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </span>
+            <div class="flex-1 leading-tight">
+              <p class="text-xs font-medium text-mutedfg">Zona</p>
+              <p class="text-sm font-semibold text-mutedfg italic">—</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-mutedfg"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+          <button class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-4 text-sm font-medium text-fg opacity-60">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar
+          </button>
+        </div>
+
+        <!-- Banner sutil: invita a registrarse para auto-fill -->
+        <div class="mt-4 flex items-center gap-3 rounded-xl border border-blue/30 bg-blue-soft px-4 py-2.5 text-sm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F6FB2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <p class="flex-1 text-foreground">
+            <a href="#" class="font-semibold text-blue underline-offset-2 hover:underline">Inicia sesión</a>
+            <span class="text-mutedfg"> para ver partidas cerca de tu ubicación automáticamente.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LISTADO (cards idénticas pero con CTA Hover diferente) -->
+    <main class="mx-auto max-w-7xl px-6 py-12">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Card 1: Hoy. Anónimo no se puede apuntar — al hacer click va a detalle -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:0ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-1 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-green px-3 py-1 text-xs font-bold text-white shadow">
+                <span class="size-1.5 animate-pulse rounded-full bg-white"></span>Abierta
+              </span>
+              <span class="rounded-full bg-red px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg">Hoy · 20:00</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Noche de Catan</h3>
+            <p class="text-sm text-mutedfg">Catan · + 1 expansión</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Centro</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>3/4</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-3/4 rounded-full bg-gradient-to-r from-green to-yellow"></div></div>
+              <p class="text-xs text-mutedfg"><span class="font-semibold text-yellow">Solo 1 plaza</span> · <span class="text-dim">@alice</span></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:80ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-2 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-green px-3 py-1 text-xs font-bold text-white shadow"><span class="size-1.5 animate-pulse rounded-full bg-white"></span>Abierta</span>
+              <span class="rounded-full bg-yellow px-3 py-1 text-xs font-bold uppercase tracking-wider text-fg shadow-lg">Mañana</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Wingspan</h3>
+            <p class="text-sm text-mutedfg">Wingspan</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Chamberí</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>2/5</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-2/5 rounded-full bg-green"></div></div>
+              <p class="text-xs text-mutedfg"><span class="font-semibold text-green">3 plazas</span> · <span class="text-dim">@bob</span></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:160ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-3 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="rounded-full bg-red px-3 py-1 text-xs font-bold text-white shadow">Completa</span>
+              <span class="rounded-full bg-blue-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue">Sáb · 22 nov</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Spirit Island</h3>
+            <p class="text-sm text-mutedfg">Spirit Island</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Malasaña</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>4/4</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-full rounded-full bg-red"></div></div>
+              <p class="text-xs text-mutedfg">Plazas llenas · <span class="font-semibold text-yellow">2 en lista de espera</span></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 4 -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:240ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-4 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-green px-3 py-1 text-xs font-bold text-white shadow"><span class="size-1.5 animate-pulse rounded-full bg-white"></span>Abierta</span>
+              <span class="rounded-full bg-blue-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue">Vie · 21 nov</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Terraforming Mars</h3>
+            <p class="text-sm text-mutedfg">Terraforming Mars</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Salamanca</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>1/4</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-1/4 rounded-full bg-green"></div></div>
+              <p class="text-xs text-mutedfg"><span class="font-semibold text-green">3 plazas</span> · <span class="text-dim">@carol</span></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 5 -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:320ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-5 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-green px-3 py-1 text-xs font-bold text-white shadow"><span class="size-1.5 animate-pulse rounded-full bg-white"></span>Abierta</span>
+              <span class="rounded-full bg-blue-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue">Dom · 23 nov</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Twilight Imperium</h3>
+            <p class="text-sm text-mutedfg">Twilight Imperium · 4ª ed</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Retiro</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>4/6</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-2/3 rounded-full bg-gradient-to-r from-green to-yellow"></div></div>
+              <p class="text-xs text-mutedfg"><span class="font-semibold text-yellow">2 plazas</span> · <span class="text-dim">@dave</span></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 6 -->
+        <article class="group relative animate-fade-up cursor-pointer overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-red hover:shadow-[0_20px_40px_rgba(31,26,20,0.12)]" style="animation-delay:400ms">
+          <div class="relative h-44 overflow-hidden">
+            <div class="game-img game-6 absolute inset-0 transition duration-500 group-hover:scale-110"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+            <div class="absolute inset-x-0 top-3 flex items-center justify-between px-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-green px-3 py-1 text-xs font-bold text-white shadow"><span class="size-1.5 animate-pulse rounded-full bg-white"></span>Abierta</span>
+              <span class="rounded-full bg-blue-soft px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue">Lun · 24 nov</span>
+            </div>
+          </div>
+          <div class="relative -mt-2 space-y-3 px-5 pb-5">
+            <h3 class="font-display text-2xl font-bold leading-tight text-fg transition group-hover:text-red">Gloomhaven</h3>
+            <p class="text-sm text-mutedfg">Gloomhaven · Jaws of the Lion</p>
+            <div class="flex items-center gap-3 text-sm text-mutedfg">
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green"><path d="M20 10c0 7-8 13-8 13S4 17 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Tetuán</span>
+              <span class="text-border">·</span>
+              <span class="inline-flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>2/4</span>
+            </div>
+            <div class="space-y-1.5">
+              <div class="h-1.5 overflow-hidden rounded-full bg-bgAlt"><div class="h-full w-1/2 rounded-full bg-green"></div></div>
+              <p class="text-xs text-mutedfg"><span class="font-semibold text-green">2 plazas</span> · <span class="text-dim">@eve</span></p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Banda CTA fin de listado (clave para anónimo) -->
+      <div class="mt-12 overflow-hidden rounded-3xl border border-border bg-bgAlt p-8 text-center">
+        <div class="pointer-events-none absolute -right-12 -bottom-12 size-40 rotate-12 rounded-3xl bg-red opacity-[0.07]"></div>
+        <h3 class="font-display text-2xl font-bold text-fg">¿Te apetece organizar tu propia mesa?</h3>
+        <p class="mx-auto mt-2 max-w-xl text-mutedfg">Crea una cuenta gratis y publica tu partida. En menos de 1 minuto la verán todos los jugadores de tu zona.</p>
+        <div class="mt-4 flex justify-center gap-3">
+          <a href="#" class="inline-flex items-center gap-2 rounded-full bg-red px-6 py-3 text-sm font-bold text-white transition hover:scale-105">Crear cuenta gratis</a>
+          <a href="#" class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-fg transition hover:bg-cardHi">Ya tengo cuenta</a>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div class="mt-12 flex items-center justify-center gap-2">
+        <button class="inline-flex size-10 items-center justify-center rounded-full border border-border bg-card text-fg transition hover:bg-cardHi">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="px-4 text-sm text-mutedfg">1 / 2</span>
+        <button class="inline-flex size-10 items-center justify-center rounded-full bg-red text-white transition hover:scale-110">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </main>
+  </body>
+</html>

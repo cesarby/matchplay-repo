@@ -1,6 +1,9 @@
+import { Building2, ChevronDown, Compass, MapPin, X } from 'lucide-react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAreasQuery, useCitiesQuery, useProvincesQuery } from '@/features/geo/hooks/useGeo'
+import { cn } from '@/shared/lib/cn'
 
 export interface SessionFiltersValue {
   provinceCode?: string
@@ -15,12 +18,13 @@ interface SessionFiltersProps {
 }
 
 /**
- * Barra de filtros del listado de partidas.
+ * Filtros del listado de partidas, presentados como "cards interactivas" con
+ * icono coloreado en pill, label de campo y valor seleccionado.
  *
- * - 100% ubicación: provincia → ciudad → zona, en cascada.
- * - Cambiar provincia limpia ciudad y zona; cambiar ciudad limpia zona.
- * - El filtro por status (OPEN/FULL/...) NO se expone al usuario en v1;
- *   el backend lo soporta pero no es útil aún para el usuario final.
+ * El control real sigue siendo un {@code <select>} con
+ * {@code appearance-none + absolute opacity-0} encima de la card. Así
+ * conservamos accesibilidad (teclado, screen reader, mobile native picker)
+ * sin perder el look.
  */
 export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps) {
   const { t } = useTranslation()
@@ -31,19 +35,24 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
 
   const hasAnyFilter = Boolean(value.provinceCode || value.cityCode || value.areaCode)
 
+  const provinceName = provinces.find((p) => p.code === value.provinceCode)?.name
+  const cityName = cities.find((c) => c.code === value.cityCode)?.name
+  const areaName = areas.find((a) => a.code === value.areaCode)?.name
+
   return (
     <section
       aria-label={t('sessions.list.title')}
-      className="rounded border border-border bg-card p-4 shadow-[var(--shadow-warm)]"
+      className="rounded-2xl border border-border bg-card p-4 shadow-warm"
     >
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-        {/* Provincia */}
-        <div>
-          <label htmlFor="filter-province" className="mb-1 block text-sm font-medium">
-            {t('sessions.filters.province')}
-          </label>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-stretch">
+        <FilterPill
+          label={t('sessions.filters.province')}
+          value={provinceName}
+          icon={<MapPin size={18} aria-hidden="true" />}
+          iconBg="bg-blue-soft"
+          iconColor="text-blue"
+        >
           <select
-            id="filter-province"
             value={value.provinceCode ?? ''}
             onChange={(e) =>
               onChange({
@@ -52,7 +61,8 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
                 areaCode: undefined,
               })
             }
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue"
+            aria-label={t('sessions.filters.province')}
+            className="absolute inset-0 cursor-pointer appearance-none bg-transparent opacity-0"
           >
             <option value="">{t('sessions.filters.province')}</option>
             {provinces.map((p) => (
@@ -61,21 +71,24 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
               </option>
             ))}
           </select>
-        </div>
+        </FilterPill>
 
-        {/* Ciudad */}
-        <div>
-          <label htmlFor="filter-city" className="mb-1 block text-sm font-medium">
-            {t('sessions.filters.city')}
-          </label>
+        <FilterPill
+          label={t('sessions.filters.city')}
+          value={cityName}
+          icon={<Building2 size={18} aria-hidden="true" />}
+          iconBg="bg-green-soft"
+          iconColor="text-green"
+          disabled={!value.provinceCode}
+        >
           <select
-            id="filter-city"
             value={value.cityCode ?? ''}
             onChange={(e) =>
               onChange({ cityCode: e.target.value || undefined, areaCode: undefined })
             }
             disabled={!value.provinceCode}
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={t('sessions.filters.city')}
+            className="absolute inset-0 cursor-pointer appearance-none bg-transparent opacity-0 disabled:cursor-not-allowed"
           >
             <option value="">{t('sessions.filters.city')}</option>
             {cities.map((c) => (
@@ -84,19 +97,22 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
               </option>
             ))}
           </select>
-        </div>
+        </FilterPill>
 
-        {/* Zona */}
-        <div>
-          <label htmlFor="filter-area" className="mb-1 block text-sm font-medium">
-            {t('sessions.filters.area')}
-          </label>
+        <FilterPill
+          label={t('sessions.filters.area')}
+          value={areaName}
+          icon={<Compass size={18} aria-hidden="true" />}
+          iconBg="bg-yellow-soft"
+          iconColor="text-yellow"
+          disabled={!value.cityCode}
+        >
           <select
-            id="filter-area"
             value={value.areaCode ?? ''}
             onChange={(e) => onChange({ areaCode: e.target.value || undefined })}
             disabled={!value.cityCode}
-            className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={t('sessions.filters.area')}
+            className="absolute inset-0 cursor-pointer appearance-none bg-transparent opacity-0 disabled:cursor-not-allowed"
           >
             <option value="">{t('sessions.filters.area')}</option>
             {areas.map((a) => (
@@ -105,19 +121,75 @@ export function SessionFilters({ value, onChange, onClear }: SessionFiltersProps
               </option>
             ))}
           </select>
-        </div>
+        </FilterPill>
 
-        {/* Clear */}
         {hasAnyFilter && (
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center justify-center rounded-sm border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
           >
+            <X size={14} aria-hidden="true" />
             {t('sessions.filters.clear')}
           </button>
         )}
       </div>
     </section>
+  )
+}
+
+interface FilterPillProps {
+  label: string
+  value: string | undefined
+  icon: React.ReactNode
+  iconBg: string
+  iconColor: string
+  disabled?: boolean
+  children: React.ReactNode
+}
+
+function FilterPill({
+  label,
+  value,
+  icon,
+  iconBg,
+  iconColor,
+  disabled = false,
+  children,
+}: FilterPillProps) {
+  const id = useId()
+  return (
+    <div
+      className={cn(
+        'relative flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 transition',
+        disabled ? 'opacity-50' : 'cursor-pointer hover:bg-muted',
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-lg',
+          iconBg,
+          iconColor,
+        )}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p id={id} className="text-xs font-medium text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className={cn(
+            'truncate text-sm font-semibold',
+            value ? 'text-foreground' : 'italic text-muted-foreground',
+          )}
+        >
+          {value ?? '—'}
+        </p>
+      </div>
+      <ChevronDown size={14} aria-hidden="true" className="shrink-0 text-muted-foreground" />
+      {children}
+    </div>
   )
 }

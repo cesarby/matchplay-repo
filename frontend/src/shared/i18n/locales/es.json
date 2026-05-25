@@ -72,18 +72,35 @@
       "CANCELLED": "Cancelada"
     },
     "card": {
-      "spots": "{{registered}}/{{max}} plazas",
+      "spots": "{{registered}}/{{max}}",
+      "spotsLeft_one": "Solo {{count}} plaza",
+      "spotsLeft_other": "{{count}} plazas",
       "waitlist": "{{count}} en lista de espera",
       "waitlist_one": "{{count}} en lista de espera",
       "waitlist_other": "{{count}} en lista de espera",
+      "full": "Plazas llenas",
       "youArePlayer": "Apuntado",
       "youAreWaitlist": "En lista de espera (#{{position}})",
-      "byCreator": "Organiza {{username}}"
+      "byCreator": "@{{username}}"
     },
     "list": {
       "title": "Partidas",
       "empty": "No hay partidas con estos filtros",
-      "loadMore": "Cargar más"
+      "loadMore": "Cargar más",
+      "heroEyebrow_one": "{{count}} partida activa",
+      "heroEyebrow_other": "{{count}} partidas activas",
+      "heroTitleAuth": "Encuentra tu <1>próxima mesa</1>",
+      "heroTitleAnon": "Explora <1>partidas abiertas</1>",
+      "heroSubtitleAuth": "Tu ubicación está prefiltrada. Cámbiala cuando quieras.",
+      "heroSubtitleAnon": "Echa un vistazo a las próximas mesas. Para apuntarte o crear la tuya, necesitas una cuenta.",
+      "anonHint": "<1>Inicia sesión</1> para ver partidas cerca de tu ubicación automáticamente.",
+      "anonCtaTitle": "¿Te apetece organizar tu propia mesa?",
+      "anonCtaSubtitle": "Crea una cuenta gratis y publica tu partida. En menos de 1 minuto la verán todos los jugadores de tu zona.",
+      "anonCtaPrimary": "Crear cuenta gratis",
+      "anonCtaSecondary": "Ya tengo cuenta",
+      "emptyHeading": "Por aquí está la cosa tranquila",
+      "emptyBody": "No hay partidas con esos filtros. Sé tú quien empiece la mesa.",
+      "emptyCta": "Organizar partida"
     },
     "filters": {
       "province": "Provincia",

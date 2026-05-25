@@ -13,6 +13,8 @@ public record SessionSummaryResponse(
         String title,
         Long baseGameId,
         String baseGameName,
+        /** Thumbnail del juego cacheado desde BGG. Nullable si BGG no lo aportó. */
+        String baseGameThumbnailUrl,
         String cityCode,
         String cityName,
         String areaCode,

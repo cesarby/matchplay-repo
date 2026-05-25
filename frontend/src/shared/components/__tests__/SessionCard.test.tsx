@@ -23,6 +23,7 @@ function renderCard(props: Partial<Parameters<typeof SessionCard>[0]> = {}) {
     status: 'OPEN',
     creatorId: 1,
     creatorUsername: 'alice',
+    baseGameThumbnailUrl: null,
   }
   return render(
     <MemoryRouter>
@@ -44,10 +45,14 @@ describe('<SessionCard>', () => {
     expect(screen.getByText(/3\s*\/\s*4/)).toBeInTheDocument()
   })
 
-  it('shows waitlist count when present', () => {
+  it('shows waitlist count when session is full', () => {
+    // El waitlistCount solo se muestra como "extra" cuando la partida está llena.
     renderCard({
       session: {
         ...buildSession(),
+        registeredPlayers: 4,
+        maxPlayers: 4,
+        status: 'FULL',
         waitlistCount: 5,
       },
     })
@@ -99,5 +104,6 @@ function buildSession(): SessionSummary {
     status: 'OPEN',
     creatorId: 1,
     creatorUsername: 'alice',
+    baseGameThumbnailUrl: null,
   }
 }

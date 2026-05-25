@@ -72,18 +72,35 @@
       "CANCELLED": "Cancelled"
     },
     "card": {
-      "spots": "{{registered}}/{{max}} spots",
+      "spots": "{{registered}}/{{max}}",
+      "spotsLeft_one": "Only {{count}} spot",
+      "spotsLeft_other": "{{count}} spots",
       "waitlist": "{{count}} on waitlist",
       "waitlist_one": "{{count}} on waitlist",
       "waitlist_other": "{{count}} on waitlist",
+      "full": "All spots taken",
       "youArePlayer": "Joined",
       "youAreWaitlist": "On waitlist (#{{position}})",
-      "byCreator": "Organised by {{username}}"
+      "byCreator": "@{{username}}"
     },
     "list": {
       "title": "Sessions",
       "empty": "No sessions match these filters",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "heroEyebrow_one": "{{count}} active session",
+      "heroEyebrow_other": "{{count}} active sessions",
+      "heroTitleAuth": "Find your <1>next table</1>",
+      "heroTitleAnon": "Explore <1>open sessions</1>",
+      "heroSubtitleAuth": "Your location is pre-filtered. Change it whenever you want.",
+      "heroSubtitleAnon": "Have a look at the upcoming tables. To join or create one you'll need an account.",
+      "anonHint": "<1>Sign in</1> to see sessions near your location automatically.",
+      "anonCtaTitle": "Want to host your own table?",
+      "anonCtaSubtitle": "Create a free account and publish your session. In less than a minute it'll be visible to every player in your area.",
+      "anonCtaPrimary": "Create free account",
+      "anonCtaSecondary": "I already have an account",
+      "emptyHeading": "It's quiet around here",
+      "emptyBody": "No sessions match those filters. Be the one to start the table.",
+      "emptyCta": "Host a session"
     },
     "filters": {
       "province": "Province",
