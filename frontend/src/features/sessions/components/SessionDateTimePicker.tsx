@@ -123,16 +123,16 @@ export function SessionDateTimePicker({
           open && 'border-red ring-2 ring-yellow/30',
         )}
       >
-        <span className="inline-flex items-center gap-3">
+        <span className="inline-flex items-center gap-3 truncate">
           <CalendarDays
             size={18}
             aria-hidden="true"
-            className={selectedDate ? 'text-red' : 'text-muted-foreground'}
+            className={cn('shrink-0', selectedDate ? 'text-red' : 'text-muted-foreground')}
           />
           <span
             className={cn(
-              'font-mono font-semibold tracking-tight',
-              !selectedDate && 'font-sans font-normal text-muted-foreground',
+              'truncate font-semibold',
+              !selectedDate && 'font-normal text-muted-foreground',
             )}
           >
             {triggerLabel}
@@ -147,7 +147,10 @@ export function SessionDateTimePicker({
 
       {open && (
         <div role="dialog" aria-label={label} className="relative z-30">
-          <div className="absolute inset-x-0 top-1 rounded-md border-2 border-border bg-card p-4 shadow-xl">
+          {/* Ancho fijo del popover para que la rejilla de horas (6 cols) no
+              se aplaste cuando el trigger está en una columna estrecha
+              del grid. max-w protege en viewports muy pequeños. */}
+          <div className="absolute left-0 top-1 w-[400px] max-w-[calc(100vw-2rem)] rounded-md border-2 border-border bg-card p-4 shadow-xl">
             <DayPicker
               mode="single"
               locale={es}

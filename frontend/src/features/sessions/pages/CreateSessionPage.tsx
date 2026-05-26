@@ -19,7 +19,7 @@ export default function CreateSessionPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="container max-w-6xl py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <SeoHead
         title={`${t('sessions.create.title')} | Match&Play`}
         description={t('sessions.create.title')}
