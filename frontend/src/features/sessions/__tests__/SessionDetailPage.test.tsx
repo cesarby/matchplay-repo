@@ -248,7 +248,7 @@ describe('<SessionDetailPage>', () => {
     renderDetail('/sessions/2')
     // El contador aparece dos veces (meta + sidebar); ambos deben mostrar 3/4
     const counters = await screen.findAllByText('3/4')
-    expect(counters.length).toBeGreaterThanOrEqual(1)
+    expect(counters.length).toBe(2)
     const guestRows = await screen.findAllByText(/acompañante de @cesarby/i)
     expect(guestRows).toHaveLength(2)
   })

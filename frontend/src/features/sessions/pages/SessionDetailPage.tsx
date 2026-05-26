@@ -62,6 +62,7 @@ export default function SessionDetailPage() {
     )
   }
 
+  const creatorUsername = data.creatorUsername
   const players = data.players.filter((p) => p.role === 'PLAYER')
   const waitlist = data.players
     .filter((p) => p.role === 'WAITLIST')
@@ -188,25 +189,15 @@ export default function SessionDetailPage() {
                 {data.registeredPlayers}/{data.maxPlayers}
               </span>
             </h2>
-            {players.length > 0 ? (
+            {players.length > 0 || data.creatorGuests > 0 ? (
               <ul className="space-y-2">
                 {players.map((p) => (
                   <SessionPlayerRow key={p.userId} player={p} />
                 ))}
                 {data.creatorGuests > 0 &&
-                  data.creatorUsername &&
+                  creatorUsername &&
                   Array.from({ length: data.creatorGuests }).map((_, idx) => (
-                    <SessionPlayerRow
-                      key={`guest-${idx}`}
-                      player={{
-                        userId: -1,
-                        username: '',
-                        role: 'PLAYER',
-                        position: null,
-                        joinedAt: '',
-                      }}
-                      guestOf={data.creatorUsername!}
-                    />
+                    <SessionPlayerRow key={`guest-${idx}`} guestOf={creatorUsername} />
                   ))}
               </ul>
             ) : (

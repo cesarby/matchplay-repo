@@ -2,13 +2,9 @@ import { useTranslation } from 'react-i18next'
 
 import type { SessionPlayer } from '../types/session.types'
 
-interface SessionPlayerRowProps {
-  player: SessionPlayer
-  /** Si true, prefija un "#N" con la posición en cola (solo WAITLIST). */
-  showPosition?: boolean
-  /** Si se pasa, esta fila representa un acompañante del creador (no es un usuario real). */
-  guestOf?: string
-}
+type SessionPlayerRowProps =
+  | { player: SessionPlayer; showPosition?: boolean; guestOf?: never }
+  | { guestOf: string; player?: never; showPosition?: never }
 
 /**
  * Fila de un jugador apuntado. Si `guestOf` está informado, la fila se renderiza
