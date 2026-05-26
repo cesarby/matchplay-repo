@@ -76,9 +76,8 @@ export default function SessionsListPage() {
     cityCode: filters.cityCode,
     areaCode: filters.areaCode,
     gameId: Number.isFinite(gameIdNum) ? gameIdNum : undefined,
-    // El listado público sólo muestra partidas abiertas a apuntarse.
-    // Excluimos FULL, IN_PROGRESS, COMPLETED y CANCELLED.
-    status: 'OPEN',
+    // No mandamos status: el backend ya filtra a OPEN+FULL por defecto en
+    // el listado público (excluye IN_PROGRESS/COMPLETED/CANCELLED).
     page,
     size: DEFAULT_PAGE_SIZE,
   }

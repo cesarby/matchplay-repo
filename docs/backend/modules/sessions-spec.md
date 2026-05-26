@@ -188,7 +188,7 @@ Query params (todos opcionales):
 | `gameId` | `Long` | `bggId` del juego base. |
 | `scheduledFrom` | `Instant` ISO-8601 | Fecha mínima. |
 | `scheduledTo` | `Instant` ISO-8601 | Fecha máxima. |
-| `status` | `SessionStatus` | Filtra por estado exacto. |
+| `status` | `SessionStatus` | Filtra por estado exacto. **Si se omite**, el listado devuelve por defecto solo `OPEN` y `FULL` (estados accionables para un usuario público: apuntarse o entrar a waitlist). Excluye `IN_PROGRESS`/`COMPLETED`/`CANCELLED`. Para ver explícitamente alguno de los terminales, hay que pedirlo. |
 | `page` | `int ≥ 0` | Default 0. |
 | `size` | `int 1..50` | Default 20. |
 

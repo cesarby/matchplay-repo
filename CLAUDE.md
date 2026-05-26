@@ -75,3 +75,44 @@ npx skills add coreyhaines31/marketingskills --skill <nombre>
 
 > ⚠️ Las skills se ejecutan con permisos del agente. Revisa el contenido de cualquier
 > skill nueva en `.agents/skills/<nombre>/SKILL.md` antes de usarla.
+
+---
+
+## Reglas del proyecto que cuestan caro si se olvidan
+
+### Cambios en records / interfaces compartidos por tests
+
+Cuando añadas o quites un campo a:
+
+- Un **record** Java (DTO de request/response, p.ej. `CreateSessionRequest`,
+  `SessionDetailResponse`, `SessionSummaryResponse`).
+- Un **interface** TS exportado que se usa como tipo en mocks/fixtures
+  (p.ej. `SessionDetail`, `SessionSummary`, `CurrentUser`).
+
+Los tests construyen estos objetos **posicionalmente** (Java) o con object
+literals (TS). Si no actualizas TODAS las invocaciones en el mismo commit,
+los tests rompen en archivos lejanos al que tocaste.
+
+**Antes de cerrar el cambio**: `Grep` por `new <ClassName>(` (Java) o por
+el nombre del interface (TS) en `**/test/**` y actualiza cada fixture.
+En particular revisa:
+
+- `backend/src/test/java/com/matchplay/session/service/GameSessionServiceImplTest.java` — tiene un helper `detail()` que construye `SessionDetailResponse` y varios sitios que construyen `CreateSessionRequest`.
+- `backend/src/test/java/com/matchplay/session/controller/GameSessionControllerTest.java` — MSW-style responses.
+- `frontend/src/features/sessions/__tests__/*.test.tsx` — fixtures + MSW responses.
+- `frontend/src/shared/components/__tests__/SessionCard.test.tsx` — fixture `SessionSummary`.
+
+Si el cambio es un campo opcional, pásalo como `null` (Java) o omítelo (TS) en los fixtures existentes para minimizar cambios.
+
+### Pre-commit hook
+
+El proyecto tiene **husky + lint-staged**: al commitear, prettier + eslint --fix
+se ejecutan automáticamente sobre los archivos staged. No hace falta correr
+`npm run format` antes de commit. Si el hook modifica archivos, los incluye
+en el mismo commit (no quedan cambios pendientes).
+
+### Push a `master`
+
+Convención del repo: trabajamos directo sobre `master` (no usamos feature
+branches ni PR review en este proyecto). El auto-mode classifier puede
+bloquear el push directo — el user confirma cuando es el flujo habitual.

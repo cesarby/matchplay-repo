@@ -23,7 +23,7 @@ public final class GameSessionSpecifications {
                 .and(byGame(criteria.gameId()))
                 .and(scheduledFrom(criteria.scheduledFrom()))
                 .and(scheduledTo(criteria.scheduledTo()))
-                .and(byStatus(criteria.status()));
+                .and(byStatusOrPublicDefault(criteria.status()));
     }
 
     private static Specification<GameSession> byProvince(String provinceCode) {
@@ -56,8 +56,21 @@ public final class GameSessionSpecifications {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("scheduledAt"), to);
     }
 
-    private static Specification<GameSession> byStatus(com.matchplay.session.entity.SessionStatus status) {
-        if (status == null) return null;
-        return (root, query, cb) -> cb.equal(root.get("status"), status);
+    /**
+     * Si el caller pide un status concreto, filtra por ese.
+     * Si no especifica, devuelve el default del listado público: {@code OPEN}
+     * y {@code FULL} (apuntable directo o vía lista de espera). Excluye
+     * {@code IN_PROGRESS}, {@code COMPLETED} y {@code CANCELLED} — estados
+     * en los que la partida ya no es accionable por un usuario.
+     */
+    private static Specification<GameSession> byStatusOrPublicDefault(
+            com.matchplay.session.entity.SessionStatus status) {
+        if (status != null) {
+            return (root, query, cb) -> cb.equal(root.get("status"), status);
+        }
+        return (root, query, cb) -> root.get("status").in(
+                com.matchplay.session.entity.SessionStatus.OPEN,
+                com.matchplay.session.entity.SessionStatus.FULL
+        );
     }
 }
