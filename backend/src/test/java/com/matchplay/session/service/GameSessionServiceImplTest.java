@@ -86,7 +86,7 @@ class GameSessionServiceImplTest {
     // ---------- CREATE ----------
 
     @Test
-    void create_withFutureDate_persistsAndReturnsDetail() {
+    void create_withFutureDate_persistsAndAddsCreatorAsPlayer() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4);
@@ -105,6 +105,18 @@ class GameSessionServiceImplTest {
 
         assertThat(result.id()).isEqualTo(99L);
         verify(sessionRepository).save(any(GameSession.class));
+
+        // El creador queda auto-apuntado como PLAYER y registeredPlayers=1.
+        ArgumentCaptor<GameSession> sessionCaptor = ArgumentCaptor.forClass(GameSession.class);
+        verify(sessionRepository).save(sessionCaptor.capture());
+        assertThat(sessionCaptor.getValue().getRegisteredPlayers()).isEqualTo(1);
+
+        ArgumentCaptor<SessionParticipant> participantCaptor =
+                ArgumentCaptor.forClass(SessionParticipant.class);
+        verify(participantRepository).save(participantCaptor.capture());
+        SessionParticipant savedParticipant = participantCaptor.getValue();
+        assertThat(savedParticipant.getUser()).isSameAs(creator);
+        assertThat(savedParticipant.getRole()).isEqualTo(ParticipantRole.PLAYER);
     }
 
     @Test
@@ -522,6 +534,19 @@ class GameSessionServiceImplTest {
 
         assertThatThrownBy(() -> service.leave(10L))
                 .isInstanceOf(UnauthorizedActionException.class);
+    }
+
+    @Test
+    void leave_byCreator_throwsUnauthorized() {
+        // El creador (auto-apuntado al crear) no puede usar leave; debe cancelar.
+        GameSession session = openSession(4, 1);
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> service.leave(10L))
+                .isInstanceOf(UnauthorizedActionException.class);
+        // No se llega ni a buscar el participante
+        verify(participantRepository, never()).findBySessionIdAndUserId(any(), any());
     }
 
     // ---------- UPDATE: max increased promotes waitlist ----------

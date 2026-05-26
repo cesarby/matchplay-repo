@@ -165,13 +165,22 @@ public class GameSessionServiceImpl implements GameSessionService {
         session.setArea(area);
         session.setScheduledAt(request.scheduledAt());
         session.setMaxPlayers(request.maxPlayers());
-        session.setRegisteredPlayers(0);
+        session.setRegisteredPlayers(1); // el creador queda apuntado (regla abajo)
         session.setStatus(SessionStatus.OPEN);
 
         GameSession saved = sessionRepository.save(session);
-        log.info("Session created: id={}, creator={}, scheduledAt={}, expansions={}",
+
+        // El creador queda automáticamente apuntado como PLAYER en su propia
+        // partida (regla de producto: organizar es jugar). Esto evita el caso
+        // "0/3 plazas" justo después de crear y reserva la plaza visualmente.
+        // La validación en {@code join} ({@code SessionJoinOwnException}) sigue
+        // protegiendo de re-joins.
+        SessionParticipant creatorParticipant = new SessionParticipant(saved, creator);
+        participantRepository.save(creatorParticipant);
+
+        log.info("Session created: id={}, creator={} (auto-PLAYER), scheduledAt={}, expansions={}",
                 saved.getId(), creator.getId(), saved.getScheduledAt(), expansions.size());
-        return mapper.toDetail(saved, List.of(), null);
+        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER);
     }
 
     @Override
@@ -293,6 +302,12 @@ public class GameSessionServiceImpl implements GameSessionService {
     public SessionDetailResponse leave(Long sessionId) {
         User user = currentUserProvider.requireCurrentUser();
         GameSession session = requireSession(sessionId);
+
+        // El creador no puede "salirse" de su propia partida — para irse debe
+        // cancelarla vía PATCH /status (regla simétrica a SessionJoinOwnException).
+        if (session.getCreator().getId().equals(user.getId())) {
+            throw new UnauthorizedActionException("error.session.creator.cannot.leave");
+        }
 
         Optional<SessionParticipant> mine = participantRepository
                 .findBySessionIdAndUserId(sessionId, user.getId());

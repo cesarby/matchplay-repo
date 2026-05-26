@@ -304,6 +304,14 @@ Validaciones Bean Validation:
 
 Respuesta `201 Created` con `Location: /api/v1/sessions/{id}` y body `SessionDetailResponse`.
 
+**Regla de producto**: el creador queda automáticamente apuntado como `PLAYER`
+en su propia partida (`registered_players = 1` al crear, una fila en
+`session_participants` con `role = PLAYER`). El response incluye `yourRole = PLAYER`.
+Implicaciones:
+
+- `POST /sessions/{id}/join` por el creador sigue lanzando `409 error.session.join.own`.
+- `DELETE /sessions/{id}/join` por el creador lanza `403 error.session.creator.cannot.leave` — para "irse" debe cancelar la partida vía `PATCH /status`.
+
 ### `PATCH /api/v1/sessions/{id}`
 
 **Auth:** JWT requerido. **Solo el creador.**
@@ -402,6 +410,7 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 | `error.session.join.own` | 409 | `join` del propio creador |
 | `error.session.not.owner` | 403 | `patch`/`changeStatus` por no-creador |
 | `error.session.not.participant` | 403 | `leave` de usuario no apuntado |
+| `error.session.creator.cannot.leave` | 403 | `leave` invocado por el creador. Para irse debe cancelar la partida. |
 | `error.session.status.invalid.transition` | 409 | Transición no permitida (incluye `join` en estado terminal) |
 
 ---
