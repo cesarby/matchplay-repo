@@ -189,7 +189,7 @@ class GameSearchServiceImplTest {
 
     private static BggThingResult.Item item(Long id, String type, String name) {
         return new BggThingResult.Item(
-                id, type, null, null,
+                id, type, null, null, null,
                 List.of(new BggThingResult.Name("primary", name)),
                 null, null, null, null, null, null,
                 List.of()
@@ -201,7 +201,7 @@ class GameSearchServiceImplTest {
                 .map(id -> new BggThingResult.Link("boardgameexpansion", id, "exp-" + id, false))
                 .toList();
         return new BggThingResult.Item(
-                baseId, "boardgame", null, null,
+                baseId, "boardgame", null, null, null,
                 List.of(new BggThingResult.Name("primary", "base-" + baseId)),
                 null, null, null, null, null, null,
                 links

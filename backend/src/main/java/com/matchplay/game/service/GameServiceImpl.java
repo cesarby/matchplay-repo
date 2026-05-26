@@ -1,5 +1,7 @@
 package com.matchplay.game.service;
 
+import com.matchplay.ai.AiSummaryClient;
+import com.matchplay.ai.GameSummary;
 import com.matchplay.game.client.BggClient;
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.entity.Game;
@@ -34,6 +36,7 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final BggClient bggClient;
     private final BggGameMapper bggGameMapper;
+    private final AiSummaryClient aiSummaryClient;
 
     @Override
     @Transactional
@@ -51,6 +54,11 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new BaseGameNotFoundException(bggId));
 
         Game entity = bggGameMapper.toEntity(item);
+        if (entity.getDescription() != null && !entity.getDescription().isBlank()) {
+            GameSummary summary = aiSummaryClient.summarize(entity.getDescription());
+            entity.setSummaryEs(summary.es());
+            entity.setSummaryEn(summary.en());
+        }
         Game saved = gameRepository.save(entity);
         log.info("Game {} persisted locally (isExpansion={}, baseGameBggId={})",
                 saved.getBggId(), saved.isExpansion(), saved.getBaseGameBggId());

@@ -394,6 +394,24 @@ class GameSessionServiceImplTest {
                 .isInstanceOf(SessionNotFoundException.class);
     }
 
+    @Test
+    void getDetail_includesGameSummaryInSpanishByDefault() {
+        GameSession s = openSession(4, 0);
+        s.getBaseGame().setSummaryEs("Resumen ES");
+        s.getBaseGame().setSummaryEn("Summary EN");
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.empty());
+        SessionDetailResponse expected = detail(s.getId(), SessionStatus.OPEN);
+        given(mapper.toDetail(any(GameSession.class), any(), any())).willReturn(expected);
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out).isSameAs(expected);
+        verify(mapper).toDetail(any(GameSession.class), any(), any());
+    }
+
     // ---------- JOIN ----------
 
     @Test
@@ -817,6 +835,7 @@ class GameSessionServiceImplTest {
 
     private SessionDetailResponse detail(Long id, SessionStatus status) {
         return new SessionDetailResponse(id, "t", null, 13L, "Catan", null,
+                null,
                 List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 0, 0, 0, status,

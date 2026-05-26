@@ -15,7 +15,7 @@ class BggGameMapperTest {
     @Test
     void toResponse_baseGameWithExpansionLink_marksHasExpansions() {
         BggThingResult.Item item = new BggThingResult.Item(
-                13L, "boardgame", "thumb.jpg", "image.jpg",
+                13L, "boardgame", "thumb.jpg", "image.jpg", null,
                 List.of(
                         new BggThingResult.Name("alternate", "Die Siedler"),
                         new BggThingResult.Name("primary", "Catan")
@@ -48,7 +48,7 @@ class BggGameMapperTest {
     @Test
     void toResponse_expansion_pointsToBaseGame() {
         BggThingResult.Item item = new BggThingResult.Item(
-                50L, "boardgameexpansion", null, null,
+                50L, "boardgameexpansion", null, null, null,
                 List.of(new BggThingResult.Name("primary", "Catan: Seafarers")),
                 null, null, null, null, null, null,
                 List.of(new BggThingResult.Link("boardgameexpansion", 13L, "Catan", true))
@@ -64,7 +64,7 @@ class BggGameMapperTest {
     @Test
     void toResponse_baseGameWithoutExpansionLinks_hasExpansionsFalse() {
         BggThingResult.Item item = new BggThingResult.Item(
-                99L, "boardgame", null, null,
+                99L, "boardgame", null, null, null,
                 List.of(new BggThingResult.Name("primary", "Solo Game")),
                 null, null, null, null, null, null,
                 List.of()

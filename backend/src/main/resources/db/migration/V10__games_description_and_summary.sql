@@ -1,0 +1,4 @@
+ALTER TABLE games
+  ADD COLUMN description TEXT NULL,
+  ADD COLUMN summary_es VARCHAR(700) NULL,
+  ADD COLUMN summary_en VARCHAR(700) NULL;

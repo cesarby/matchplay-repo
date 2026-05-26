@@ -50,6 +50,7 @@ public class BggGameMapper {
         game.setImageUrl(item.image());
         game.setExpansion(isExpansion);
         game.setBaseGameBggId(isExpansion ? baseGameLinkId(item.links()) : null);
+        game.setDescription(item.description());
         return game;
     }
 

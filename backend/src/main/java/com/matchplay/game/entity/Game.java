@@ -62,4 +62,13 @@ public class Game {
      */
     @Column(name = "base_game_bgg_id")
     private Long baseGameBggId;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "summary_es", length = 700)
+    private String summaryEs;
+
+    @Column(name = "summary_en", length = 700)
+    private String summaryEn;
 }

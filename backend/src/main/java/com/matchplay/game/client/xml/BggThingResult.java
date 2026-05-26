@@ -19,6 +19,7 @@ public record BggThingResult(
             @JsonProperty("type") @JacksonXmlProperty(isAttribute = true) String type,
             @JsonProperty("thumbnail") String thumbnail,
             @JsonProperty("image") String image,
+            @JsonProperty("description") String description,
 
             @JsonProperty("name")
             @JacksonXmlElementWrapper(useWrapping = false)

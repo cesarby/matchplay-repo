@@ -23,6 +23,7 @@ public record SessionDetailResponse(
         Long baseGameId,
         String baseGameName,
         String baseGameThumbnailUrl,
+        String baseGameSummary,
         List<ExpansionSummary> expansions,
         String cityCode,
         String cityName,

@@ -1,5 +1,7 @@
 package com.matchplay.game.service;
 
+import com.matchplay.ai.AiSummaryClient;
+import com.matchplay.ai.GameSummary;
 import com.matchplay.game.client.BggClient;
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.entity.Game;
@@ -30,6 +32,7 @@ class GameServiceImplTest {
     @Mock GameRepository gameRepository;
     @Mock BggClient bggClient;
     @Mock BggGameMapper bggGameMapper;
+    @Mock AiSummaryClient aiSummaryClient;
 
     @InjectMocks GameServiceImpl service;
 
@@ -51,7 +54,7 @@ class GameServiceImplTest {
     void findOrFetch_whenNotCached_fetchesFromBggAndPersists() {
         given(gameRepository.findById(13L)).willReturn(Optional.empty());
         BggThingResult.Item item = new BggThingResult.Item(
-                13L, "boardgame", null, null, null,
+                13L, "boardgame", null, null, null, null,
                 null, null, null, null, null, null, null);
         given(bggClient.getThing(13L)).willReturn(Optional.of(item));
 
@@ -82,5 +85,42 @@ class GameServiceImplTest {
     void findOrFetch_withNullId_throws() {
         assertThatThrownBy(() -> service.findOrFetch(null))
                 .isInstanceOf(BaseGameNotFoundException.class);
+    }
+
+    @Test
+    void findOrFetch_savesGameWithSummary_whenAiReturnsContent() {
+        given(gameRepository.findById(42L)).willReturn(Optional.empty());
+        BggThingResult.Item item = org.mockito.Mockito.mock(BggThingResult.Item.class);
+        given(bggClient.getThing(42L)).willReturn(Optional.of(item));
+        Game entity = new Game();
+        entity.setBggId(42L);
+        entity.setDescription("Long BGG description...");
+        given(bggGameMapper.toEntity(item)).willReturn(entity);
+        given(aiSummaryClient.summarize("Long BGG description..."))
+                .willReturn(new GameSummary("Resumen ES", "Summary EN"));
+        given(gameRepository.save(any(Game.class))).willAnswer(inv -> inv.getArgument(0));
+
+        Game out = service.findOrFetch(42L);
+
+        assertThat(out.getSummaryEs()).isEqualTo("Resumen ES");
+        assertThat(out.getSummaryEn()).isEqualTo("Summary EN");
+    }
+
+    @Test
+    void findOrFetch_savesGameWithoutSummary_whenDescriptionMissing() {
+        given(gameRepository.findById(42L)).willReturn(Optional.empty());
+        BggThingResult.Item item = org.mockito.Mockito.mock(BggThingResult.Item.class);
+        given(bggClient.getThing(42L)).willReturn(Optional.of(item));
+        Game entity = new Game();
+        entity.setBggId(42L);
+        // description == null
+        given(bggGameMapper.toEntity(item)).willReturn(entity);
+        given(gameRepository.save(any(Game.class))).willAnswer(inv -> inv.getArgument(0));
+
+        Game out = service.findOrFetch(42L);
+
+        assertThat(out.getSummaryEs()).isNull();
+        assertThat(out.getSummaryEn()).isNull();
+        verify(aiSummaryClient, never()).summarize(any());
     }
 }

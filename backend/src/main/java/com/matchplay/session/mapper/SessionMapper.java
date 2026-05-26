@@ -8,6 +8,7 @@ import com.matchplay.session.dto.SessionSummaryResponse;
 import com.matchplay.session.entity.GameSession;
 import com.matchplay.session.entity.ParticipantRole;
 import com.matchplay.session.entity.SessionParticipant;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -65,6 +66,14 @@ public class SessionMapper {
                         .map(this::toExpansionSummary)
                         .toList();
 
+        String lang = LocaleContextHolder.getLocale().getLanguage();
+        String baseGameSummary = null;
+        if (session.getBaseGame() != null) {
+            baseGameSummary = "en".equals(lang)
+                    ? session.getBaseGame().getSummaryEn()
+                    : session.getBaseGame().getSummaryEs();
+        }
+
         return new SessionDetailResponse(
                 session.getId(),
                 session.getTitle(),
@@ -72,6 +81,7 @@ public class SessionMapper {
                 session.getBaseGame() != null ? session.getBaseGame().getBggId() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getName() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getThumbnailUrl() : null,
+                baseGameSummary,
                 expansions,
                 session.getCity() != null ? session.getCity().getCode() : null,
                 session.getCity() != null ? session.getCity().getName() : null,
