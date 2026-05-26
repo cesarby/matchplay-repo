@@ -1,5 +1,7 @@
 package com.matchplay.session.mapper;
 
+import com.matchplay.game.entity.Game;
+import com.matchplay.session.dto.ExpansionSummary;
 import com.matchplay.session.dto.SessionDetailResponse;
 import com.matchplay.session.dto.SessionPlayerResponse;
 import com.matchplay.session.dto.SessionSummaryResponse;
@@ -31,6 +33,7 @@ public class SessionMapper {
                 session.getBaseGame() != null ? session.getBaseGame().getBggId() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getName() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getThumbnailUrl() : null,
+                session.getExpansions() != null ? session.getExpansions().size() : 0,
                 session.getCity() != null ? session.getCity().getCode() : null,
                 session.getCity() != null ? session.getCity().getName() : null,
                 session.getArea() != null ? session.getArea().getCode() : null,
@@ -56,6 +59,12 @@ public class SessionMapper {
                 .filter(p -> p.getRole() == ParticipantRole.WAITLIST)
                 .count();
 
+        List<ExpansionSummary> expansions = session.getExpansions() == null
+                ? List.of()
+                : session.getExpansions().stream()
+                        .map(this::toExpansionSummary)
+                        .toList();
+
         return new SessionDetailResponse(
                 session.getId(),
                 session.getTitle(),
@@ -63,6 +72,7 @@ public class SessionMapper {
                 session.getBaseGame() != null ? session.getBaseGame().getBggId() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getName() : null,
                 session.getBaseGame() != null ? session.getBaseGame().getThumbnailUrl() : null,
+                expansions,
                 session.getCity() != null ? session.getCity().getCode() : null,
                 session.getCity() != null ? session.getCity().getName() : null,
                 session.getArea() != null ? session.getArea().getCode() : null,
@@ -88,6 +98,14 @@ public class SessionMapper {
                 participant.getRole(),
                 participant.getPosition(),
                 participant.getJoinedAt()
+        );
+    }
+
+    public ExpansionSummary toExpansionSummary(Game expansion) {
+        return new ExpansionSummary(
+                expansion.getBggId(),
+                expansion.getName(),
+                expansion.getThumbnailUrl()
         );
     }
 }

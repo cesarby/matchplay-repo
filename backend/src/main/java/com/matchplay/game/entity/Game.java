@@ -8,6 +8,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Caché local de un juego (o expansión) de BoardGameGeek.
+ *
+ * <p>Se persiste de forma perezosa: cuando un consumidor (típicamente
+ * {@code GameSessionService} al crear/editar una partida) necesita el juego
+ * y no está en local, se hace un fetch a BGG vía {@link
+ * com.matchplay.game.service.GameService#findOrFetch(Long)} y se inserta.</p>
+ *
+ * <p>{@code isExpansion} y {@code baseGameBggId} permiten validar la
+ * relación base ↔ expansión sin volver a BGG. {@code baseGameBggId} es
+ * NULL en juegos base.</p>
+ */
 @Entity
 @Table(name = "games")
 @Getter
@@ -39,4 +51,15 @@ public class Game {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    @Column(name = "is_expansion", nullable = false)
+    private boolean isExpansion;
+
+    /**
+     * bggId del juego base si esta fila es una expansión. NULL si es base.
+     * Sin FK formal en la DB para evitar problemas de orden de inserción
+     * cuando se cachean lazy desde BGG.
+     */
+    @Column(name = "base_game_bgg_id")
+    private Long baseGameBggId;
 }

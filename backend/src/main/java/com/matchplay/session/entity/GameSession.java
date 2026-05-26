@@ -14,7 +14,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,14 +26,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Partida de juego de mesa.
  *
- * <p>El módulo {@code sessions} (controllers/services/DTOs) llegará en una
- * iteración posterior. Esta entidad existe ya para soportar el endpoint
- * público {@code GET /api/v1/stats/public} y mantener el schema versionado
- * con Flyway desde el principio.</p>
+ * <p>Asocia un juego base ({@link #baseGame}) y opcionalmente varias
+ * expansiones del mismo base ({@link #expansions}). Las expansiones se
+ * persisten en la tabla M:N {@code game_session_expansions} con
+ * {@code position} preservando el orden de inserción.</p>
  */
 @Entity
 @Table(
@@ -63,6 +68,20 @@ public class GameSession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "base_game_id", nullable = false, referencedColumnName = "bgg_id")
     private Game baseGame;
+
+    /**
+     * Expansiones asociadas a la partida. Orden preservado por la columna
+     * {@code position} en la tabla join. Todas deben tener
+     * {@code baseGameBggId == baseGame.bggId} (validado en service).
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "game_session_expansions",
+            joinColumns = @JoinColumn(name = "session_id"),
+            inverseJoinColumns = @JoinColumn(name = "expansion_id", referencedColumnName = "bgg_id")
+    )
+    @OrderColumn(name = "position")
+    private List<Game> expansions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "city_code", nullable = false, referencedColumnName = "code")

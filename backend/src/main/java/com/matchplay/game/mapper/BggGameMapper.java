@@ -2,6 +2,7 @@ package com.matchplay.game.mapper;
 
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.dto.GameSearchResponse;
+import com.matchplay.game.entity.Game;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,6 +30,27 @@ public class BggGameMapper {
                 !isExpansion && hasOutboundExpansionLink(item.links()),
                 isExpansion ? baseGameLinkId(item.links()) : null
         );
+    }
+
+    /**
+     * Construye una entidad {@link Game} lista para persistir desde un Item
+     * de BGG. Usado por {@code GameService.findOrFetch} cuando el juego no
+     * está cacheado en local.
+     */
+    public Game toEntity(BggThingResult.Item item) {
+        boolean isExpansion = TYPE_BGG_EXPANSION.equals(item.type());
+        Game game = new Game();
+        game.setBggId(item.id());
+        game.setName(primaryName(item.names()));
+        game.setYearPublished(value(item.yearPublished()));
+        game.setMinPlayers(value(item.minPlayers()));
+        game.setMaxPlayers(value(item.maxPlayers()));
+        game.setPlayingTime(value(item.playingTime()));
+        game.setThumbnailUrl(item.thumbnail());
+        game.setImageUrl(item.image());
+        game.setExpansion(isExpansion);
+        game.setBaseGameBggId(isExpansion ? baseGameLinkId(item.links()) : null);
+        return game;
     }
 
     private String primaryName(List<BggThingResult.Name> names) {

@@ -117,6 +117,22 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
     }
 
+    @ExceptionHandler(SessionExpansionWrongBaseException.class)
+    public ResponseEntity<ErrorResponse> handleSessionExpansionWrongBase(
+            SessionExpansionWrongBaseException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionExpansionNotExpansionException.class)
+    public ResponseEntity<ErrorResponse> handleSessionExpansionNotExpansion(
+            SessionExpansionNotExpansionException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
     @ExceptionHandler(UnauthorizedActionException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedAction(
             UnauthorizedActionException ex, HttpServletRequest request, Locale locale) {

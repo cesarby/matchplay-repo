@@ -75,7 +75,7 @@ class GameSessionControllerTest {
     @Test
     void search_returns200WithPage() throws Exception {
         SessionSummaryResponse s = new SessionSummaryResponse(
-                1L, "Catan", 13L, "Catan", null,
+                1L, "Catan", 13L, "Catan", null, 0,
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
                 SessionStatus.OPEN, 1L, "creator");
@@ -118,9 +118,9 @@ class GameSessionControllerTest {
     void create_withValidPayload_returns201WithLocation() throws Exception {
         Instant future = Instant.parse("2030-01-01T20:00:00Z");
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, "MAD01", null, future, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4);
         SessionDetailResponse created = new SessionDetailResponse(
-                42L, "Catan Night", "Desc", 13L, "Catan", null,
+                42L, "Catan Night", "Desc", 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
                 future, 4, 0, 0, SessionStatus.OPEN,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
@@ -135,9 +135,57 @@ class GameSessionControllerTest {
     }
 
     @Test
+    void create_withExpansions_returns201_andResponseIncludesThem() throws Exception {
+        Instant future = Instant.parse("2030-01-01T20:00:00Z");
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan + Seafarers", "Desc", 13L,
+                java.util.List.of(325L, 926L),
+                "MAD01", null, future, 4);
+        SessionDetailResponse created = new SessionDetailResponse(
+                43L, "Catan + Seafarers", "Desc", 13L, "Catan", null,
+                java.util.List.of(
+                        new com.matchplay.session.dto.ExpansionSummary(325L, "Seafarers", null),
+                        new com.matchplay.session.dto.ExpansionSummary(926L, "Cities & Knights", null)
+                ),
+                "MAD01", "Madrid", null, null,
+                future, 4, 0, 0, SessionStatus.OPEN,
+                1L, "creator", List.of(), null, Instant.now(), Instant.now());
+
+        given(service.create(any())).willReturn(created);
+
+        mockMvc.perform(post("/api/v1/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(43))
+                .andExpect(jsonPath("$.expansions.length()").value(2))
+                .andExpect(jsonPath("$.expansions[0].bggId").value(325))
+                .andExpect(jsonPath("$.expansions[1].bggId").value(926));
+    }
+
+    @Test
+    void create_with21Expansions_returns400() throws Exception {
+        // Genera lista de 21 ids (uno por encima del max=20 en DTO)
+        StringBuilder ids = new StringBuilder();
+        for (int i = 0; i < 21; i++) {
+            if (i > 0) ids.append(",");
+            ids.append(1000 + i);
+        }
+        String body = """
+                {"title":"X","baseGameId":13,"expansionBggIds":[%s],"cityCode":"MAD01","scheduledAt":"2030-01-01T20:00:00Z","maxPlayers":4}
+                """.formatted(ids.toString());
+
+        mockMvc.perform(post("/api/v1/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("error.validation"));
+    }
+
+    @Test
     void join_returns200WithDetail() throws Exception {
         SessionDetailResponse d = new SessionDetailResponse(
-                10L, "Catan", null, 13L, "Catan", null,
+                10L, "Catan", null, 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
@@ -152,7 +200,7 @@ class GameSessionControllerTest {
     @Test
     void leave_returns200WithDetail() throws Exception {
         SessionDetailResponse d = new SessionDetailResponse(
-                10L, "Catan", null, 13L, "Catan", null,
+                10L, "Catan", null, 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());

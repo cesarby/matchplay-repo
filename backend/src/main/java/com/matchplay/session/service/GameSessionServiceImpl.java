@@ -1,6 +1,8 @@
 package com.matchplay.session.service;
 
 import com.matchplay.exception.SessionAlreadyJoinedException;
+import com.matchplay.exception.SessionExpansionNotExpansionException;
+import com.matchplay.exception.SessionExpansionWrongBaseException;
 import com.matchplay.exception.SessionJoinOwnException;
 import com.matchplay.exception.SessionMaxPlayersAboveGameException;
 import com.matchplay.exception.SessionMaxPlayersBelowCurrentException;
@@ -10,8 +12,7 @@ import com.matchplay.exception.SessionScheduledInPastException;
 import com.matchplay.exception.SessionStatusTransitionException;
 import com.matchplay.exception.UnauthorizedActionException;
 import com.matchplay.game.entity.Game;
-import com.matchplay.game.exception.BaseGameNotFoundException;
-import com.matchplay.game.repository.GameRepository;
+import com.matchplay.game.service.GameService;
 import com.matchplay.geo.entity.Area;
 import com.matchplay.geo.entity.City;
 import com.matchplay.geo.exception.GeoCodeNotFoundException;
@@ -42,14 +43,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * Lógica de negocio del módulo Partidas — Fase 1.1 (core + waitlist).
+ * Lógica de negocio del módulo Partidas — Fase 1 (core + waitlist + expansiones).
  *
  * <p>Reglas:
  * <ul>
@@ -60,10 +64,13 @@ import java.util.Set;
  *       de BGG (si están informados). Si BGG no da el dato, se salta.</li>
  *   <li>Auto-transition OPEN→FULL al llegar a maxPlayers; FULL→OPEN al
  *       salir un PLAYER y promocionar (o no quedar nadie en la cola).</li>
- *   <li>Waitlist: al unirse a una partida llena se entra como WAITLIST
- *       (límite waitlist = maxPlayers). Al salir un PLAYER, se promociona
- *       FIFO el primer WAITLIST. Si el organizador sube maxPlayers,
- *       se promocionan en cascada hasta llenar o agotar la cola.</li>
+ *   <li>Waitlist: al unirse a una partida llena se entra como WAITLIST.
+ *       Al salir un PLAYER, se promociona FIFO el primer WAITLIST.</li>
+ *   <li>Juegos: lazy-load via {@link GameService#findOrFetch} para que el
+ *       cliente solo necesite mandar {@code bggId}.</li>
+ *   <li>Expansiones: cada {@code expansionBggId} debe (1) resolverse en BGG,
+ *       (2) tener {@code isExpansion=true} y (3) pertenecer al juego base.
+ *       Duplicados se ignoran silenciosamente. Máximo 20 por partida (en DTO).</li>
  * </ul></p>
  */
 @Service
@@ -73,7 +80,7 @@ public class GameSessionServiceImpl implements GameSessionService {
 
     private final GameSessionRepository sessionRepository;
     private final SessionParticipantRepository participantRepository;
-    private final GameRepository gameRepository;
+    private final GameService gameService;
     private final CityRepository cityRepository;
     private final AreaRepository areaRepository;
     private final CurrentUserProvider currentUserProvider;
@@ -135,8 +142,7 @@ public class GameSessionServiceImpl implements GameSessionService {
             throw new SessionScheduledInPastException();
         }
 
-        Game baseGame = gameRepository.findById(request.baseGameId())
-                .orElseThrow(() -> new BaseGameNotFoundException(request.baseGameId()));
+        Game baseGame = gameService.findOrFetch(request.baseGameId());
         validateAgainstGameLimits(request.maxPlayers(), baseGame);
 
         City city = cityRepository.findById(request.cityCode())
@@ -147,11 +153,14 @@ public class GameSessionServiceImpl implements GameSessionService {
                     .orElseThrow(() -> new GeoCodeNotFoundException("error.geo.area.not.found", request.areaCode()));
         }
 
+        List<Game> expansions = resolveAndValidateExpansions(request.expansionBggIds(), baseGame);
+
         GameSession session = new GameSession();
         session.setTitle(request.title());
         session.setDescription(request.description());
         session.setCreator(creator);
         session.setBaseGame(baseGame);
+        session.setExpansions(new ArrayList<>(expansions));
         session.setCity(city);
         session.setArea(area);
         session.setScheduledAt(request.scheduledAt());
@@ -160,7 +169,8 @@ public class GameSessionServiceImpl implements GameSessionService {
         session.setStatus(SessionStatus.OPEN);
 
         GameSession saved = sessionRepository.save(session);
-        log.info("Session created: id={}, creator={}, scheduledAt={}", saved.getId(), creator.getId(), saved.getScheduledAt());
+        log.info("Session created: id={}, creator={}, scheduledAt={}, expansions={}",
+                saved.getId(), creator.getId(), saved.getScheduledAt(), expansions.size());
         return mapper.toDetail(saved, List.of(), null);
     }
 
@@ -202,6 +212,12 @@ public class GameSessionServiceImpl implements GameSessionService {
                         .orElseThrow(() -> new GeoCodeNotFoundException("error.geo.area.not.found", request.areaCode()));
                 session.setArea(area);
             }
+        }
+        if (request.expansionBggIds() != null) {
+            // PATCH semantics sobre el sub-recurso: lista no null = reemplazar.
+            List<Game> resolved = resolveAndValidateExpansions(request.expansionBggIds(), session.getBaseGame());
+            session.getExpansions().clear();
+            session.getExpansions().addAll(resolved);
         }
 
         GameSession saved = sessionRepository.save(session);
@@ -344,6 +360,38 @@ public class GameSessionServiceImpl implements GameSessionService {
         if (game.getMinPlayers() != null && requestedMax < game.getMinPlayers()) {
             throw new SessionMaxPlayersBelowGameMinException(requestedMax, game.getMinPlayers());
         }
+    }
+
+    /**
+     * Resuelve cada {@code bggId} de expansión a entidad {@link Game}
+     * (cache local o fetch BGG) y aplica las reglas:
+     * <ol>
+     *   <li>la fila debe tener {@code isExpansion = true} → {@link SessionExpansionNotExpansionException};</li>
+     *   <li>su {@code baseGameBggId} debe coincidir con el {@code bggId} del juego base de la partida
+     *       → {@link SessionExpansionWrongBaseException}.</li>
+     * </ol>
+     * Duplicados se ignoran preservando el orden (LinkedHashSet).
+     *
+     * @return lista de expansiones validadas en el orden recibido (sin duplicados); vacía si {@code bggIds} es null o vacía.
+     */
+    private List<Game> resolveAndValidateExpansions(List<Long> bggIds, Game baseGame) {
+        if (bggIds == null || bggIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Set<Long> deduped = new LinkedHashSet<>(bggIds);
+        List<Game> resolved = new ArrayList<>(deduped.size());
+        for (Long expBggId : deduped) {
+            Game expansion = gameService.findOrFetch(expBggId);
+            if (!expansion.isExpansion()) {
+                throw new SessionExpansionNotExpansionException(expBggId);
+            }
+            if (expansion.getBaseGameBggId() == null
+                    || !expansion.getBaseGameBggId().equals(baseGame.getBggId())) {
+                throw new SessionExpansionWrongBaseException(expBggId, baseGame.getBggId());
+            }
+            resolved.add(expansion);
+        }
+        return resolved;
     }
 
     /**

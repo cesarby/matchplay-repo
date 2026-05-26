@@ -1,6 +1,8 @@
 package com.matchplay.session.service;
 
 import com.matchplay.exception.SessionAlreadyJoinedException;
+import com.matchplay.exception.SessionExpansionNotExpansionException;
+import com.matchplay.exception.SessionExpansionWrongBaseException;
 import com.matchplay.exception.SessionJoinOwnException;
 import com.matchplay.exception.SessionMaxPlayersAboveGameException;
 import com.matchplay.exception.SessionMaxPlayersBelowGameMinException;
@@ -9,7 +11,7 @@ import com.matchplay.exception.SessionScheduledInPastException;
 import com.matchplay.exception.SessionStatusTransitionException;
 import com.matchplay.exception.UnauthorizedActionException;
 import com.matchplay.game.entity.Game;
-import com.matchplay.game.repository.GameRepository;
+import com.matchplay.game.service.GameService;
 import com.matchplay.geo.entity.City;
 import com.matchplay.geo.repository.AreaRepository;
 import com.matchplay.geo.repository.CityRepository;
@@ -52,7 +54,7 @@ class GameSessionServiceImplTest {
 
     @Mock GameSessionRepository sessionRepository;
     @Mock SessionParticipantRepository participantRepository;
-    @Mock GameRepository gameRepository;
+    @Mock GameService gameService;
     @Mock CityRepository cityRepository;
     @Mock AreaRepository areaRepository;
     @Mock CurrentUserProvider currentUserProvider;
@@ -87,10 +89,10 @@ class GameSessionServiceImplTest {
     void create_withFutureDate_persistsAndReturnsDetail() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, "MAD01", null, future, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
-        given(gameRepository.findById(13L)).willReturn(Optional.of(game));
+        given(gameService.findOrFetch(13L)).willReturn(game);
         given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
         given(sessionRepository.save(any(GameSession.class))).willAnswer(inv -> {
             GameSession s = inv.getArgument(0);
@@ -109,7 +111,7 @@ class GameSessionServiceImplTest {
     void create_withPastDate_throws() {
         Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, "MAD01", null, past, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, past, 4);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
 
@@ -123,10 +125,10 @@ class GameSessionServiceImplTest {
     void create_maxAboveGameMax_throws() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, "MAD01", null, future, 6); // game.max = 4
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 6); // game.max = 4
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
-        given(gameRepository.findById(13L)).willReturn(Optional.of(game));
+        given(gameService.findOrFetch(13L)).willReturn(game);
 
         assertThatThrownBy(() -> service.create(req))
                 .isInstanceOf(SessionMaxPlayersAboveGameException.class);
@@ -138,10 +140,10 @@ class GameSessionServiceImplTest {
     void create_maxBelowGameMin_throws() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, "MAD01", null, future, 2); // game.min = 3
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 2); // game.min = 3
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
-        given(gameRepository.findById(13L)).willReturn(Optional.of(game));
+        given(gameService.findOrFetch(13L)).willReturn(game);
 
         assertThatThrownBy(() -> service.create(req))
                 .isInstanceOf(SessionMaxPlayersBelowGameMinException.class);
@@ -158,10 +160,10 @@ class GameSessionServiceImplTest {
 
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Pandemic", "Desc", 50L, "MAD01", null, future, 10);
+                "Pandemic", "Desc", 50L, null, "MAD01", null, future, 10);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
-        given(gameRepository.findById(50L)).willReturn(Optional.of(cooperative));
+        given(gameService.findOrFetch(50L)).willReturn(cooperative);
         given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
         given(sessionRepository.save(any())).willAnswer(inv -> {
             GameSession s = inv.getArgument(0);
@@ -171,6 +173,141 @@ class GameSessionServiceImplTest {
         given(mapper.toDetail(any(), any(), any())).willReturn(detail(7L, SessionStatus.OPEN));
 
         service.create(req); // no debe lanzar
+    }
+
+    // ---------- CREATE con expansiones ----------
+
+    @Test
+    void create_withValidExpansions_persistsThemInOrderWithoutDuplicates() {
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        Game seafarers = expansion(325L, "Catan: Seafarers", 13L);
+        Game cities    = expansion(926L, "Catan: Cities & Knights", 13L);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan+exp", "Desc", 13L,
+                List.of(325L, 926L, 325L), // duplicado a propósito
+                "MAD01", null, future, 4);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+        given(gameService.findOrFetch(325L)).willReturn(seafarers);
+        given(gameService.findOrFetch(926L)).willReturn(cities);
+        given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
+        given(sessionRepository.save(any(GameSession.class))).willAnswer(inv -> {
+            GameSession s = inv.getArgument(0);
+            s.setId(101L);
+            return s;
+        });
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(101L, SessionStatus.OPEN));
+
+        service.create(req);
+
+        ArgumentCaptor<GameSession> captor = ArgumentCaptor.forClass(GameSession.class);
+        verify(sessionRepository).save(captor.capture());
+        GameSession saved = captor.getValue();
+        // Dedupe silencioso + orden de inserción preservado
+        assertThat(saved.getExpansions()).extracting(Game::getBggId).containsExactly(325L, 926L);
+        // findOrFetch del duplicado se llama solo una vez (LinkedHashSet dedupe)
+        verify(gameService, times(1)).findOrFetch(325L);
+    }
+
+    @Test
+    void create_withExpansionOfDifferentBase_throws() {
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        Game wrongExp = expansion(999L, "Wingspan: Oceania", 99L); // base distinto
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan", "Desc", 13L, List.of(999L),
+                "MAD01", null, future, 4);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+        given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
+        given(gameService.findOrFetch(999L)).willReturn(wrongExp);
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionExpansionWrongBaseException.class);
+
+        verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void create_withBaseGameInExpansionList_throws() {
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        // Otro juego base (no expansion) intentando colarse
+        Game otherBase = new Game();
+        otherBase.setBggId(77L);
+        otherBase.setName("Wingspan");
+        otherBase.setExpansion(false);
+
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan", "Desc", 13L, List.of(77L),
+                "MAD01", null, future, 4);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+        given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
+        given(gameService.findOrFetch(77L)).willReturn(otherBase);
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionExpansionNotExpansionException.class);
+    }
+
+    // ---------- UPDATE: expansiones ----------
+
+    @Test
+    void update_withNullExpansions_keepsExistingList() {
+        GameSession session = openSession(4, 0);
+        Game existingExp = expansion(325L, "Seafarers", 13L);
+        session.getExpansions().add(existingExp);
+
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+
+        service.update(10L, new UpdateSessionRequest("Nuevo título", null, null, null, null, null));
+
+        assertThat(session.getExpansions()).extracting(Game::getBggId).containsExactly(325L);
+    }
+
+    @Test
+    void update_withEmptyExpansionsList_clearsThem() {
+        GameSession session = openSession(4, 0);
+        Game existingExp = expansion(325L, "Seafarers", 13L);
+        session.getExpansions().add(existingExp);
+
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+
+        service.update(10L, new UpdateSessionRequest(null, null, null, null, null, List.of()));
+
+        assertThat(session.getExpansions()).isEmpty();
+    }
+
+    @Test
+    void update_withNewExpansionsList_replacesEntirely() {
+        GameSession session = openSession(4, 0);
+        Game oldExp = expansion(325L, "Seafarers", 13L);
+        session.getExpansions().add(oldExp);
+
+        Game newExp = expansion(926L, "Cities & Knights", 13L);
+
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        given(gameService.findOrFetch(926L)).willReturn(newExp);
+        given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+
+        service.update(10L, new UpdateSessionRequest(null, null, null, null, null, List.of(926L)));
+
+        assertThat(session.getExpansions()).extracting(Game::getBggId).containsExactly(926L);
     }
 
     // ---------- FIND ----------
@@ -409,7 +546,7 @@ class GameSessionServiceImplTest {
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
         given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
-        service.update(10L, new UpdateSessionRequest(null, null, null, null, 4));
+        service.update(10L, new UpdateSessionRequest(null, null, null, null, 4, null));
 
         // ambos waitlist promocionados
         assertThat(w1.getRole()).isEqualTo(ParticipantRole.PLAYER);
@@ -427,7 +564,7 @@ class GameSessionServiceImplTest {
         given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
 
         assertThatThrownBy(() ->
-                service.update(10L, new UpdateSessionRequest(null, null, null, null, 6)))
+                service.update(10L, new UpdateSessionRequest(null, null, null, null, 6, null)))
                 .isInstanceOf(SessionMaxPlayersAboveGameException.class);
     }
 
@@ -509,8 +646,18 @@ class GameSessionServiceImplTest {
         return p;
     }
 
+    private Game expansion(Long bggId, String name, Long baseId) {
+        Game g = new Game();
+        g.setBggId(bggId);
+        g.setName(name);
+        g.setExpansion(true);
+        g.setBaseGameBggId(baseId);
+        return g;
+    }
+
     private SessionDetailResponse detail(Long id, SessionStatus status) {
         return new SessionDetailResponse(id, "t", null, 13L, "Catan", null,
+                List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 0, 0, status,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
