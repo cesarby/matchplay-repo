@@ -135,7 +135,25 @@
       "cancelSession": "Cancel session",
       "closeRegistrations": "Close registrations",
       "reopenRegistrations": "Reopen registrations",
-      "edit": "Edit"
+      "edit": "Edit",
+      "editButton": "Edit",
+      "closeButton": "Close table"
+    },
+    "close": {
+      "title": "Close table",
+      "body": "You will close this table with {{count}} players. No new players will be able to join.",
+      "bodyWithWaitlist": "You will close this table with {{count}} players. No new players will be able to join, but if someone cancels the {{waitlist}} in queue can enter.",
+      "confirm": "Close table",
+      "cancel": "Cancel"
+    },
+    "edit": {
+      "title": "Edit session",
+      "scheduledAt": "Date and time",
+      "maxPlayers": "Maximum spots",
+      "maxPlayersHint": "Minimum {{min}} (already registered).",
+      "waitlistNote": "ℹ️ There are {{count}} people in the queue — they will keep their position.",
+      "submit": "Save changes",
+      "cancel": "Cancel"
     },
     "create": {
       "title": "Create session",

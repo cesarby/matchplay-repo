@@ -267,4 +267,55 @@ describe('<SessionDetailPage>', () => {
     expect(screen.queryByRole('button', { name: /unirme/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /salir/i })).not.toBeInTheDocument()
   })
+
+  it('as creator with OPEN status shows both Edit and Close table buttons', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { userId: 1, username: 'alice' },
+      status: 'authenticated',
+    })
+    server.use(
+      http.get(`${API}/sessions/7`, () =>
+        HttpResponse.json(detail({ status: 'OPEN', creatorUsername: 'alice' })),
+      ),
+    )
+    renderDetail()
+    await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cerrar mesa/i })).toBeInTheDocument()
+  })
+
+  it('as creator with FULL status shows Edit but not Close table', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { userId: 1, username: 'alice' },
+      status: 'authenticated',
+    })
+    server.use(
+      http.get(`${API}/sessions/7`, () =>
+        HttpResponse.json(detail({ status: 'FULL', creatorUsername: 'alice' })),
+      ),
+    )
+    renderDetail()
+    await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar mesa/i })).not.toBeInTheDocument()
+  })
+
+  it('as visitor does not show Edit or Close table buttons', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { userId: 99, username: 'visitor' },
+      status: 'authenticated',
+    })
+    server.use(
+      http.get(`${API}/sessions/7`, () =>
+        HttpResponse.json(detail({ status: 'OPEN', creatorUsername: 'alice' })),
+      ),
+    )
+    renderDetail()
+    await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
+    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar mesa/i })).not.toBeInTheDocument()
+  })
 })

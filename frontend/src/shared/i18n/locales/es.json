@@ -135,7 +135,25 @@
       "cancelSession": "Cancelar partida",
       "closeRegistrations": "Cerrar inscripciones",
       "reopenRegistrations": "Reabrir inscripciones",
-      "edit": "Editar"
+      "edit": "Editar",
+      "editButton": "Editar",
+      "closeButton": "Cerrar mesa"
+    },
+    "close": {
+      "title": "Cerrar mesa",
+      "body": "Cerrarás esta mesa con {{count}} jugadores. Nadie nuevo podrá apuntarse.",
+      "bodyWithWaitlist": "Cerrarás esta mesa con {{count}} jugadores. Nadie nuevo podrá apuntarse, pero si alguien cancela los {{waitlist}} en cola podrán entrar.",
+      "confirm": "Cerrar mesa",
+      "cancel": "Cancelar"
+    },
+    "edit": {
+      "title": "Editar partida",
+      "scheduledAt": "Fecha y hora",
+      "maxPlayers": "Plazas máximas",
+      "maxPlayersHint": "Mínimo {{min}} (los ya apuntados).",
+      "waitlistNote": "ℹ️ Hay {{count}} personas en cola — mantendrán su posición.",
+      "submit": "Guardar cambios",
+      "cancel": "Cancelar"
     },
     "create": {
       "title": "Crear partida",
