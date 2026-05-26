@@ -5,6 +5,13 @@ export type SessionStatus = 'OPEN' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CAN
 
 export type ParticipantRole = 'PLAYER' | 'WAITLIST'
 
+/** Vista compacta de una expansión asociada a una partida (DTO ExpansionSummary). */
+export interface ExpansionSummary {
+  bggId: number
+  name: string
+  thumbnailUrl: string | null
+}
+
 /** Resumen compacto usado en listados / cards. */
 export interface SessionSummary {
   id: number
@@ -13,6 +20,8 @@ export interface SessionSummary {
   baseGameName: string | null
   /** Thumbnail BGG. Nullable si BGG no aportó imagen. */
   baseGameThumbnailUrl: string | null
+  /** Nº de expansiones asociadas a la partida (0..N). Solo el conteo en listados. */
+  expansionCount: number
   cityCode: string | null
   cityName: string | null
   areaCode: string | null
@@ -36,8 +45,13 @@ export interface SessionPlayer {
 }
 
 /** Detalle completo de una partida. */
-export interface SessionDetail extends Omit<SessionSummary, 'creatorId' | 'creatorUsername'> {
+export interface SessionDetail extends Omit<
+  SessionSummary,
+  'creatorId' | 'creatorUsername' | 'expansionCount'
+> {
   description: string | null
+  /** Lista detallada de expansiones asociadas (orden de inserción). */
+  expansions: ExpansionSummary[]
   creatorId: number | null
   creatorUsername: string | null
   players: SessionPlayer[]
@@ -52,6 +66,8 @@ export interface CreateSessionRequest {
   title: string
   description?: string | null
   baseGameId: number
+  /** bggIds de expansiones (0..20). Vacío/omitido → sin expansiones. */
+  expansionBggIds?: number[]
   cityCode: string
   areaCode?: string | null
   scheduledAt: string // ISO Instant
@@ -64,6 +80,13 @@ export interface UpdateSessionRequest {
   areaCode?: string | null
   scheduledAt?: string | null
   maxPlayers?: number | null
+  /**
+   * PATCH semantics:
+   *  - omitido / null → no se toca la lista actual.
+   *  - [] → vacía la lista.
+   *  - [a, b, ...] → reemplaza completamente la lista.
+   */
+  expansionBggIds?: number[] | null
 }
 
 export interface ChangeStatusRequest {

@@ -19,8 +19,6 @@ type UrlState = {
   provinceCode?: string
   cityCode?: string
   areaCode?: string
-  /** Día concreto YYYY-MM-DD — se traduce a scheduledFrom/To al consultar. */
-  date?: string
   /** bggId del juego seleccionado. */
   gameId?: string
   /** Nombre del juego — guardado en URL para mostrar el pill sin re-fetch. */
@@ -72,15 +70,12 @@ export default function SessionsListPage() {
 
   const page = parseIntSafe(filters.page, 0)
   const gameIdNum = filters.gameId ? Number(filters.gameId) : undefined
-  const dayRange = filters.date ? dayToIsoRange(filters.date) : null
 
   const searchParams: SessionSearchParams = {
     provinceCode: filters.provinceCode,
     cityCode: filters.cityCode,
     areaCode: filters.areaCode,
     gameId: Number.isFinite(gameIdNum) ? gameIdNum : undefined,
-    scheduledFrom: dayRange?.from,
-    scheduledTo: dayRange?.to,
     page,
     size: DEFAULT_PAGE_SIZE,
   }
@@ -109,15 +104,15 @@ export default function SessionsListPage() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-6 py-12">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="relative mx-auto max-w-7xl px-6 py-10 sm:py-12">
+          <div className="flex flex-col items-stretch gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
             <div className="min-w-0 flex-1">
               {data && (
                 <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-red">
                   {t('sessions.list.heroEyebrow', { count: totalCount })}
                 </p>
               )}
-              <h1 className="font-display text-5xl font-bold leading-[0.95] text-foreground lg:text-6xl">
+              <h1 className="font-display text-4xl font-bold leading-[1.1] text-foreground sm:text-5xl sm:leading-[0.95] lg:text-6xl">
                 <Trans
                   i18nKey="sessions.list.heroTitle"
                   components={{ 1: <span className="text-red" /> }}
@@ -135,7 +130,7 @@ export default function SessionsListPage() {
             {isAuthenticated && (
               <Link
                 to="/sessions/new"
-                className="inline-flex animate-pulse-soft items-center gap-2 rounded-full bg-red px-6 py-3.5 text-sm font-bold text-white transition hover:scale-105"
+                className="inline-flex animate-pulse-soft items-center justify-center gap-2 self-start rounded-full bg-red px-6 py-3.5 text-sm font-bold text-white transition hover:scale-105 sm:self-auto"
               >
                 <Plus size={18} aria-hidden="true" />
                 {t('sessions.create.title')}
@@ -150,7 +145,6 @@ export default function SessionsListPage() {
                 provinceCode: filters.provinceCode,
                 cityCode: filters.cityCode,
                 areaCode: filters.areaCode,
-                date: filters.date,
                 gameId: gameIdNum,
                 gameName: filters.gameName,
               }}
@@ -161,7 +155,6 @@ export default function SessionsListPage() {
                 if ('provinceCode' in patch) urlPatch.provinceCode = patch.provinceCode
                 if ('cityCode' in patch) urlPatch.cityCode = patch.cityCode
                 if ('areaCode' in patch) urlPatch.areaCode = patch.areaCode
-                if ('date' in patch) urlPatch.date = patch.date
                 if ('gameId' in patch) {
                   urlPatch.gameId = patch.gameId ? String(patch.gameId) : undefined
                   urlPatch.gameName = patch.gameName ?? undefined
@@ -335,23 +328,4 @@ function parseIntSafe(value: string | undefined, fallback: number): number {
   if (!value) return fallback
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
-}
-
-/**
- * Convierte un día (YYYY-MM-DD, asumido en la zona horaria local del navegador)
- * en un rango ISO Instant [from, to] que cubre las 24h de ese día.
- *
- * El backend usa Instant (UTC), así que respeta la zona del cliente: si el user
- * filtra por "15 ene" en España, verá las partidas con scheduledAt entre las
- * 00:00 y 23:59 del 15 ene en hora española, no UTC.
- */
-function dayToIsoRange(yyyyMmDd: string): { from: string; to: string } | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(yyyyMmDd)
-  if (!m) return null
-  const year = Number(m[1])
-  const month = Number(m[2]) - 1
-  const day = Number(m[3])
-  const start = new Date(year, month, day, 0, 0, 0, 0)
-  const end = new Date(year, month, day, 23, 59, 59, 999)
-  return { from: start.toISOString(), to: end.toISOString() }
 }

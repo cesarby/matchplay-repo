@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matchplay — Datepicker · Opción C (Calendario custom)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      --background: 250 246 238;
+      --foreground: 31 26 20;
+      --card: 255 252 246;
+      --muted: 240 234 224;
+      --muted-foreground: 110 97 79;
+      --border: 229 220 201;
+      --p-red: 200 54 44;
+      --p-blue: 31 111 178;
+      --p-green: 47 143 79;
+      --p-yellow: 232 169 59;
+      --p-yellow-soft: 253 243 219;
+      --p-green-soft: 226 245 232;
+      --p-red-soft: 252 232 229;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: rgb(var(--background));
+      color: rgb(var(--foreground));
+    }
+    .display { font-family: 'Bricolage Grotesque', system-ui, sans-serif; letter-spacing: -0.02em; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace; }
+
+    .calendar-wrap {
+      background: rgb(var(--card));
+      border: 1.5px solid rgb(var(--border));
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 24px rgba(31,26,20,0.06);
+    }
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .cal-title {
+      font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .nav-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgb(var(--muted));
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    .nav-btn:hover { background: rgb(var(--p-yellow-soft)); }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-dayname {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgb(var(--muted-foreground));
+      padding: 0.3rem 0;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.12s ease;
+    }
+    .cal-day:hover { background: rgb(var(--p-yellow-soft)); }
+    .cal-day.muted { color: rgb(var(--muted-foreground)); opacity: 0.4; }
+    .cal-day.past { color: rgb(var(--muted-foreground)); opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+    .cal-day.past:hover { background: transparent; }
+    .cal-day.today {
+      background: rgb(var(--p-yellow-soft));
+      color: rgb(var(--p-yellow));
+      border: 1.5px solid rgb(var(--p-yellow));
+    }
+    .cal-day.selected {
+      background: rgb(var(--p-red));
+      color: white;
+      box-shadow: 0 4px 12px rgba(var(--p-red), 0.4);
+    }
+    .cal-day.has-sessions::after {
+      content: "";
+      position: absolute;
+      bottom: 5px;
+      width: 4px;
+      height: 4px;
+      background: rgb(var(--p-green));
+      border-radius: 50%;
+    }
+    .cal-day.has-sessions.selected::after { background: white; }
+
+    .time-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgb(var(--border));
+      align-items: center;
+    }
+    .time-pill {
+      flex: 1;
+      padding: 0.5rem 0.8rem;
+      border-radius: 10px;
+      border: 1.5px solid rgb(var(--border));
+      background: rgb(var(--card));
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', ui-monospace;
+      text-align: center;
+      transition: all 0.12s ease;
+    }
+    .time-pill:hover { border-color: rgb(var(--p-red)); }
+    .time-pill.active {
+      background: rgb(var(--p-red));
+      border-color: rgb(var(--p-red));
+      color: white;
+    }
+
+    .field-card {
+      background: rgb(var(--card));
+      border: 1.5px solid rgb(var(--border));
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .field-card:hover { border-color: rgb(var(--p-red)); }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgb(var(--p-green));
+      margin-right: 0.4rem;
+      vertical-align: middle;
+    }
+
+    .dice-emoji { font-size: 1.1em; display: inline-block; transform: rotate(-8deg); }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+  <div class="max-w-3xl mx-auto">
+    <header class="mb-10">
+      <p class="text-sm uppercase tracking-wider" style="color: rgb(var(--muted-foreground));">Opción C</p>
+      <h1 class="display text-4xl font-bold mt-1">Calendario custom (react-day-picker)</h1>
+      <p class="mt-2 text-base" style="color: rgb(var(--muted-foreground));">
+        Sustituye el input nativo por un calendario propio con tema board-game-café. Días pasados
+        tachados, hoy en amarillo, selección en rojo, puntito verde en días con partidas conocidas
+        (gancho futuro). Hora se elige con un strip de pills 18:00 / 19:00 / 20:00 / 21:00 / 22:00.
+      </p>
+    </header>
+
+    <!-- Estado: cerrado -->
+    <section class="mb-10">
+      <div class="text-xs uppercase tracking-wider mb-3" style="color: rgb(var(--muted-foreground));">Estado · cerrado (trigger)</div>
+      <div class="bg-white/40 p-6 rounded-2xl border border-dashed" style="border-color: rgb(var(--border));">
+        <label class="text-sm font-medium flex items-center gap-2 mb-2">
+          <span class="dice-emoji">🎲</span>
+          Fecha y hora de la partida
+        </label>
+        <div class="field-card flex items-center justify-between">
+          <span class="flex items-center gap-3">
+            <i data-lucide="calendar-days" class="w-5 h-5" style="color: rgb(var(--p-red));"></i>
+            <span class="mono font-semibold">sáb 30/05/2026 · 20:00</span>
+          </span>
+          <i data-lucide="chevron-down" class="w-5 h-5" style="color: rgb(var(--muted-foreground));"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Estado: abierto -->
+    <section class="mb-10">
+      <div class="text-xs uppercase tracking-wider mb-3" style="color: rgb(var(--muted-foreground));">Estado · abierto</div>
+      <div class="bg-white/40 p-6 rounded-2xl border border-dashed" style="border-color: rgb(var(--border));">
+        <label class="text-sm font-medium flex items-center gap-2 mb-2">
+          <span class="dice-emoji">🎲</span>
+          Fecha y hora de la partida
+        </label>
+
+        <div class="calendar-wrap">
+          <!-- Header -->
+          <div class="cal-header">
+            <button class="nav-btn"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <div class="cal-title">mayo 2026</div>
+            <button class="nav-btn"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+
+          <!-- Day names -->
+          <div class="cal-grid">
+            <div class="cal-dayname">lun</div>
+            <div class="cal-dayname">mar</div>
+            <div class="cal-dayname">mié</div>
+            <div class="cal-dayname">jue</div>
+            <div class="cal-dayname">vie</div>
+            <div class="cal-dayname">sáb</div>
+            <div class="cal-dayname">dom</div>
+
+            <!-- Week 1 (April overflow) -->
+            <div class="cal-day muted">27</div>
+            <div class="cal-day muted">28</div>
+            <div class="cal-day muted">29</div>
+            <div class="cal-day muted">30</div>
+            <div class="cal-day past">1</div>
+            <div class="cal-day past">2</div>
+            <div class="cal-day past">3</div>
+
+            <!-- Week 2 -->
+            <div class="cal-day past">4</div>
+            <div class="cal-day past">5</div>
+            <div class="cal-day past">6</div>
+            <div class="cal-day past">7</div>
+            <div class="cal-day past">8</div>
+            <div class="cal-day past">9</div>
+            <div class="cal-day past">10</div>
+
+            <!-- Week 3 -->
+            <div class="cal-day past">11</div>
+            <div class="cal-day past">12</div>
+            <div class="cal-day past">13</div>
+            <div class="cal-day past">14</div>
+            <div class="cal-day past">15</div>
+            <div class="cal-day past">16</div>
+            <div class="cal-day past">17</div>
+
+            <!-- Week 4 -->
+            <div class="cal-day past">18</div>
+            <div class="cal-day past">19</div>
+            <div class="cal-day past">20</div>
+            <div class="cal-day past">21</div>
+            <div class="cal-day past">22</div>
+            <div class="cal-day past">23</div>
+            <div class="cal-day past">24</div>
+
+            <!-- Week 5 -->
+            <div class="cal-day past">25</div>
+            <div class="cal-day today">26</div>
+            <div class="cal-day">27</div>
+            <div class="cal-day has-sessions">28</div>
+            <div class="cal-day">29</div>
+            <div class="cal-day selected">30</div>
+            <div class="cal-day has-sessions">31</div>
+
+            <!-- Week 6 (June overflow) -->
+            <div class="cal-day muted">1</div>
+            <div class="cal-day muted">2</div>
+            <div class="cal-day muted">3</div>
+            <div class="cal-day muted">4</div>
+            <div class="cal-day muted">5</div>
+            <div class="cal-day muted">6</div>
+            <div class="cal-day muted">7</div>
+          </div>
+
+          <!-- Time picker -->
+          <div class="time-row">
+            <span class="text-xs font-semibold uppercase tracking-wider mr-1" style="color: rgb(var(--muted-foreground));">Hora</span>
+            <button class="time-pill">18:00</button>
+            <button class="time-pill">19:00</button>
+            <button class="time-pill active">20:00</button>
+            <button class="time-pill">21:00</button>
+            <button class="time-pill">22:00</button>
+          </div>
+
+          <!-- Legend -->
+          <div class="mt-3 text-xs flex items-center gap-3" style="color: rgb(var(--muted-foreground));">
+            <span><span class="legend-dot"></span>Día con partidas conocidas</span>
+            <span style="opacity: 0.7;">Hoy en amarillo · Selección en rojo · Pasado tachado</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-12 pt-6 border-t" style="border-color: rgb(var(--border));">
+      <h3 class="display text-lg font-semibold mb-3">Detalles de implementación</h3>
+      <ul class="text-sm space-y-2" style="color: rgb(var(--muted-foreground));">
+        <li>• Librería: <code>react-day-picker</code> (12kb gzip, accesible, headless con CSS propio)</li>
+        <li>• Trigger compacto cerrado, popover ancla bajo el campo con el calendario</li>
+        <li>• Días pasados deshabilitados (tachados, no clickables); días vacíos del mes muted</li>
+        <li>• Hoy en amarillo border + tinte; selección en rojo sólido con sombra</li>
+        <li>• Strip de horas 18→22 (las más típicas de partida), con opción de input libre debajo (no en mockup)</li>
+        <li>• Puntito verde en días con partidas conocidas — datos del backend `/sessions?scheduledFrom=...` (opcional, gancho futuro)</li>
+        <li>• Coste real: <strong>3-4 horas</strong> (install, theme, integración con react-hook-form, tests a11y)</li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

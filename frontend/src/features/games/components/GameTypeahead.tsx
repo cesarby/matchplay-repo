@@ -10,6 +10,8 @@ import type { GameSearchResult } from '../types/game.types'
 
 interface GameTypeaheadProps {
   label: string
+  /** Oculta el label visualmente pero lo mantiene en el DOM para a11y. */
+  labelSrOnly?: boolean
   /** Juego seleccionado (controlled). */
   value: GameSearchResult | null
   onChange: (game: GameSearchResult | null) => void
@@ -34,6 +36,7 @@ interface GameTypeaheadProps {
  */
 export function GameTypeahead({
   label,
+  labelSrOnly = false,
   value,
   onChange,
   error,
@@ -62,10 +65,14 @@ export function GameTypeahead({
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
-  // Si cambian externamente el valor, sincronizamos el input
+  // Si cambia EXTERNAMENTE la selección (bggId distinto, o se limpia),
+  // sincronizamos el input. Usamos bggId como dep — si el padre re-renderiza
+  // con el mismo juego (objeto nuevo, misma identidad) no pisamos lo que el
+  // usuario esté tecleando.
   useEffect(() => {
-    if (value) setQuery(value.name)
-  }, [value])
+    setQuery(value?.name ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value?.bggId])
 
   const results = data?.content ?? []
   const showDropdown = open && debounced.trim().length >= 2
@@ -84,7 +91,7 @@ export function GameTypeahead({
 
   return (
     <div className="flex flex-col gap-1" ref={wrapperRef}>
-      <label htmlFor={inputId} className="text-sm font-medium">
+      <label htmlFor={inputId} className={cn('text-sm font-medium', labelSrOnly && 'sr-only')}>
         {label}
       </label>
 

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matchplay — Menú móvil · Opción B (Bottom sheet)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      --background: 250 246 238;
+      --background-alt: 245 239 226;
+      --foreground: 31 26 20;
+      --card: 255 252 246;
+      --muted: 240 234 224;
+      --muted-foreground: 110 97 79;
+      --border: 229 220 201;
+      --p-red: 200 54 44;
+      --p-red-soft: 252 232 229;
+      --p-green: 47 143 79;
+      --p-green-soft: 226 245 232;
+      --p-yellow: 232 169 59;
+      --p-yellow-soft: 253 243 219;
+      --p-blue: 31 111 178;
+      --p-blue-soft: 226 240 252;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #eef2f7;
+      color: rgb(var(--foreground));
+      padding: 2rem;
+    }
+    .display { font-family: 'Bricolage Grotesque', system-ui, sans-serif; letter-spacing: -0.02em; }
+
+    .phone {
+      width: 375px;
+      height: 760px;
+      background: rgb(var(--background));
+      border-radius: 36px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.18), 0 0 0 12px #111;
+      overflow: hidden;
+      position: relative;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: rgb(var(--card));
+      border-bottom: 1px solid rgb(var(--border));
+    }
+    .logo {
+      font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+      font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em;
+    }
+    .logo-sub { font-size: 0.62rem; color: rgb(var(--muted-foreground)); letter-spacing: 0.04em; margin-top: -1px; }
+    .burger {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: rgb(var(--card));
+      border: 1.5px solid rgb(var(--border));
+      color: rgb(var(--foreground));
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Bottom sheet */
+    .sheet-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(2px);
+    }
+    .sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: rgb(var(--card));
+      border-radius: 24px 24px 0 0;
+      padding: 0.5rem 0 1.5rem;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+      max-height: 78%;
+    }
+    .sheet-handle {
+      width: 44px; height: 5px;
+      background: rgb(var(--border));
+      border-radius: 999px;
+      margin: 0.5rem auto 1rem;
+    }
+    .sheet-user {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0 1.25rem 1rem;
+    }
+    .avatar {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgb(var(--p-red)) 0%, rgb(var(--p-yellow)) 100%);
+      color: white;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+      font-weight: 800; font-size: 1.3rem;
+    }
+    .sheet-grid {
+      padding: 0.25rem 1rem 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+    }
+    .grid-action {
+      background: rgb(var(--card));
+      border: 1.5px solid rgb(var(--border));
+      border-radius: 16px;
+      padding: 1rem 0.5rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .grid-action:hover {
+      border-color: rgb(var(--p-red));
+      background: rgb(var(--p-red-soft));
+    }
+    .grid-action.active {
+      background: rgb(var(--p-red));
+      border-color: rgb(var(--p-red));
+      color: white;
+    }
+    .grid-action.active .grid-icon {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    .grid-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .grid-label {
+      font-size: 0.8rem; font-weight: 600; text-align: center;
+    }
+    .sheet-divider {
+      height: 1px;
+      background: rgb(var(--border));
+      margin: 1rem 1.25rem;
+    }
+    .sheet-row {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.65rem 1.25rem;
+      font-weight: 600; font-size: 0.95rem;
+    }
+    .lang-toggle {
+      display: inline-flex;
+      background: rgb(var(--muted));
+      border-radius: 12px;
+      padding: 3px;
+      margin-left: auto;
+    }
+    .lang-toggle button {
+      padding: 0.35rem 0.75rem;
+      border-radius: 9px;
+      font-size: 0.82rem; font-weight: 700;
+      border: none; background: transparent; cursor: pointer;
+    }
+    .lang-toggle button.active {
+      background: rgb(var(--foreground));
+      color: rgb(var(--background));
+    }
+    .sheet-logout {
+      margin: 1rem 1.25rem 0;
+      padding: 0.95rem;
+      width: calc(100% - 2.5rem);
+      border-radius: 14px;
+      background: rgb(var(--p-red));
+      color: white;
+      border: none;
+      font-weight: 700; font-size: 0.92rem;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(var(--p-red), 0.3);
+    }
+
+    .hero {
+      padding: 1.5rem 1.25rem 2rem;
+      background: rgb(var(--background-alt));
+    }
+    .hero-eyebrow {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.18em; color: rgb(var(--p-red));
+      margin-bottom: 0.85rem;
+    }
+    .hero-title {
+      font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+      font-weight: 800; font-size: 2.5rem;
+      line-height: 1.08; letter-spacing: -0.02em;
+    }
+    .hero-title .accent { color: rgb(var(--p-red)); }
+    .hero-subtitle {
+      margin-top: 0.85rem;
+      color: rgb(var(--muted-foreground));
+      font-size: 0.92rem; max-width: 90%; line-height: 1.45;
+    }
+
+    .frame-label {
+      font-size: 0.85rem; color: rgb(var(--muted-foreground));
+      margin-bottom: 0.5rem; text-align: center; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-6xl mx-auto">
+    <header class="text-center mb-8">
+      <p class="text-sm uppercase tracking-wider text-slate-500">Opción B</p>
+      <h1 class="display text-4xl font-bold mt-1">Bottom sheet</h1>
+      <p class="mt-2 text-slate-600 max-w-xl mx-auto">
+        Sheet que sube desde abajo. Acciones primarias como grid (3 botones grandes tipo app-launcher).
+        Ergonomía pulgar mucho mejor: lo más usado queda cerca del dedo, no en la esquina superior.
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <!-- Estado 1: cerrado -->
+      <div>
+        <div class="frame-label">Estado · cerrado</div>
+        <div class="phone mx-auto">
+          <div class="header">
+            <div>
+              <div class="logo">Match<span style="color: rgb(var(--p-red))">&</span>Play</div>
+              <div class="logo-sub">conecta y juega</div>
+            </div>
+            <button class="burger" aria-label="Abrir menú">
+              <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div class="hero">
+            <div class="hero-eyebrow">0 partidas activas</div>
+            <h2 class="hero-title">Encuentra tu <span class="accent">próxima mesa</span></h2>
+            <p class="hero-subtitle">Tu ubicación está prefiltrada. Cámbiala cuando quieras.</p>
+          </div>
+
+          <div class="px-5 mt-4">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Filtros</div>
+            <div class="bg-white rounded-2xl border border-slate-200 p-3 text-sm text-slate-500">
+              📍 Madrid · Madrid · Centro
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado 2: sheet abierto -->
+      <div>
+        <div class="frame-label">Estado · sheet abierto</div>
+        <div class="phone mx-auto">
+          <div class="header" style="opacity: 0.4;">
+            <div>
+              <div class="logo">Match<span style="color: rgb(var(--p-red))">&</span>Play</div>
+              <div class="logo-sub">conecta y juega</div>
+            </div>
+            <button class="burger"><i data-lucide="menu" class="w-5 h-5"></i></button>
+          </div>
+          <div class="hero" style="opacity: 0.4;">
+            <div class="hero-eyebrow">0 partidas activas</div>
+            <h2 class="hero-title">Encuentra tu <span class="accent">próxima mesa</span></h2>
+          </div>
+
+          <div class="sheet-overlay"></div>
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+
+            <div class="sheet-user">
+              <div class="avatar">C</div>
+              <div>
+                <div class="font-bold text-base">cesarby</div>
+                <div class="text-xs" style="color: rgb(var(--muted-foreground));">⭐ 4.8 · 320 puntos</div>
+              </div>
+            </div>
+
+            <div class="sheet-grid">
+              <button class="grid-action active">
+                <div class="grid-icon" style="background: rgb(var(--p-red-soft));">
+                  <i data-lucide="dices" class="w-5 h-5" style="color: rgb(var(--p-red));"></i>
+                </div>
+                <div class="grid-label">Partidas</div>
+              </button>
+
+              <button class="grid-action">
+                <div class="grid-icon" style="background: rgb(var(--p-yellow-soft));">
+                  <i data-lucide="plus" class="w-5 h-5" style="color: rgb(var(--p-yellow));"></i>
+                </div>
+                <div class="grid-label">Crear</div>
+              </button>
+
+              <button class="grid-action">
+                <div class="grid-icon" style="background: rgb(var(--p-green-soft));">
+                  <i data-lucide="calendar-check" class="w-5 h-5" style="color: rgb(var(--p-green));"></i>
+                </div>
+                <div class="grid-label">Mis partidas</div>
+              </button>
+
+              <button class="grid-action">
+                <div class="grid-icon" style="background: rgb(var(--p-blue-soft));">
+                  <i data-lucide="user" class="w-5 h-5" style="color: rgb(var(--p-blue));"></i>
+                </div>
+                <div class="grid-label">Perfil</div>
+              </button>
+
+              <button class="grid-action">
+                <div class="grid-icon" style="background: rgb(var(--muted));">
+                  <i data-lucide="settings" class="w-5 h-5" style="color: rgb(var(--muted-foreground));"></i>
+                </div>
+                <div class="grid-label">Ajustes</div>
+              </button>
+
+              <button class="grid-action">
+                <div class="grid-icon" style="background: rgb(var(--muted));">
+                  <i data-lucide="circle-help" class="w-5 h-5" style="color: rgb(var(--muted-foreground));"></i>
+                </div>
+                <div class="grid-label">Ayuda</div>
+              </button>
+            </div>
+
+            <div class="sheet-divider"></div>
+
+            <div class="sheet-row">
+              <i data-lucide="languages" class="w-5 h-5" style="color: rgb(var(--muted-foreground));"></i>
+              <span>Idioma</span>
+              <div class="lang-toggle">
+                <button class="active">ES</button>
+                <button>EN</button>
+              </div>
+            </div>
+
+            <button class="sheet-logout">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-12 max-w-3xl mx-auto pt-6 border-t border-slate-200">
+      <h3 class="display text-lg font-semibold mb-3">Detalles de implementación</h3>
+      <ul class="text-sm space-y-2 text-slate-600">
+        <li>• Hamburguesa <strong>outlined neutra</strong> (sin distracción), porque el sheet es el protagonista al abrir</li>
+        <li>• Handle decorativo arriba (la "barrita" tipo iOS) — refuerza affordance de "arrastra para cerrar"</li>
+        <li>• Grid 3×N para acciones rápidas: dado=Partidas, plus=Crear, calendar-check=Mis partidas, user=Perfil…</li>
+        <li>• Acción activa en rojo sólido (resto en blanco con borde) — feedback fuerte de "estás aquí"</li>
+        <li>• Idioma como toggle ES/EN inline, no menú aparte</li>
+        <li>• Logout como botón rojo grande al pie con sombra — sensible al pulgar derecho</li>
+        <li>• En interacción real: <code>aria-modal="true"</code>, focus trap, swipe-down para cerrar</li>
+        <li><strong>Hero fix</strong>: line-height pasa de <code>0.95</code> a <code>1.08</code> en móvil</li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

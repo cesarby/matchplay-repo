@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
-import { GameTypeahead } from '@/features/games/components/GameTypeahead'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { GameWithExpansionsPicker } from '@/features/games/components/GameWithExpansionsPicker'
 import type { GameSearchResult } from '@/features/games/types/game.types'
 import { useAreasQuery, useCitiesQuery, useProvincesQuery } from '@/features/geo/hooks/useGeo'
 import type { ApiError } from '@/shared/api/ApiError'
@@ -16,28 +17,33 @@ import { useCreateSessionMutation } from '../hooks/useSessions'
 import { mapSessionError } from '../lib/errorMapping'
 import type { CreateSessionRequest } from '../types/session.types'
 
+import { SessionDateTimePicker } from './SessionDateTimePicker'
+
+const DESCRIPTION_MAX = 500
+
 /**
  * Schema de validación cliente para Create.
- * Las claves de error son keys i18n (se resuelven en render con t()).
  *
- * Notas:
- * - `game` es objeto seleccionado (no string). Se valida que esté presente.
- * - `scheduledAt` se almacena como string del input (datetime-local) y se valida que sea futuro.
- * - `maxPlayers` 2-20 (mismo rango que el backend). El límite del juego BGG
- *   lo refuerza el backend con 400 si se excede.
+ * Reglas de obligatoriedad (regla de producto):
+ *   Todos los campos son obligatorios EXCEPTO {@code description}.
+ *
+ * Las claves de error son keys i18n (se resuelven en render con t()).
  */
 const schema = z.object({
   title: z.string().min(1, 'sessions.errors.required').max(150, 'sessions.errors.tooLong'),
-  description: z.string().max(5000, 'sessions.errors.tooLong').optional(),
+  description: z.string().max(DESCRIPTION_MAX, 'sessions.errors.tooLong').optional(),
   game: z.object({
     bggId: z.number(),
     name: z.string(),
     minPlayers: z.number().nullable(),
     maxPlayers: z.number().nullable(),
   }),
+  expansions: z
+    .array(z.object({ bggId: z.number(), name: z.string() }))
+    .max(20, 'sessions.errors.tooLong'),
   provinceCode: z.string().min(1, 'sessions.errors.required'),
   cityCode: z.string().min(1, 'sessions.errors.required'),
-  areaCode: z.string().optional(),
+  areaCode: z.string().min(1, 'sessions.errors.required'),
   scheduledAt: z
     .string()
     .min(1, 'sessions.errors.required')
@@ -49,7 +55,7 @@ const schema = z.object({
       { message: 'sessions.errors.scheduledInPast' },
     ),
   maxPlayers: z.coerce
-    .number()
+    .number({ invalid_type_error: 'sessions.errors.required' })
     .int()
     .min(2, 'sessions.errors.maxBelowGameMin')
     .max(20, 'sessions.errors.maxAboveGame'),
@@ -75,6 +81,7 @@ export function CreateSessionForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const mutation = useCreateSessionMutation()
+  const { user } = useAuth()
   const [banner, setBanner] = useState<string | null>(null)
 
   const {
@@ -89,6 +96,7 @@ export function CreateSessionForm() {
     defaultValues: {
       title: '',
       description: '',
+      expansions: [],
       provinceCode: '',
       cityCode: '',
       areaCode: '',
@@ -100,10 +108,51 @@ export function CreateSessionForm() {
   const provinceCode = watch('provinceCode')
   const cityCode = watch('cityCode')
   const selectedGame = watch('game') as GameSearchResult | undefined
+  const descriptionValue = watch('description') ?? ''
 
   const provincesQuery = useProvincesQuery()
   const citiesQuery = useCitiesQuery(provinceCode)
   const areasQuery = useAreasQuery(cityCode)
+
+  // 1) Prefill de localización en cascada.
+  //    Cada nivel espera a que su query (cities depende de province,
+  //    areas depende de city) traiga la opción correspondiente del usuario
+  //    antes de hacer setValue. Si no, el <select> uncontrolled descarta
+  //    el value cuando todavía no existe esa opción y el campo queda vacío.
+  useEffect(() => {
+    if (user?.provinceCode) setValue('provinceCode', user.provinceCode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId])
+
+  useEffect(() => {
+    if (!user?.cityCode) return
+    const cities = citiesQuery.data ?? []
+    if (cities.some((c) => c.code === user.cityCode)) {
+      setValue('cityCode', user.cityCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId, citiesQuery.data])
+
+  useEffect(() => {
+    if (!user?.areaCode) return
+    const areas = areasQuery.data ?? []
+    if (areas.some((a) => a.code === user.areaCode)) {
+      setValue('areaCode', user.areaCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId, areasQuery.data])
+
+  // 2) Plazas se autocompletan con el máximo del juego al seleccionar uno.
+  //    Si el juego no aporta maxPlayers (cooperativos), no tocamos el valor.
+  useEffect(() => {
+    if (selectedGame?.maxPlayers != null) {
+      setValue('maxPlayers', selectedGame.maxPlayers, { shouldValidate: false })
+    }
+  }, [selectedGame?.bggId, selectedGame?.maxPlayers, setValue])
+
+  // 3) El SessionDateTimePicker se ocupa internamente de bloquear días
+  //    anteriores a hoy. La validación de "estrictamente futura" la refuerza
+  //    el schema en submit.
 
   const onSubmit = handleSubmit((raw) => {
     const parsed = schema.safeParse(raw)
@@ -124,6 +173,7 @@ export function CreateSessionForm() {
       title: parsed.data.title,
       description: parsed.data.description?.trim() || null,
       baseGameId: parsed.data.game.bggId,
+      expansionBggIds: parsed.data.expansions.map((e) => e.bggId),
       cityCode: parsed.data.cityCode,
       areaCode: parsed.data.areaCode?.trim() || null,
       // datetime-local da "2030-01-15T20:00" — el navegador lo asume local.
@@ -139,7 +189,6 @@ export function CreateSessionForm() {
           setBanner(t('auth.errors.generic'))
           return
         }
-        // Errores de validación por campo (Bean Validation del backend)
         if (err.fieldErrors) {
           for (const fe of err.fieldErrors) {
             if ((ALLOWED_FIELDS as string[]).includes(fe.field)) {
@@ -173,12 +222,25 @@ export function CreateSessionForm() {
       />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium">
-          {t('sessions.create.fields.description')}
-        </label>
+        <div className="flex items-baseline justify-between">
+          <label htmlFor="description" className="text-sm font-medium">
+            {t('sessions.create.fields.description')}
+          </label>
+          <span
+            className={
+              descriptionValue.length > DESCRIPTION_MAX
+                ? 'text-xs text-red'
+                : 'text-xs text-muted-foreground'
+            }
+            aria-live="polite"
+          >
+            {descriptionValue.length} / {DESCRIPTION_MAX}
+          </span>
+        </div>
         <textarea
           id="description"
           rows={4}
+          maxLength={DESCRIPTION_MAX}
           {...register('description')}
           className="rounded-sm border border-border bg-card px-3 py-2 text-base outline-none transition focus:ring-2 focus:ring-blue"
         />
@@ -193,12 +255,23 @@ export function CreateSessionForm() {
         control={control}
         name="game"
         rules={{ required: true }}
-        render={({ field, fieldState }) => (
-          <GameTypeahead
-            label={t('sessions.create.fields.game')}
-            value={(field.value as GameSearchResult | null) ?? null}
-            onChange={(g) => field.onChange(g)}
-            error={fieldState.error ? t('sessions.errors.required') : undefined}
+        render={({ field: gameField, fieldState: gameFieldState }) => (
+          <Controller
+            control={control}
+            name="expansions"
+            render={({ field: expField }) => (
+              <GameWithExpansionsPicker
+                baseGame={(gameField.value as GameSearchResult | null) ?? null}
+                onBaseGameChange={(g) => gameField.onChange(g)}
+                expansions={(expField.value as GameSearchResult[]) ?? []}
+                onExpansionsChange={(list) => expField.onChange(list)}
+                baseLabel={t('sessions.create.fields.game')}
+                expansionsLabel={t('sessions.create.fields.expansions')}
+                basePlaceholder={t('sessions.create.fields.gamePlaceholder')}
+                expansionPlaceholder={t('sessions.create.fields.expansionsPlaceholder')}
+                baseError={gameFieldState.error ? t('sessions.errors.required') : undefined}
+              />
+            )}
           />
         )}
       />
@@ -236,11 +309,17 @@ export function CreateSessionForm() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <TextField
-          label={t('sessions.create.fields.scheduledAt')}
-          type="datetime-local"
-          {...register('scheduledAt')}
-          error={errors.scheduledAt?.message ? t(errors.scheduledAt.message) : undefined}
+        <Controller
+          control={control}
+          name="scheduledAt"
+          render={({ field, fieldState }) => (
+            <SessionDateTimePicker
+              label={t('sessions.create.fields.scheduledAt')}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={fieldState.error?.message ? t(fieldState.error.message) : undefined}
+            />
+          )}
         />
         <TextField
           label={

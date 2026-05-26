@@ -24,6 +24,8 @@ function makeSummary(id: number, title: string) {
     title,
     baseGameId: 13,
     baseGameName: 'Catan',
+    baseGameThumbnailUrl: null,
+    expansionCount: 0,
     cityCode: 'MAD01',
     cityName: 'Madrid',
     areaCode: null,

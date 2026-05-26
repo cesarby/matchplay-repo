@@ -9,7 +9,13 @@
   "nav": {
     "home": "Inicio",
     "sessions": "Partidas",
-    "profile": "Perfil",
+    "profile": "Mi perfil",
+    "createSession": "Crear partida",
+    "mySessions": "Mis partidas",
+    "comingSoon": "Próximamente",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "greeting": "¡Hola, {{name}}!",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "register": "Crear cuenta"
@@ -112,7 +118,9 @@
       "to": "Hasta",
       "status": "Estado",
       "apply": "Aplicar",
-      "clear": "Limpiar filtros"
+      "clear": "Limpiar filtros",
+      "clearWithCount_one": "Limpiar {{count}} filtro",
+      "clearWithCount_other": "Limpiar {{count}} filtros"
     },
     "detail": {
       "playersHeading": "Apuntados",
@@ -134,6 +142,9 @@
         "title": "Título",
         "description": "Descripción",
         "game": "Juego",
+        "gamePlaceholder": "Buscar juego…",
+        "expansions": "Expansiones",
+        "expansionsPlaceholder": "Buscar expansión…",
         "city": "Ciudad",
         "area": "Zona",
         "scheduledAt": "Fecha y hora",
@@ -153,7 +164,9 @@
       "maxBelowCurrent": "No puedes reducir el máximo por debajo de los apuntados",
       "maxAboveGame": "El máximo supera el límite del juego",
       "maxBelowGameMin": "El máximo es menor que el mínimo del juego",
-      "invalidTransition": "No se puede cambiar a ese estado"
+      "invalidTransition": "No se puede cambiar a ese estado",
+      "expansionWrongBase": "Una de las expansiones no pertenece al juego base",
+      "expansionNotExpansion": "Uno de los items seleccionados no es una expansión"
     }
   },
   "landing": {

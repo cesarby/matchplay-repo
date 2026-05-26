@@ -39,6 +39,10 @@ export function mapSessionError(err: ApiError): SessionErrorTarget {
       return { channel: 'banner', i18nKey: 'sessions.errors.invalidTransition' }
     case 'error.session.not.found':
       return { channel: 'banner', i18nKey: 'sessions.errors.notFound' }
+    case 'error.session.expansion.wrong.base':
+      return { channel: 'banner', i18nKey: 'sessions.errors.expansionWrongBase' }
+    case 'error.session.expansion.not.expansion':
+      return { channel: 'banner', i18nKey: 'sessions.errors.expansionNotExpansion' }
     default:
       return { channel: 'banner', i18nKey: 'auth.errors.generic' }
   }

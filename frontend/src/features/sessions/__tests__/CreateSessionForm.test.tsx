@@ -11,6 +11,34 @@ import { CreateSessionForm } from '../components/CreateSessionForm'
 
 const API = '/api/v1'
 
+// Picker de fecha mockeado a un input nativo para no tener que clicar
+// el popover en cada test. La UX del calendario tiene tests propios en
+// SessionDateTimePicker.test.tsx.
+vi.mock('../components/SessionDateTimePicker', () => ({
+  SessionDateTimePicker: ({
+    label,
+    value,
+    onChange,
+    error,
+  }: {
+    label: string
+    value: string
+    onChange: (next: string) => void
+    error?: string
+  }) => (
+    <div>
+      <label htmlFor="mock-date">{label}</label>
+      <input
+        id="mock-date"
+        type="datetime-local"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {error && <span role="alert">{error}</span>}
+    </div>
+  ),
+}))
+
 // Geo mockeado
 vi.mock('@/features/geo/hooks/useGeo', () => ({
   useProvincesQuery: () => ({
@@ -93,6 +121,7 @@ describe('<CreateSessionForm>', () => {
     await user.type(screen.getByLabelText(/título/i), 'Catan Night')
     await user.selectOptions(screen.getByLabelText(/provincia/i), 'MAD')
     await user.selectOptions(screen.getByLabelText(/^ciudad$/i), 'MAD01')
+    await user.selectOptions(screen.getByLabelText(/zona/i), 'MAD01-01')
     // datetime-local con valor en el pasado
     await user.type(screen.getByLabelText(/fecha/i), '2000-01-15T20:00')
 
@@ -118,6 +147,8 @@ describe('<CreateSessionForm>', () => {
             description: postedBody.description,
             baseGameId: postedBody.baseGameId,
             baseGameName: 'Catan',
+            baseGameThumbnailUrl: null,
+            expansions: [],
             cityCode: postedBody.cityCode,
             cityName: 'Madrid',
             areaCode: null,
@@ -146,16 +177,16 @@ describe('<CreateSessionForm>', () => {
     await user.type(screen.getByLabelText(/descripción/i), 'Mesa nocturna')
     await user.selectOptions(screen.getByLabelText(/provincia/i), 'MAD')
     await user.selectOptions(screen.getByLabelText(/^ciudad$/i), 'MAD01')
+    await user.selectOptions(screen.getByLabelText(/zona/i), 'MAD01-01')
     await user.type(screen.getByLabelText(/fecha/i), '2030-01-15T20:00')
 
     await user.type(screen.getByLabelText(/juego/i), 'Catan')
     const option = await screen.findByText('Catan', { selector: '.font-medium' })
     await user.click(option)
 
-    // El input "Plazas" tiene formato dinámico → busco el field tipo number
-    const maxPlayers = screen.getByDisplayValue('4')
-    await user.clear(maxPlayers)
-    await user.type(maxPlayers, '4')
+    // Tras seleccionar el juego, "Plazas" se autocompleta con el max del juego (4).
+    // Verificamos que el autocompletado tomó efecto antes de seguir.
+    expect(screen.getByDisplayValue('4')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /publicar partida/i }))
 
@@ -189,6 +220,7 @@ describe('<CreateSessionForm>', () => {
     await user.type(screen.getByLabelText(/título/i), 'Catan')
     await user.selectOptions(screen.getByLabelText(/provincia/i), 'MAD')
     await user.selectOptions(screen.getByLabelText(/^ciudad$/i), 'MAD01')
+    await user.selectOptions(screen.getByLabelText(/zona/i), 'MAD01-01')
     await user.type(screen.getByLabelText(/fecha/i), '2030-01-15T20:00')
     await user.type(screen.getByLabelText(/juego/i), 'Catan')
     const option = await screen.findByText('Catan', { selector: '.font-medium' })

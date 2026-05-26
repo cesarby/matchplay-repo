@@ -5,7 +5,7 @@ import { usePublicStatsQuery } from '../hooks/usePublicStatsQuery'
 
 function StatSkeleton() {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left">
       <div className="size-10 animate-pulse rounded-full bg-muted" />
       <div className="space-y-1">
         <div className="h-7 w-16 animate-pulse rounded bg-muted" />
@@ -23,7 +23,7 @@ interface StatItemProps {
 
 function StatItem({ value, label, icon }: StatItemProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left">
       <div aria-hidden="true" className="shrink-0">
         {icon}
       </div>
@@ -52,7 +52,7 @@ export function TrustStrip() {
       className="border-y border-border bg-card py-8"
     >
       <div className="container">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:gap-6">
           {isLoading ? (
             <>
               <StatSkeleton />
