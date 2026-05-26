@@ -167,6 +167,24 @@ export default function SessionDetailPage() {
             {canEdit && <CreatorActions session={data} />}
           </section>
 
+          {/* Sobre el juego */}
+          {data.baseGameSummary && data.baseGameName && (
+            <section
+              aria-labelledby="game-summary-heading"
+              className="rounded border-l-4 border-yellow bg-yellow-soft/30 p-4"
+            >
+              <h2
+                id="game-summary-heading"
+                className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground"
+              >
+                {t('sessions.detail.aboutGameHeading', { game: data.baseGameName })}
+              </h2>
+              <p className="text-sm italic leading-relaxed text-foreground">
+                {data.baseGameSummary}
+              </p>
+            </section>
+          )}
+
           {/* Descripción */}
           <section aria-labelledby="desc-heading">
             <h2 id="desc-heading" className="mb-2 font-display text-lg font-bold text-foreground">

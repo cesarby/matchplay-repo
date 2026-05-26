@@ -129,6 +129,7 @@
       "waitlistHeading": "Lista de espera",
       "descriptionHeading": "Descripción",
       "noDescription": "Sin descripción",
+      "aboutGameHeading": "Sobre {{game}}",
       "guestOf": "+1 acompañante de @{{username}}",
       "join": "Unirme",
       "leave": "Salir",

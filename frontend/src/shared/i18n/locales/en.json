@@ -129,6 +129,7 @@
       "waitlistHeading": "Waitlist",
       "descriptionHeading": "Description",
       "noDescription": "No description",
+      "aboutGameHeading": "About {{game}}",
       "guestOf": "+1 guest of @{{username}}",
       "join": "Join",
       "leave": "Leave",

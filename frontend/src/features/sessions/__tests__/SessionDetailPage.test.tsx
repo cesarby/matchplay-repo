@@ -27,6 +27,7 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
     baseGameId: 13,
     baseGameName: 'Catan',
     baseGameThumbnailUrl: null,
+    baseGameSummary: null,
     expansions: [],
     creatorGuests: 0,
     cityCode: 'MAD01',
@@ -317,5 +318,35 @@ describe('<SessionDetailPage>', () => {
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cerrar mesa/i })).not.toBeInTheDocument()
+  })
+
+  it('renderiza el bloque "Sobre el juego" cuando hay baseGameSummary', async () => {
+    server.use(
+      http.get(`${API}/sessions/:id`, () =>
+        HttpResponse.json(
+          detail({
+            id: 7,
+            baseGameName: 'Ark Nova',
+            baseGameSummary: 'Construye un zoo moderno enfocado en conservación y ciencia.',
+          }),
+        ),
+      ),
+    )
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    renderDetail()
+    expect(await screen.findByText(/sobre ark nova/i)).toBeInTheDocument()
+    expect(screen.getByText(/construye un zoo/i)).toBeInTheDocument()
+  })
+
+  it('omite el bloque cuando baseGameSummary es null', async () => {
+    server.use(
+      http.get(`${API}/sessions/:id`, () =>
+        HttpResponse.json(detail({ id: 7, baseGameSummary: null })),
+      ),
+    )
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    renderDetail()
+    await screen.findByRole('heading', { level: 1, name: /catan night/i })
+    expect(screen.queryByText(/sobre /i)).not.toBeInTheDocument()
   })
 })

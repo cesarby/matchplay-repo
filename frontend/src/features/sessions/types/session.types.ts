@@ -50,6 +50,8 @@ export interface SessionDetail extends Omit<
   'creatorId' | 'creatorUsername' | 'expansionCount'
 > {
   description: string | null
+  /** Resumen editorial del juego base generado por LLM. Null si no se ha generado todavía. */
+  baseGameSummary: string | null
   /** Lista detallada de expansiones asociadas (orden de inserción). */
   expansions: ExpansionSummary[]
   /** Personas adicionales declaradas por el creador. Cuenta dentro de registeredPlayers. */
