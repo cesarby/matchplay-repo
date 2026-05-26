@@ -43,6 +43,14 @@ export function mapSessionError(err: ApiError): SessionErrorTarget {
       return { channel: 'banner', i18nKey: 'sessions.errors.expansionWrongBase' }
     case 'error.session.expansion.not.expansion':
       return { channel: 'banner', i18nKey: 'sessions.errors.expansionNotExpansion' }
+    case 'error.session.guests.exceed.max':
+      return {
+        channel: 'field',
+        field: 'creatorGuests',
+        i18nKey: 'sessions.errors.guestsExceedMax',
+      }
+    case 'error.session.creator.cannot.leave':
+      return { channel: 'banner', i18nKey: 'sessions.errors.creatorCannotLeave' }
     default:
       return { channel: 'banner', i18nKey: 'auth.errors.generic' }
   }

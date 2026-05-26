@@ -312,6 +312,21 @@ Implicaciones:
 - `POST /sessions/{id}/join` por el creador sigue lanzando `409 error.session.join.own`.
 - `DELETE /sessions/{id}/join` por el creador lanza `403 error.session.creator.cannot.leave` — para "irse" debe cancelar la partida vía `PATCH /status`.
 
+**Acompañantes del creador (`creatorGuests`, v1.3)**: el creador puede declarar
+en el body cuántas personas adicionales vienen con él (familiares/amigos que no
+son usuarios del sistema). Esos huecos quedan reservados desde la creación:
+
+- Validación: `0 ≤ creatorGuests` y `1 + creatorGuests ≤ maxPlayers`. Si no
+  cabe, `400 error.session.guests.exceed.max`.
+- `registered_players = 1 + creatorGuests` al persistir. Si llena la capacidad
+  exacta, `status = FULL` desde el minuto cero.
+- Persistido en `game_sessions.creator_guests` (V9, `INT NOT NULL DEFAULT 0`)
+  y expuesto en `SessionDetailResponse.creatorGuests`. No se incluye en
+  `SessionSummaryResponse` (el conteo ya va en `registered_players`).
+- `creatorGuests` es **inmutable** tras crear (no se admite en
+  `UpdateSessionRequest` v1; si en el futuro se quiere editar, hay que
+  recalcular capacidad y promocionar/demover waitlist).
+
 ### `PATCH /api/v1/sessions/{id}`
 
 **Auth:** JWT requerido. **Solo el creador.**
@@ -411,6 +426,7 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 | `error.session.not.owner` | 403 | `patch`/`changeStatus` por no-creador |
 | `error.session.not.participant` | 403 | `leave` de usuario no apuntado |
 | `error.session.creator.cannot.leave` | 403 | `leave` invocado por el creador. Para irse debe cancelar la partida. |
+| `error.session.guests.exceed.max` | 400 | `creatorGuests` declarados superan la capacidad: `1 + creatorGuests > maxPlayers`. |
 | `error.session.status.invalid.transition` | 409 | Transición no permitida (incluye `join` en estado terminal) |
 
 ---

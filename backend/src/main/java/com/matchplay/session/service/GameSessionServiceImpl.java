@@ -3,6 +3,7 @@ package com.matchplay.session.service;
 import com.matchplay.exception.SessionAlreadyJoinedException;
 import com.matchplay.exception.SessionExpansionNotExpansionException;
 import com.matchplay.exception.SessionExpansionWrongBaseException;
+import com.matchplay.exception.SessionGuestsExceedMaxException;
 import com.matchplay.exception.SessionJoinOwnException;
 import com.matchplay.exception.SessionMaxPlayersAboveGameException;
 import com.matchplay.exception.SessionMaxPlayersBelowCurrentException;
@@ -145,6 +146,11 @@ public class GameSessionServiceImpl implements GameSessionService {
         Game baseGame = gameService.findOrFetch(request.baseGameId());
         validateAgainstGameLimits(request.maxPlayers(), baseGame);
 
+        int guests = request.creatorGuests() != null ? request.creatorGuests() : 0;
+        if (1 + guests > request.maxPlayers()) {
+            throw new SessionGuestsExceedMaxException(guests, request.maxPlayers());
+        }
+
         City city = cityRepository.findById(request.cityCode())
                 .orElseThrow(() -> new GeoCodeNotFoundException("error.geo.city.not.found", request.cityCode()));
         Area area = null;
@@ -165,8 +171,12 @@ public class GameSessionServiceImpl implements GameSessionService {
         session.setArea(area);
         session.setScheduledAt(request.scheduledAt());
         session.setMaxPlayers(request.maxPlayers());
-        session.setRegisteredPlayers(1); // el creador queda apuntado (regla abajo)
-        session.setStatus(SessionStatus.OPEN);
+        session.setCreatorGuests(guests);
+        // El creador + sus acompañantes ocupan plazas desde el minuto cero.
+        session.setRegisteredPlayers(1 + guests);
+        session.setStatus(
+                1 + guests >= request.maxPlayers() ? SessionStatus.FULL : SessionStatus.OPEN
+        );
 
         GameSession saved = sessionRepository.save(session);
 

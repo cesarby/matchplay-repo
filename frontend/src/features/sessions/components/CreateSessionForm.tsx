@@ -59,6 +59,11 @@ const schema = z.object({
     .int()
     .min(2, 'sessions.errors.maxBelowGameMin')
     .max(20, 'sessions.errors.maxAboveGame'),
+  creatorGuests: z.coerce
+    .number({ invalid_type_error: 'sessions.errors.required' })
+    .int()
+    .min(0, 'sessions.errors.guestsNegative')
+    .max(19, 'sessions.errors.guestsExceedMax'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -71,6 +76,7 @@ const ALLOWED_FIELDS: (keyof FormValues)[] = [
   'areaCode',
   'scheduledAt',
   'maxPlayers',
+  'creatorGuests',
 ]
 
 function isApiError(value: unknown): value is ApiError {
@@ -102,6 +108,7 @@ export function CreateSessionForm() {
       areaCode: '',
       scheduledAt: '',
       maxPlayers: 4,
+      creatorGuests: 0,
     },
   })
 
@@ -169,6 +176,12 @@ export function CreateSessionForm() {
     }
     setBanner(null)
 
+    // Cross-field check: 1 (creador) + acompañantes ≤ maxPlayers.
+    if (1 + parsed.data.creatorGuests > parsed.data.maxPlayers) {
+      setError('creatorGuests', { message: 'sessions.errors.guestsExceedMax' })
+      return
+    }
+
     const body: CreateSessionRequest = {
       title: parsed.data.title,
       description: parsed.data.description?.trim() || null,
@@ -180,6 +193,7 @@ export function CreateSessionForm() {
       // toISOString lo lleva a Instant (UTC) que es lo que espera el backend.
       scheduledAt: new Date(parsed.data.scheduledAt).toISOString(),
       maxPlayers: parsed.data.maxPlayers,
+      creatorGuests: parsed.data.creatorGuests,
     }
 
     mutation.mutate(body, {
@@ -333,6 +347,21 @@ export function CreateSessionForm() {
           {...register('maxPlayers')}
           error={errors.maxPlayers?.message ? t(errors.maxPlayers.message) : undefined}
         />
+      </div>
+
+      {/* Personas extras que vienen contigo */}
+      <div className="flex flex-col gap-1">
+        <TextField
+          label={t('sessions.create.fields.creatorGuests')}
+          type="number"
+          min={0}
+          max={Math.max(0, (watch('maxPlayers') ?? 2) - 1)}
+          {...register('creatorGuests')}
+          error={errors.creatorGuests?.message ? t(errors.creatorGuests.message) : undefined}
+        />
+        <span className="text-xs text-muted-foreground">
+          {t('sessions.create.fields.creatorGuestsHelp')}
+        </span>
       </div>
 
       <Button type="submit" isLoading={mutation.isPending || isSubmitting}>

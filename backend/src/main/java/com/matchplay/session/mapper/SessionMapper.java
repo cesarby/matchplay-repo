@@ -80,6 +80,7 @@ public class SessionMapper {
                 session.getScheduledAt(),
                 session.getMaxPlayers(),
                 session.getRegisteredPlayers(),
+                session.getCreatorGuests(),
                 waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,

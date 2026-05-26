@@ -52,6 +52,8 @@ export interface SessionDetail extends Omit<
   description: string | null
   /** Lista detallada de expansiones asociadas (orden de inserción). */
   expansions: ExpansionSummary[]
+  /** Personas adicionales declaradas por el creador. Cuenta dentro de registeredPlayers. */
+  creatorGuests: number
   creatorId: number | null
   creatorUsername: string | null
   players: SessionPlayer[]
@@ -72,6 +74,11 @@ export interface CreateSessionRequest {
   areaCode?: string | null
   scheduledAt: string // ISO Instant
   maxPlayers: number
+  /**
+   * Personas adicionales que el creador trae consigo (no usuarios del
+   * sistema). Cuenta para la capacidad. Default 0 si se omite.
+   */
+  creatorGuests?: number
 }
 
 export interface UpdateSessionRequest {

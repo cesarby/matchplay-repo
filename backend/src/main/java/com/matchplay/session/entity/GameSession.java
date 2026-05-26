@@ -100,6 +100,14 @@ public class GameSession {
     @Column(name = "registered_players", nullable = false)
     private int registeredPlayers;
 
+    /**
+     * Personas adicionales que el creador trae consigo y que no son usuarios
+     * del sistema. Cuenta para la capacidad: si {@code maxPlayers = 4} y
+     * {@code creatorGuests = 2}, solo cabe 1 usuario apuntado además del creador.
+     */
+    @Column(name = "creator_guests", nullable = false)
+    private int creatorGuests;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SessionStatus status = SessionStatus.OPEN;

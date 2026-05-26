@@ -148,7 +148,9 @@
         "city": "City",
         "area": "Area",
         "scheduledAt": "Date and time",
-        "maxPlayers": "Spots"
+        "maxPlayers": "Spots",
+        "creatorGuests": "Are you bringing anyone with you?",
+        "creatorGuestsHelp": "How many people are coming with you (and don't use the app). They'll take a spot."
       }
     },
     "errors": {
@@ -166,7 +168,10 @@
       "maxBelowGameMin": "Max is below the game's minimum",
       "invalidTransition": "Cannot change to that status",
       "expansionWrongBase": "One of the expansions does not belong to the base game",
-      "expansionNotExpansion": "One of the selected items is not an expansion"
+      "expansionNotExpansion": "One of the selected items is not an expansion",
+      "guestsNegative": "Cannot be a negative number",
+      "guestsExceedMax": "Too many guests for the spots you've set",
+      "creatorCannotLeave": "You can't leave your own session. If you're not going to play, cancel it."
     }
   },
   "landing": {

@@ -397,6 +397,7 @@ Ruta envuelta en `<ProtectedRoute>` — anónimos van a `/login?from=...`.
 | `areaCode` | requerido, depende de ciudad | `SelectField` |
 | `scheduledAt` | válido y futuro | `<SessionDateTimePicker>` (custom) |
 | `maxPlayers` | `Min(2)`, `Max(20)`. Auto-rellena con `game.maxPlayers` al elegir juego. Label muestra `(min–max BGG)` | `TextField` type=number |
+| `creatorGuests` | `Min(0)`. Max dinámico = `maxPlayers - 1`. Cross-check en submit: `1 + creatorGuests ≤ maxPlayers`. Default 0 | `TextField` type=number + helper text |
 
 > **Regla de producto v1.2**: todos los campos son obligatorios excepto
 > `description`. Esto incluye `areaCode` (antes opcional).

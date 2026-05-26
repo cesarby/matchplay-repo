@@ -3,6 +3,7 @@ package com.matchplay.session.service;
 import com.matchplay.exception.SessionAlreadyJoinedException;
 import com.matchplay.exception.SessionExpansionNotExpansionException;
 import com.matchplay.exception.SessionExpansionWrongBaseException;
+import com.matchplay.exception.SessionGuestsExceedMaxException;
 import com.matchplay.exception.SessionJoinOwnException;
 import com.matchplay.exception.SessionMaxPlayersAboveGameException;
 import com.matchplay.exception.SessionMaxPlayersBelowGameMinException;
@@ -89,7 +90,7 @@ class GameSessionServiceImplTest {
     void create_withFutureDate_persistsAndAddsCreatorAsPlayer() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -123,7 +124,7 @@ class GameSessionServiceImplTest {
     void create_withPastDate_throws() {
         Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, null, "MAD01", null, past, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, past, 4, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
 
@@ -137,7 +138,7 @@ class GameSessionServiceImplTest {
     void create_maxAboveGameMax_throws() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 6); // game.max = 4
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 6, null); // game.max = 4
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -152,13 +153,56 @@ class GameSessionServiceImplTest {
     void create_maxBelowGameMin_throws() {
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 2); // game.min = 3
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 2, null); // game.min = 3
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
 
         assertThatThrownBy(() -> service.create(req))
                 .isInstanceOf(SessionMaxPlayersBelowGameMinException.class);
+    }
+
+    @Test
+    void create_withCreatorGuests_setsRegisteredAndFullStatusWhenFitsExactly() {
+        // maxPlayers=3, guests=2 → registered=3 → status=FULL ya en create.
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan", "Desc", 13L, null, "MAD01", null, future, 3, 2);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+        given(cityRepository.findById("MAD01")).willReturn(Optional.of(city));
+        given(sessionRepository.save(any(GameSession.class))).willAnswer(inv -> {
+            GameSession s = inv.getArgument(0);
+            s.setId(50L);
+            return s;
+        });
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(50L, SessionStatus.FULL));
+
+        service.create(req);
+
+        ArgumentCaptor<GameSession> captor = ArgumentCaptor.forClass(GameSession.class);
+        verify(sessionRepository).save(captor.capture());
+        GameSession saved = captor.getValue();
+        assertThat(saved.getCreatorGuests()).isEqualTo(2);
+        assertThat(saved.getRegisteredPlayers()).isEqualTo(3); // 1 creador + 2 acompañantes
+        assertThat(saved.getStatus()).isEqualTo(SessionStatus.FULL);
+    }
+
+    @Test
+    void create_withTooManyGuests_throws() {
+        // maxPlayers=4, guests=4 → 1+4=5 > 4 → rechaza.
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan", "Desc", 13L, null, "MAD01", null, future, 4, 4);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionGuestsExceedMaxException.class);
+
+        verify(sessionRepository, never()).save(any());
     }
 
     @Test
@@ -172,7 +216,7 @@ class GameSessionServiceImplTest {
 
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Pandemic", "Desc", 50L, null, "MAD01", null, future, 10);
+                "Pandemic", "Desc", 50L, null, "MAD01", null, future, 10, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(50L)).willReturn(cooperative);
@@ -197,7 +241,7 @@ class GameSessionServiceImplTest {
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan+exp", "Desc", 13L,
                 List.of(325L, 926L, 325L), // duplicado a propósito
-                "MAD01", null, future, 4);
+                "MAD01", null, future, 4, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -228,7 +272,7 @@ class GameSessionServiceImplTest {
         Game wrongExp = expansion(999L, "Wingspan: Oceania", 99L); // base distinto
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan", "Desc", 13L, List.of(999L),
-                "MAD01", null, future, 4);
+                "MAD01", null, future, 4, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -252,7 +296,7 @@ class GameSessionServiceImplTest {
 
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan", "Desc", 13L, List.of(77L),
-                "MAD01", null, future, 4);
+                "MAD01", null, future, 4, null);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -684,7 +728,7 @@ class GameSessionServiceImplTest {
         return new SessionDetailResponse(id, "t", null, 13L, "Catan", null,
                 List.of(),
                 "MAD01", "Madrid", null, null,
-                Instant.now(), 4, 0, 0, status,
+                Instant.now(), 4, 0, 0, 0, status,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
     }
 

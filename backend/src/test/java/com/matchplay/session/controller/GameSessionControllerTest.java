@@ -118,11 +118,11 @@ class GameSessionControllerTest {
     void create_withValidPayload_returns201WithLocation() throws Exception {
         Instant future = Instant.parse("2030-01-01T20:00:00Z");
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4);
+                "Catan Night", "Desc", 13L, null, "MAD01", null, future, 4, null);
         SessionDetailResponse created = new SessionDetailResponse(
                 42L, "Catan Night", "Desc", 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
-                future, 4, 0, 0, SessionStatus.OPEN,
+                future, 4, 0, 0, 0, SessionStatus.OPEN,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.create(any())).willReturn(created);
@@ -140,7 +140,7 @@ class GameSessionControllerTest {
         CreateSessionRequest req = new CreateSessionRequest(
                 "Catan + Seafarers", "Desc", 13L,
                 java.util.List.of(325L, 926L),
-                "MAD01", null, future, 4);
+                "MAD01", null, future, 4, null);
         SessionDetailResponse created = new SessionDetailResponse(
                 43L, "Catan + Seafarers", "Desc", 13L, "Catan", null,
                 java.util.List.of(
@@ -148,7 +148,7 @@ class GameSessionControllerTest {
                         new com.matchplay.session.dto.ExpansionSummary(926L, "Cities & Knights", null)
                 ),
                 "MAD01", "Madrid", null, null,
-                future, 4, 0, 0, SessionStatus.OPEN,
+                future, 4, 0, 0, 0, SessionStatus.OPEN,
                 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.create(any())).willReturn(created);
@@ -187,7 +187,7 @@ class GameSessionControllerTest {
         SessionDetailResponse d = new SessionDetailResponse(
                 10L, "Catan", null, 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
-                Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0,
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.join(eq(10L))).willReturn(d);
@@ -202,7 +202,7 @@ class GameSessionControllerTest {
         SessionDetailResponse d = new SessionDetailResponse(
                 10L, "Catan", null, 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
-                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0, 0,
                 SessionStatus.OPEN, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
         given(service.leave(eq(10L))).willReturn(d);

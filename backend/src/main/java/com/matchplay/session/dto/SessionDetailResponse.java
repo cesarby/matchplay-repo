@@ -31,6 +31,7 @@ public record SessionDetailResponse(
         Instant scheduledAt,
         int maxPlayers,
         int registeredPlayers,
+        int creatorGuests,
         int waitlistCount,
         SessionStatus status,
         Long creatorId,

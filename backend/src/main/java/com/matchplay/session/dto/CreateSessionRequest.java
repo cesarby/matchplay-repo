@@ -47,5 +47,14 @@ public record CreateSessionRequest(
         @NotNull
         @Min(2)
         @Max(20)
-        Integer maxPlayers
+        Integer maxPlayers,
+
+        /**
+         * Personas extras que el creador trae consigo (acompañantes no
+         * usuarios). 0 si viene solo. El service valida que
+         * {@code 1 + creatorGuests <= maxPlayers}.
+         */
+        @Min(0)
+        @Max(19)
+        Integer creatorGuests
 ) {}

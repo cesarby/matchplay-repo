@@ -149,6 +149,7 @@ describe('<CreateSessionForm>', () => {
             baseGameName: 'Catan',
             baseGameThumbnailUrl: null,
             expansions: [],
+            creatorGuests: 0,
             cityCode: postedBody.cityCode,
             cityName: 'Madrid',
             areaCode: null,
