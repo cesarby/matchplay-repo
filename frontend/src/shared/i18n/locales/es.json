@@ -138,6 +138,23 @@
     },
     "create": {
       "title": "Crear partida",
+      "heroTitle": "Prepara los detalles de tu mesa",
+      "livePreview": "Vista previa en vivo",
+      "publishReady": "Todo listo",
+      "publishCta": "Crear",
+      "publishHint_one": "Al publicar, otros jugadores podrán apuntarse hasta llenar la última plaza libre.",
+      "publishHint_other": "Al publicar, otros jugadores podrán apuntarse hasta llenar las {{count}} plazas libres.",
+      "sections": {
+        "info": "Información",
+        "game": "Juego",
+        "location": "Ubicación",
+        "when": "Cuándo y cuántos"
+      },
+      "preview": {
+        "heading": "Así se va a ver",
+        "placeholderTitle": "Tu partida",
+        "placeholderGame": "Pendiente de elegir juego"
+      },
       "submit": "Publicar partida",
       "submitting": "Publicando…",
       "fields": {

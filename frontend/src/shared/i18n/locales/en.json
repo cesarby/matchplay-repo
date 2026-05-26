@@ -138,6 +138,23 @@
     },
     "create": {
       "title": "Create session",
+      "heroTitle": "Set up the details of your table",
+      "livePreview": "Live preview",
+      "publishReady": "All set",
+      "publishCta": "Create",
+      "publishHint_one": "When you publish, other players can join until the last free spot is taken.",
+      "publishHint_other": "When you publish, other players can join until all {{count}} free spots are taken.",
+      "sections": {
+        "info": "Information",
+        "game": "Game",
+        "location": "Location",
+        "when": "When and how many"
+      },
+      "preview": {
+        "heading": "This is how it will look",
+        "placeholderTitle": "Your session",
+        "placeholderGame": "Pick a game"
+      },
       "submit": "Publish session",
       "submitting": "Publishing…",
       "fields": {
