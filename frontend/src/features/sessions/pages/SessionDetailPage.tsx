@@ -185,7 +185,7 @@ export default function SessionDetailPage() {
             >
               <span>{t('sessions.detail.playersHeading')}</span>
               <span className="text-sm font-normal text-muted-foreground">
-                {players.length}/{data.maxPlayers}
+                {data.registeredPlayers}/{data.maxPlayers}
               </span>
             </h2>
             {players.length > 0 ? (
@@ -193,6 +193,21 @@ export default function SessionDetailPage() {
                 {players.map((p) => (
                   <SessionPlayerRow key={p.userId} player={p} />
                 ))}
+                {data.creatorGuests > 0 &&
+                  data.creatorUsername &&
+                  Array.from({ length: data.creatorGuests }).map((_, idx) => (
+                    <SessionPlayerRow
+                      key={`guest-${idx}`}
+                      player={{
+                        userId: -1,
+                        username: '',
+                        role: 'PLAYER',
+                        position: null,
+                        joinedAt: '',
+                      }}
+                      guestOf={data.creatorUsername!}
+                    />
+                  ))}
               </ul>
             ) : (
               <p className="text-sm text-muted-foreground">—</p>

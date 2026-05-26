@@ -222,6 +222,37 @@ describe('<SessionDetailPage>', () => {
     await waitFor(() => expect(patchedBody).toEqual({ status: 'CANCELLED' }))
   })
 
+  it('shows guest rows and correct counter when creatorGuests > 0', async () => {
+    server.use(
+      http.get(`${API}/sessions/2`, () =>
+        HttpResponse.json(
+          detail({
+            id: 2,
+            creatorGuests: 2,
+            registeredPlayers: 3,
+            maxPlayers: 4,
+            creatorUsername: 'cesarby',
+            players: [
+              {
+                userId: 1,
+                username: 'cesarby',
+                role: 'PLAYER',
+                position: null,
+                joinedAt: '2026-01-01T10:00:00Z',
+              },
+            ],
+          }),
+        ),
+      ),
+    )
+    renderDetail('/sessions/2')
+    // El contador aparece dos veces (meta + sidebar); ambos deben mostrar 3/4
+    const counters = await screen.findAllByText('3/4')
+    expect(counters.length).toBeGreaterThanOrEqual(1)
+    const guestRows = await screen.findAllByText(/acompañante de @cesarby/i)
+    expect(guestRows).toHaveLength(2)
+  })
+
   it('hides actions when status is CANCELLED', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,

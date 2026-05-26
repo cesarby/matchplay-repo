@@ -129,6 +129,7 @@
       "waitlistHeading": "Lista de espera",
       "descriptionHeading": "Descripción",
       "noDescription": "Sin descripción",
+      "guestOf": "+1 acompañante de @{{username}}",
       "join": "Unirme",
       "leave": "Salir",
       "cancelSession": "Cancelar partida",
