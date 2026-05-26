@@ -18,7 +18,7 @@ export default function CreateSessionPage() {
   return (
     <div className="container max-w-3xl py-8">
       <SeoHead
-        title={`${t('sessions.create.title')} | Matchplay`}
+        title={`${t('sessions.create.title')} | Match&Play`}
         description={t('sessions.create.title')}
         noindex
       />

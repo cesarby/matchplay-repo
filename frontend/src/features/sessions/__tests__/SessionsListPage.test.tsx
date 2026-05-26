@@ -130,8 +130,9 @@ describe('<SessionsListPage>', () => {
     expect(params.get('provinceCode')).toBe('MAD')
     expect(params.get('cityCode')).toBe('MAD01')
     expect(params.get('areaCode')).toBe('MAD01-001')
-    // status NO se manda — la UI ya no expone ese filtro
-    expect(params.get('status')).toBeNull()
+    // El listado público sólo muestra partidas abiertas — status=OPEN se manda
+    // siempre desde el cliente (no expuesto en UI, pero sí en el query).
+    expect(params.get('status')).toBe('OPEN')
   })
 
   it('renders pagination when totalPages > 1', async () => {

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Matchplay",
+    "appName": "Match&Play",
     "loading": "Loading…",
     "error": "Something went wrong",
     "retry": "Retry",
@@ -79,6 +79,8 @@
     },
     "card": {
       "spots": "{{registered}}/{{max}}",
+      "expansions_one": "expansion",
+      "expansions_other": "expansions",
       "spotsLeft_one": "Only {{count}} spot",
       "spotsLeft_other": "{{count}} spots",
       "waitlist": "{{count}} on waitlist",
@@ -255,16 +257,16 @@
   },
   "seo": {
     "landing": {
-      "title": "Find players and sessions near you | Matchplay",
-      "description": "Discover open board game sessions, connect with players in your area and organise your next meetup with Matchplay."
+      "title": "Find players and sessions near you | Match&Play",
+      "description": "Discover open board game sessions, connect with players in your area and organise your next meetup with Match&Play."
     },
     "login": {
-      "title": "Sign in | Matchplay",
-      "description": "Access your Matchplay account and find board game sessions near you."
+      "title": "Sign in | Match&Play",
+      "description": "Access your Match&Play account and find board game sessions near you."
     },
     "register": {
-      "title": "Create account | Matchplay",
-      "description": "Join Matchplay and start discovering and organising board game sessions in your city."
+      "title": "Create account | Match&Play",
+      "description": "Join Match&Play and start discovering and organising board game sessions in your city."
     }
   }
 }

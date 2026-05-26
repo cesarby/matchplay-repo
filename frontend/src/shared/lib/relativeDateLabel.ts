@@ -39,21 +39,26 @@ export function relativeDateLabel(iso: string, locale = 'es'): RelativeDateLabel
   const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' })
   const dateFmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
 
+  const time = timeFmt.format(date)
+
   if (diffDays === 0) {
-    const time = timeFmt.format(date)
     return { key: 'today', label: `${capitalize(getTodayWord(locale))} · ${time}`, tone: 'urgent' }
   }
   if (diffDays === 1) {
-    return { key: 'tomorrow', label: capitalize(getTomorrowWord(locale)), tone: 'warning' }
+    return {
+      key: 'tomorrow',
+      label: `${capitalize(getTomorrowWord(locale))} · ${time}`,
+      tone: 'warning',
+    }
   }
   if (diffDays > 1 && diffDays < 7) {
     return {
       key: 'thisWeek',
-      label: `${capitalize(weekdayFmt.format(date))} · ${dateFmt.format(date)}`,
+      label: `${capitalize(weekdayFmt.format(date))} · ${dateFmt.format(date)} · ${time}`,
       tone: 'info',
     }
   }
-  return { key: 'far', label: dateFmt.format(date), tone: 'info' }
+  return { key: 'far', label: `${dateFmt.format(date)} · ${time}`, tone: 'info' }
 }
 
 function capitalize(s: string): string {

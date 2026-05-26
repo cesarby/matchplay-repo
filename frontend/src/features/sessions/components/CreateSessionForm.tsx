@@ -322,7 +322,7 @@ export function CreateSessionForm() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
         <Controller
           control={control}
           name="scheduledAt"
@@ -347,21 +347,19 @@ export function CreateSessionForm() {
           {...register('maxPlayers')}
           error={errors.maxPlayers?.message ? t(errors.maxPlayers.message) : undefined}
         />
-      </div>
-
-      {/* Personas extras que vienen contigo */}
-      <div className="flex flex-col gap-1">
-        <TextField
-          label={t('sessions.create.fields.creatorGuests')}
-          type="number"
-          min={0}
-          max={Math.max(0, (watch('maxPlayers') ?? 2) - 1)}
-          {...register('creatorGuests')}
-          error={errors.creatorGuests?.message ? t(errors.creatorGuests.message) : undefined}
-        />
-        <span className="text-xs text-muted-foreground">
-          {t('sessions.create.fields.creatorGuestsHelp')}
-        </span>
+        <div className="flex flex-col gap-1">
+          <TextField
+            label={t('sessions.create.fields.creatorGuests')}
+            type="number"
+            min={0}
+            max={Math.max(0, (watch('maxPlayers') ?? 2) - 1)}
+            {...register('creatorGuests')}
+            error={errors.creatorGuests?.message ? t(errors.creatorGuests.message) : undefined}
+          />
+          <span className="text-xs text-muted-foreground">
+            {t('sessions.create.fields.creatorGuestsHelp')}
+          </span>
+        </div>
       </div>
 
       <Button type="submit" isLoading={mutation.isPending || isSubmitting}>

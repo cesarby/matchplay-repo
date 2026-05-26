@@ -50,7 +50,7 @@ export default function SessionDetailPage() {
     if (status === 404) {
       return (
         <div className="container py-12 text-center">
-          <SeoHead title="Matchplay" description={t('sessions.errors.notFound')} noindex />
+          <SeoHead title="Match&Play" description={t('sessions.errors.notFound')} noindex />
           <p className="text-muted-foreground">{t('sessions.errors.notFound')}</p>
         </div>
       )
@@ -92,7 +92,7 @@ export default function SessionDetailPage() {
   return (
     <div className="container py-8">
       <SeoHead
-        title={`${data.title} | Matchplay`}
+        title={`${data.title} | Match&Play`}
         description={data.description ?? data.title}
         canonical={`/sessions/${data.id}`}
       />

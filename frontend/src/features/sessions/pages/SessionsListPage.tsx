@@ -76,6 +76,9 @@ export default function SessionsListPage() {
     cityCode: filters.cityCode,
     areaCode: filters.areaCode,
     gameId: Number.isFinite(gameIdNum) ? gameIdNum : undefined,
+    // El listado público sólo muestra partidas abiertas a apuntarse.
+    // Excluimos FULL, IN_PROGRESS, COMPLETED y CANCELLED.
+    status: 'OPEN',
     page,
     size: DEFAULT_PAGE_SIZE,
   }
@@ -87,7 +90,7 @@ export default function SessionsListPage() {
   return (
     <div>
       <SeoHead
-        title={`${t('sessions.list.title')} | Matchplay`}
+        title={`${t('sessions.list.title')} | Match&Play`}
         description={t('sessions.list.title')}
         canonical="/sessions"
       />

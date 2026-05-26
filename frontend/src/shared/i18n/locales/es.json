@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Matchplay",
+    "appName": "Match&Play",
     "loading": "Cargando…",
     "error": "Algo salió mal",
     "retry": "Reintentar",
@@ -79,6 +79,8 @@
     },
     "card": {
       "spots": "{{registered}}/{{max}}",
+      "expansions_one": "expansión",
+      "expansions_other": "expansiones",
       "spotsLeft_one": "Solo {{count}} plaza",
       "spotsLeft_other": "{{count}} plazas",
       "waitlist": "{{count}} en lista de espera",
@@ -255,16 +257,16 @@
   },
   "seo": {
     "landing": {
-      "title": "Encuentra jugadores y partidas cerca de ti | Matchplay",
-      "description": "Descubre partidas abiertas de juegos de mesa, conecta con jugadores de tu zona y organiza tu próxima quedada con Matchplay."
+      "title": "Encuentra jugadores y partidas cerca de ti | Match&Play",
+      "description": "Descubre partidas abiertas de juegos de mesa, conecta con jugadores de tu zona y organiza tu próxima quedada con Match&Play."
     },
     "login": {
-      "title": "Iniciar sesión | Matchplay",
-      "description": "Accede a tu cuenta de Matchplay y encuentra partidas de juegos de mesa cerca de ti."
+      "title": "Iniciar sesión | Match&Play",
+      "description": "Accede a tu cuenta de Match&Play y encuentra partidas de juegos de mesa cerca de ti."
     },
     "register": {
-      "title": "Crear cuenta | Matchplay",
-      "description": "Únete a Matchplay y empieza a descubrir y organizar partidas de juegos de mesa en tu ciudad."
+      "title": "Crear cuenta | Match&Play",
+      "description": "Únete a Match&Play y empieza a descubrir y organizar partidas de juegos de mesa en tu ciudad."
     }
   }
 }

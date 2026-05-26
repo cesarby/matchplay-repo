@@ -198,7 +198,15 @@ export function SessionCard({
             {session.title}
           </h3>
           {session.baseGameName && (
-            <p className="mt-0.5 text-sm text-muted-foreground">{session.baseGameName}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+              <span>{session.baseGameName}</span>
+              {session.expansionCount > 0 && (
+                <span className="inline-flex items-center rounded-full bg-yellow-soft px-2 py-0.5 text-xs font-semibold text-yellow">
+                  +{session.expansionCount}{' '}
+                  {t('sessions.card.expansions', { count: session.expansionCount })}
+                </span>
+              )}
+            </p>
           )}
         </div>
 
