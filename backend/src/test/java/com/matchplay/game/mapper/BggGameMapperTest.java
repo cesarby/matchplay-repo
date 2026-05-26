@@ -2,6 +2,7 @@ package com.matchplay.game.mapper;
 
 import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.dto.GameSearchResponse;
+import com.matchplay.game.entity.Game;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -74,5 +75,20 @@ class BggGameMapperTest {
 
         assertThat(r.hasExpansions()).isFalse();
         assertThat(r.isExpansion()).isFalse();
+    }
+
+    @Test
+    void toEntity_unescapesHtmlEntitiesInDescription() {
+        BggThingResult.Item item = new BggThingResult.Item(
+                42L, "boardgame", null, null,
+                "Build a zoo &#10;&amp; manage animals.",
+                List.of(new BggThingResult.Name("primary", "Zoo Game")),
+                null, null, null, null, null, null,
+                List.of()
+        );
+
+        Game out = mapper.toEntity(item);
+
+        assertThat(out.getDescription()).isEqualTo("Build a zoo \n& manage animals.");
     }
 }

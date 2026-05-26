@@ -4,6 +4,7 @@ import com.matchplay.game.client.xml.BggThingResult;
 import com.matchplay.game.dto.GameSearchResponse;
 import com.matchplay.game.entity.Game;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class BggGameMapper {
         game.setImageUrl(item.image());
         game.setExpansion(isExpansion);
         game.setBaseGameBggId(isExpansion ? baseGameLinkId(item.links()) : null);
-        game.setDescription(item.description());
+        game.setDescription(item.description() != null ? HtmlUtils.htmlUnescape(item.description()) : null);
         return game;
     }
 

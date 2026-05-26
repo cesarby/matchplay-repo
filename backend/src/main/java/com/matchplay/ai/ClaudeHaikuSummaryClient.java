@@ -25,14 +25,21 @@ public class ClaudeHaikuSummaryClient implements AiSummaryClient {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public ClaudeHaikuSummaryClient(String apiKey) {
-        this(apiKey, DEFAULT_BASE_URL);
+        this(apiKey, DEFAULT_BASE_URL, 3000, 10000);
+    }
+
+    public ClaudeHaikuSummaryClient(String apiKey, int connectTimeoutMs, int readTimeoutMs) {
+        this(apiKey, DEFAULT_BASE_URL, connectTimeoutMs, readTimeoutMs);
     }
 
     /** Constructor para tests (permite redirigir a WireMock). */
-    public ClaudeHaikuSummaryClient(String apiKey, String baseUrl) {
+    public ClaudeHaikuSummaryClient(String apiKey, String baseUrl, int connectTimeoutMs, int readTimeoutMs) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(connectTimeoutMs);
+        factory.setReadTimeout(readTimeoutMs);
         this.http = RestClient.builder()
                 .baseUrl(baseUrl)
-                .requestFactory(new SimpleClientHttpRequestFactory())
+                .requestFactory(factory)
                 .defaultHeader("x-api-key", apiKey)
                 .defaultHeader("anthropic-version", "2023-06-01")
                 .defaultHeader("content-type", "application/json")
@@ -80,10 +87,12 @@ public class ClaudeHaikuSummaryClient implements AiSummaryClient {
                 String txt = content.get(0).path("text").asText(null);
                 if (txt != null && !txt.isBlank()) return txt.trim();
             }
-            log.warn("Anthropic response had no usable content: {}", raw);
+            log.warn("Anthropic response had no usable content (len={}): {}",
+                    raw.length(),
+                    raw.length() > 200 ? raw.substring(0, 200) + "…" : raw);
             return null;
         } catch (Exception e) {
-            log.warn("Anthropic call failed ({}): {}", language, e.getMessage());
+            log.warn("Anthropic call failed ({})", language, e);
             return null;
         }
     }

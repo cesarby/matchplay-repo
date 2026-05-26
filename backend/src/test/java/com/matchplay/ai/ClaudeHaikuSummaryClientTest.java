@@ -17,7 +17,7 @@ class ClaudeHaikuSummaryClientTest {
     void setUp() {
         wm = new WireMockServer(0);
         wm.start();
-        client = new ClaudeHaikuSummaryClient("test-key", "http://localhost:" + wm.port());
+        client = new ClaudeHaikuSummaryClient("test-key", "http://localhost:" + wm.port(), 2000, 5000);
     }
 
     @AfterEach
@@ -36,6 +36,12 @@ class ClaudeHaikuSummaryClientTest {
 
         assertThat(out.es()).contains("Resumen ES");
         assertThat(out.en()).contains("Resumen ES"); // mismo stub responde a ambas calls
+
+        wm.verify(2, postRequestedFor(urlEqualTo("/v1/messages"))
+                .withHeader("x-api-key", equalTo("test-key"))
+                .withHeader("anthropic-version", equalTo("2023-06-01"))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("claude-haiku-4-5-20251001")))
+                .withRequestBody(matchingJsonPath("$.max_tokens", equalTo("400"))));
     }
 
     @Test

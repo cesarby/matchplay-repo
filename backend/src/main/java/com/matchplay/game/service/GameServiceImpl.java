@@ -54,6 +54,11 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new BaseGameNotFoundException(bggId));
 
         Game entity = bggGameMapper.toEntity(item);
+        // AI summary se genera síncronamente y dentro de la misma transacción que
+        // guarda el juego. Esto bloquea la creación de partida (~1-6s extra) y
+        // mantiene la transacción abierta durante el HTTP. Aceptable a este volumen
+        // (juego nuevo = excepcional, no concurrente). Si crece, mover a job async
+        // fuera de la transacción.
         if (entity.getDescription() != null && !entity.getDescription().isBlank()) {
             GameSummary summary = aiSummaryClient.summarize(entity.getDescription());
             entity.setSummaryEs(summary.es());
