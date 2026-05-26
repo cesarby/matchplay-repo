@@ -1,6 +1,7 @@
 package com.matchplay.session.service;
 
 import com.matchplay.exception.SessionAlreadyJoinedException;
+import com.matchplay.exception.SessionEmptyCannotCloseException;
 import com.matchplay.exception.SessionExpansionNotExpansionException;
 import com.matchplay.exception.SessionExpansionWrongBaseException;
 import com.matchplay.exception.SessionGuestsExceedMaxException;
@@ -307,6 +308,25 @@ public class GameSessionServiceImpl implements GameSessionService {
             log.info("User {} added to waitlist of session {} at position {}", user.getId(), sessionId, nextPosition);
         }
 
+        return buildDetail(session);
+    }
+
+    @Override
+    @Transactional
+    public SessionDetailResponse close(Long sessionId) {
+        GameSession session = requireSession(sessionId);
+        assertOwner(session);
+        if (session.getStatus() != SessionStatus.OPEN) {
+            throw new SessionStatusTransitionException(session.getStatus().name(), "CLOSE");
+        }
+        int realThirdParties = session.getRegisteredPlayers() - 1 - session.getCreatorGuests();
+        if (realThirdParties < 1) {
+            throw new SessionEmptyCannotCloseException();
+        }
+        session.setMaxPlayers(session.getRegisteredPlayers());
+        session.setStatus(SessionStatus.FULL);
+        sessionRepository.save(session);
+        log.info("Session closed: id={} max set to {} (FULL)", sessionId, session.getMaxPlayers());
         return buildDetail(session);
     }
 

@@ -29,4 +29,11 @@ public interface GameSessionService {
     SessionDetailResponse leave(Long sessionId);
 
     List<SessionPlayerResponse> listPlayers(Long sessionId);
+
+    /**
+     * Cierra una mesa anticipadamente: baja {@code maxPlayers} a los actuales y
+     * pone status FULL. Solo el creador, solo si OPEN, y debe haber al menos
+     * un tercero apuntado (no cuentan los creatorGuests).
+     */
+    SessionDetailResponse close(Long sessionId);
 }

@@ -127,4 +127,10 @@ public class GameSessionController {
     public SessionDetailResponse leave(@PathVariable Long id) {
         return sessionService.leave(id);
     }
+
+    @PostMapping("/{id}/close")
+    @Operation(summary = "Cerrar mesa: baja maxPlayers a los actuales y status FULL (solo creador)")
+    public SessionDetailResponse close(@PathVariable Long id) {
+        return sessionService.close(id);
+    }
 }

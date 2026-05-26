@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.matchplay.config.LocaleConfig;
 import com.matchplay.exception.GlobalExceptionHandler;
+import com.matchplay.exception.SessionEmptyCannotCloseException;
 import com.matchplay.exception.SessionNotFoundException;
 import com.matchplay.session.dto.CreateSessionRequest;
 import com.matchplay.session.dto.SessionDetailResponse;
@@ -210,5 +211,30 @@ class GameSessionControllerTest {
         mockMvc.perform(delete("/api/v1/sessions/10/join"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.registeredPlayers").value(1));
+    }
+
+    @Test
+    void close_returns200WithUpdatedDetail() throws Exception {
+        SessionDetailResponse d = new SessionDetailResponse(
+                1L, "Catan", null, 13L, "Catan", null, List.of(),
+                "MAD01", "Madrid", null, null,
+                Instant.now().plus(1, ChronoUnit.DAYS), 2, 2, 0, 0,
+                SessionStatus.FULL, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
+
+        given(service.close(eq(1L))).willReturn(d);
+
+        mockMvc.perform(post("/api/v1/sessions/1/close"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FULL"))
+                .andExpect(jsonPath("$.maxPlayers").value(2));
+    }
+
+    @Test
+    void close_returns400WhenEmpty() throws Exception {
+        willThrow(new SessionEmptyCannotCloseException()).given(service).close(1L);
+
+        mockMvc.perform(post("/api/v1/sessions/1/close"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("error.session.empty.cannot.close"));
     }
 }
