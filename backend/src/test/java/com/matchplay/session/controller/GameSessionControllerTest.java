@@ -216,14 +216,14 @@ class GameSessionControllerTest {
     @Test
     void close_returns200WithUpdatedDetail() throws Exception {
         SessionDetailResponse d = new SessionDetailResponse(
-                1L, "Catan", null, 13L, "Catan", null, List.of(),
+                10L, "Catan", null, 13L, "Catan", null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 2, 2, 0, 0,
                 SessionStatus.FULL, 1L, "creator", List.of(), null, Instant.now(), Instant.now());
 
-        given(service.close(eq(1L))).willReturn(d);
+        given(service.close(eq(10L))).willReturn(d);
 
-        mockMvc.perform(post("/api/v1/sessions/1/close"))
+        mockMvc.perform(post("/api/v1/sessions/10/close"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FULL"))
                 .andExpect(jsonPath("$.maxPlayers").value(2));
@@ -231,9 +231,9 @@ class GameSessionControllerTest {
 
     @Test
     void close_returns400WhenEmpty() throws Exception {
-        willThrow(new SessionEmptyCannotCloseException()).given(service).close(1L);
+        willThrow(new SessionEmptyCannotCloseException()).given(service).close(10L);
 
-        mockMvc.perform(post("/api/v1/sessions/1/close"))
+        mockMvc.perform(post("/api/v1/sessions/10/close"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("error.session.empty.cannot.close"));
     }

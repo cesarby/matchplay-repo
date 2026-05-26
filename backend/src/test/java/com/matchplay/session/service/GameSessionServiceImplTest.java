@@ -31,7 +31,6 @@ import com.matchplay.session.repository.GameSessionRepository;
 import com.matchplay.session.repository.SessionParticipantRepository;
 import com.matchplay.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -712,79 +711,75 @@ class GameSessionServiceImplTest {
 
     // ---------- CLOSE ----------
 
-    @Nested
-    class CloseSession {
+    @Test
+    void close_ok_setsMaxToRegisteredAndStatusFull() {
+        // registered=2 (creator + 1 other), guests=0 → realThirdParties=1 → OK
+        GameSession session = openSession(4, 2);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
-        @Test
-        void close_ok_setsMaxToRegisteredAndStatusFull() {
-            // registered=2 (creator + 1 other), guests=0 → realThirdParties=1 → OK
-            GameSession session = openSession(4, 2);
-            given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-            given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
-            given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
-            given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
-            given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-            given(mapper.toDetail(any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        SessionDetailResponse result = service.close(10L);
 
-            SessionDetailResponse result = service.close(10L);
+        assertThat(session.getMaxPlayers()).isEqualTo(2);
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
+        assertThat(result.status()).isEqualTo(SessionStatus.FULL);
+        verify(sessionRepository).save(session);
+    }
 
-            assertThat(session.getMaxPlayers()).isEqualTo(2);
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.FULL);
-            assertThat(result.status()).isEqualTo(SessionStatus.FULL);
-            verify(sessionRepository).save(session);
-        }
+    @Test
+    void close_emptyExceptCreator_throws() {
+        // registered=1 (creator only), guests=0 → realThirdParties=0 → throws
+        GameSession session = openSession(4, 1);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
 
-        @Test
-        void close_emptyExceptCreator_throws() {
-            // registered=1 (creator only), guests=0 → realThirdParties=0 → throws
-            GameSession session = openSession(4, 1);
-            given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-            given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        assertThatThrownBy(() -> service.close(10L))
+                .isInstanceOf(SessionEmptyCannotCloseException.class);
 
-            assertThatThrownBy(() -> service.close(10L))
-                    .isInstanceOf(SessionEmptyCannotCloseException.class);
+        verify(sessionRepository, never()).save(any());
+    }
 
-            verify(sessionRepository, never()).save(any());
-        }
+    @Test
+    void close_creatorGuestsDoNotCountAsThirdParty_throws() {
+        // registered=3 (creator + 2 guests), guests=2 → realThirdParties=0 → throws
+        GameSession session = openSession(4, 3);
+        session.setCreatorGuests(2);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
 
-        @Test
-        void close_creatorGuestsDoNotCountAsThirdParty_throws() {
-            // registered=3 (creator + 2 guests), guests=2 → realThirdParties=0 → throws
-            GameSession session = openSession(4, 3);
-            session.setCreatorGuests(2);
-            given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-            given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        assertThatThrownBy(() -> service.close(10L))
+                .isInstanceOf(SessionEmptyCannotCloseException.class);
 
-            assertThatThrownBy(() -> service.close(10L))
-                    .isInstanceOf(SessionEmptyCannotCloseException.class);
+        verify(sessionRepository, never()).save(any());
+    }
 
-            verify(sessionRepository, never()).save(any());
-        }
+    @Test
+    void close_alreadyFull_throws() {
+        GameSession session = openSession(4, 4);
+        session.setStatus(SessionStatus.FULL);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
 
-        @Test
-        void close_alreadyFull_throws() {
-            GameSession session = openSession(4, 4);
-            session.setStatus(SessionStatus.FULL);
-            given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-            given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
+        assertThatThrownBy(() -> service.close(10L))
+                .isInstanceOf(SessionStatusTransitionException.class);
 
-            assertThatThrownBy(() -> service.close(10L))
-                    .isInstanceOf(SessionStatusTransitionException.class);
+        verify(sessionRepository, never()).save(any());
+    }
 
-            verify(sessionRepository, never()).save(any());
-        }
+    @Test
+    void close_notOwner_throws() {
+        GameSession session = openSession(4, 2);
+        given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
+        given(currentUserProvider.requireCurrentUserId()).willReturn(999L); // different user
 
-        @Test
-        void close_notOwner_throws() {
-            GameSession session = openSession(4, 2);
-            given(sessionRepository.findById(10L)).willReturn(Optional.of(session));
-            given(currentUserProvider.requireCurrentUserId()).willReturn(999L); // different user
+        assertThatThrownBy(() -> service.close(10L))
+                .isInstanceOf(UnauthorizedActionException.class);
 
-            assertThatThrownBy(() -> service.close(10L))
-                    .isInstanceOf(UnauthorizedActionException.class);
-
-            verify(sessionRepository, never()).save(any());
-        }
+        verify(sessionRepository, never()).save(any());
     }
 
     // ---------- helpers ----------

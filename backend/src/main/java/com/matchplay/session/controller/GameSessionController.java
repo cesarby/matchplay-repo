@@ -129,7 +129,7 @@ public class GameSessionController {
     }
 
     @PostMapping("/{id}/close")
-    @Operation(summary = "Cerrar mesa: baja maxPlayers a los actuales y status FULL (solo creador)")
+    @Operation(summary = "Close table: sets maxPlayers to current registeredPlayers and status FULL (creator only)")
     public SessionDetailResponse close(@PathVariable Long id) {
         return sessionService.close(id);
     }
