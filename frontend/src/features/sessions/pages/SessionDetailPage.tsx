@@ -168,7 +168,7 @@ export default function SessionDetailPage() {
           </section>
 
           {/* Sobre el juego */}
-          {data.baseGameSummary && data.baseGameName && (
+          {data.baseGameSummary?.trim() && data.baseGameName && (
             <section
               aria-labelledby="game-summary-heading"
               className="rounded border-l-4 border-yellow bg-yellow-soft/30 p-4"

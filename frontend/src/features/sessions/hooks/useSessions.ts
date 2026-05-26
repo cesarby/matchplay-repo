@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import i18next from 'i18next'
 
 import { sessionsApi } from '../api/sessionsApi'
 import type {
@@ -18,7 +19,9 @@ export const sessionKeys = {
   lists: () => [...sessionKeys.all, 'list'] as const,
   list: (params: SessionSearchParams) => [...sessionKeys.lists(), params] as const,
   details: () => [...sessionKeys.all, 'detail'] as const,
-  detail: (id: number) => [...sessionKeys.details(), id] as const,
+  // Include the current locale so a language switch invalidates the cached
+  // response (backend returns the summary in the active language).
+  detail: (id: number) => [...sessionKeys.details(), id, i18next.language] as const,
   players: (id: number) => [...sessionKeys.detail(id), 'players'] as const,
 }
 

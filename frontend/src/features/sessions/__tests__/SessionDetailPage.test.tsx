@@ -347,6 +347,6 @@ describe('<SessionDetailPage>', () => {
     mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: /catan night/i })
-    expect(screen.queryByText(/sobre /i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /sobre/i })).not.toBeInTheDocument()
   })
 })
