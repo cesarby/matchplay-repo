@@ -147,7 +147,10 @@ public class GameSessionServiceImpl implements GameSessionService {
         validateAgainstGameLimits(request.maxPlayers(), baseGame);
 
         int guests = request.creatorGuests() != null ? request.creatorGuests() : 0;
-        if (1 + guests > request.maxPlayers()) {
+        // Regla de producto: siempre tiene que quedar al menos 1 plaza libre
+        // para que otro usuario pueda apuntarse. Si no, la partida nace ya
+        // "cerrada" y no tiene sentido publicarla.
+        if (1 + guests >= request.maxPlayers()) {
             throw new SessionGuestsExceedMaxException(guests, request.maxPlayers());
         }
 
@@ -173,10 +176,10 @@ public class GameSessionServiceImpl implements GameSessionService {
         session.setMaxPlayers(request.maxPlayers());
         session.setCreatorGuests(guests);
         // El creador + sus acompañantes ocupan plazas desde el minuto cero.
+        // La validación de arriba garantiza que siempre queda ≥1 plaza libre,
+        // así que el estado inicial es siempre OPEN.
         session.setRegisteredPlayers(1 + guests);
-        session.setStatus(
-                1 + guests >= request.maxPlayers() ? SessionStatus.FULL : SessionStatus.OPEN
-        );
+        session.setStatus(SessionStatus.OPEN);
 
         GameSession saved = sessionRepository.save(session);
 

@@ -151,8 +151,7 @@
         "area": "Zona",
         "scheduledAt": "Fecha y hora",
         "maxPlayers": "Plazas",
-        "creatorGuests": "¿Vienes con alguien más?",
-        "creatorGuestsHelp": "Indica cuántas personas vienen contigo (que no usan la app). Ocuparán plaza."
+        "creatorGuests": "¿Vienes con alguien más?"
       }
     },
     "errors": {
@@ -172,7 +171,7 @@
       "expansionWrongBase": "Una de las expansiones no pertenece al juego base",
       "expansionNotExpansion": "Uno de los items seleccionados no es una expansión",
       "guestsNegative": "No puede ser un número negativo",
-      "guestsExceedMax": "Vienes con demasiadas personas para las plazas que has puesto",
+      "guestsExceedMax": "Tiene que quedar al menos 1 plaza libre para otro jugador",
       "creatorCannotLeave": "No puedes salirte de tu propia partida. Si no la vas a jugar, cancélala."
     }
   },

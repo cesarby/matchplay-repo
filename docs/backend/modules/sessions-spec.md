@@ -316,10 +316,11 @@ Implicaciones:
 en el body cuántas personas adicionales vienen con él (familiares/amigos que no
 son usuarios del sistema). Esos huecos quedan reservados desde la creación:
 
-- Validación: `0 ≤ creatorGuests` y `1 + creatorGuests ≤ maxPlayers`. Si no
-  cabe, `400 error.session.guests.exceed.max`.
-- `registered_players = 1 + creatorGuests` al persistir. Si llena la capacidad
-  exacta, `status = FULL` desde el minuto cero.
+- Validación: `0 ≤ creatorGuests` **y** `1 + creatorGuests < maxPlayers` (regla
+  estricta: siempre debe quedar al menos 1 plaza libre para que otro usuario
+  pueda apuntarse). Si no, `400 error.session.guests.exceed.max`.
+- `registered_players = 1 + creatorGuests` al persistir. La partida arranca
+  siempre en `OPEN` (la regla garantiza ≥1 plaza libre).
 - Persistido en `game_sessions.creator_guests` (V9, `INT NOT NULL DEFAULT 0`)
   y expuesto en `SessionDetailResponse.creatorGuests`. No se incluye en
   `SessionSummaryResponse` (el conteo ya va en `registered_players`).

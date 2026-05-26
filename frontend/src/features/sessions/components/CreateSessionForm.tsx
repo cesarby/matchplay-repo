@@ -176,8 +176,9 @@ export function CreateSessionForm() {
     }
     setBanner(null)
 
-    // Cross-field check: 1 (creador) + acompañantes ≤ maxPlayers.
-    if (1 + parsed.data.creatorGuests > parsed.data.maxPlayers) {
+    // Cross-field check: tiene que quedar al menos 1 plaza para otro usuario.
+    // → 1 (creador) + acompañantes < maxPlayers.
+    if (1 + parsed.data.creatorGuests >= parsed.data.maxPlayers) {
       setError('creatorGuests', { message: 'sessions.errors.guestsExceedMax' })
       return
     }
@@ -347,19 +348,14 @@ export function CreateSessionForm() {
           {...register('maxPlayers')}
           error={errors.maxPlayers?.message ? t(errors.maxPlayers.message) : undefined}
         />
-        <div className="flex flex-col gap-1">
-          <TextField
-            label={t('sessions.create.fields.creatorGuests')}
-            type="number"
-            min={0}
-            max={Math.max(0, (watch('maxPlayers') ?? 2) - 1)}
-            {...register('creatorGuests')}
-            error={errors.creatorGuests?.message ? t(errors.creatorGuests.message) : undefined}
-          />
-          <span className="text-xs text-muted-foreground">
-            {t('sessions.create.fields.creatorGuestsHelp')}
-          </span>
-        </div>
+        <TextField
+          label={t('sessions.create.fields.creatorGuests')}
+          type="number"
+          min={0}
+          max={Math.max(0, (watch('maxPlayers') ?? 2) - 2)}
+          {...register('creatorGuests')}
+          error={errors.creatorGuests?.message ? t(errors.creatorGuests.message) : undefined}
+        />
       </div>
 
       <Button type="submit" isLoading={mutation.isPending || isSubmitting}>

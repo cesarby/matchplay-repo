@@ -163,11 +163,11 @@ class GameSessionServiceImplTest {
     }
 
     @Test
-    void create_withCreatorGuests_setsRegisteredAndFullStatusWhenFitsExactly() {
-        // maxPlayers=3, guests=2 → registered=3 → status=FULL ya en create.
+    void create_withCreatorGuests_leavesAtLeastOneFreeSpotAndStatusOpen() {
+        // maxPlayers=4, guests=2 → registered=3, queda 1 plaza libre → OPEN.
         Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
         CreateSessionRequest req = new CreateSessionRequest(
-                "Catan", "Desc", 13L, null, "MAD01", null, future, 3, 2);
+                "Catan", "Desc", 13L, null, "MAD01", null, future, 4, 2);
 
         given(currentUserProvider.requireCurrentUser()).willReturn(creator);
         given(gameService.findOrFetch(13L)).willReturn(game);
@@ -177,7 +177,7 @@ class GameSessionServiceImplTest {
             s.setId(50L);
             return s;
         });
-        given(mapper.toDetail(any(), any(), any())).willReturn(detail(50L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any())).willReturn(detail(50L, SessionStatus.OPEN));
 
         service.create(req);
 
@@ -186,7 +186,24 @@ class GameSessionServiceImplTest {
         GameSession saved = captor.getValue();
         assertThat(saved.getCreatorGuests()).isEqualTo(2);
         assertThat(saved.getRegisteredPlayers()).isEqualTo(3); // 1 creador + 2 acompañantes
-        assertThat(saved.getStatus()).isEqualTo(SessionStatus.FULL);
+        assertThat(saved.getStatus()).isEqualTo(SessionStatus.OPEN);
+    }
+
+    @Test
+    void create_withGuestsFillingExactly_throws() {
+        // maxPlayers=3, guests=2 → registered=3 = max → no queda plaza para
+        // otros usuarios → la regla obliga a ≥ 1 libre → rechaza.
+        Instant future = Instant.now().plus(1, ChronoUnit.DAYS);
+        CreateSessionRequest req = new CreateSessionRequest(
+                "Catan", "Desc", 13L, null, "MAD01", null, future, 3, 2);
+
+        given(currentUserProvider.requireCurrentUser()).willReturn(creator);
+        given(gameService.findOrFetch(13L)).willReturn(game);
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(SessionGuestsExceedMaxException.class);
+
+        verify(sessionRepository, never()).save(any());
     }
 
     @Test
