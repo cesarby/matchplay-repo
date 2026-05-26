@@ -48,11 +48,14 @@ derecha, tile amarillo rotado abajo-derecha, dots foreground arriba-izquierda.
   determinístico por `bggId` (`FALLBACK_GRADIENTS`).
 - Sobre la imagen: status badge (verde/rojo/azul con dot pulsing si OPEN)
   arriba-izquierda; badge de fecha contextual arriba-derecha (`urgent`
-  rojo, `warning` amarillo, `info` azul-soft).
+  rojo, `warning` amarillo, `info` azul-soft). **El badge de fecha incluye
+  siempre la hora** (`"VIE · 29 MAY · 20:00"`) — `relativeDateLabel`
+  añade `HH:mm` en todos los modos.
 - Overlay `bg-gradient-to-t from-card via-card/30 to-transparent` para
   fundir la imagen con la card y dar legibilidad al título.
-- Body: H3 Bricolage 2xl + juego (muted) + meta inline (ubicación con icono
-  verde, plazas con icono).
+- Body: H3 Bricolage 2xl + juego (muted) + **pill `+N expansión/expansiones`**
+  amarillo-soft junto al juego cuando `expansionCount > 0` (plural i18n) +
+  meta inline (ubicación con icono verde, plazas con icono).
 - Progress bar de plazas: `bg-green` con holgura, `from-green to-yellow`
   cuando queda ≤1 plaza, `bg-red` si llena.
 - Microcopy: `"Solo 1 plaza"` (yellow) · `"3 plazas"` (green) · `"Plazas
@@ -315,7 +318,7 @@ Las mutations comparten un helper `syncCacheFromDetail(qc, detail)` que:
 └────────────────────────────────────────────────────────────┘
 ```
 
-- **URL state**: lee `provinceCode`, `cityCode`, `status`, `page` con `useUrlFilters`.
+- **URL state**: lee `provinceCode`, `cityCode`, `areaCode`, `gameId`, `gameName`, `page` con `useUrlFilters`. **No** se envía `status`: el backend filtra por defecto a `OPEN + FULL` (sesiones accionables — apuntarse o waitlist). Ver `docs/backend/modules/sessions-spec.md` para la regla del default.
 - **City disabled** hasta seleccionar provincia. Cambiar provincia limpia ciudad.
 - **Cambio de filtro** vuelve a `page=0` (descarta `page` del URL).
 - **Grid responsive**: 1 col mobile · 2 cols sm · 3 cols lg.
@@ -385,6 +388,28 @@ no `id` (el `CurrentUser` del módulo auth usa `userId`).
 
 Ruta envuelta en `<ProtectedRoute>` — anónimos van a `/login?from=...`.
 
+**Layout** (rediseño v1.4, mockup `create-session-redesign-B-preview.html` aprobado):
+
+- Página: `mx-auto max-w-7xl px-4 sm:px-6` (mismo ancho que el listado público — consistencia visual entre pantallas).
+- **Escritorio (`≥lg`)**: dos columnas con `lg:grid-cols-[1fr_400px]`. Form a la izquierda (panel-card), `<SessionLivePreview>` a la derecha (sticky).
+- **Móvil**: el aside se apila debajo del form.
+- Encabezado: eyebrow `"CREAR PARTIDA"` (rojo, uppercase, tracking widest) + h1 `"Prepara los detalles de tu mesa"` + pill animado `"● en vivo"` (solo `sm:+`).
+- Form panel: `rounded-3xl border bg-card p-7` con sombra `shadow-warm`. Dentro, 4 secciones separadas por `border-b border-dashed border-border` (sin borde la última).
+
+**Patrón de cada sección** (helper interno `<FormSection>`):
+
+```
+●  INFORMACIÓN                                   01 / 04
+   [campos…]
+- - - - - - - - - - - - - - - - - - - - - - - -
+●  JUEGO                                         02 / 04
+   …
+```
+
+- `●` dot 8px coloreado por sección: 1=red, 2=blue, 3=green, 4=yellow.
+- Nombre en `font-display text-sm font-bold uppercase tracking-[0.08em]`.
+- Contador a la derecha en `font-mono text-xs text-muted-foreground`.
+
 **Form (RHF + zod):**
 
 | Campo | Validación cliente | Componente |
@@ -397,10 +422,10 @@ Ruta envuelta en `<ProtectedRoute>` — anónimos van a `/login?from=...`.
 | `areaCode` | requerido, depende de ciudad | `SelectField` |
 | `scheduledAt` | válido y futuro | `<SessionDateTimePicker>` (custom) |
 | `maxPlayers` | `Min(2)`, `Max(20)`. Auto-rellena con `game.maxPlayers` al elegir juego. Label muestra `(min–max BGG)` | `TextField` type=number |
-| `creatorGuests` | `Min(0)`. Max dinámico = `maxPlayers - 1`. Cross-check en submit: `1 + creatorGuests ≤ maxPlayers`. Default 0 | `TextField` type=number + helper text |
+| `creatorGuests` | `Min(0)`. Max dinámico = `maxPlayers - 2`. **Cross-check estricto: `1 + creatorGuests < maxPlayers`** (debe quedar ≥1 plaza libre para otro jugador). Default 0. Sin helper text (label autodescriptivo). | `TextField` type=number |
 
-> **Regla de producto v1.2**: todos los campos son obligatorios excepto
-> `description`. Esto incluye `areaCode` (antes opcional).
+> **Regla de producto**: todos los campos son obligatorios excepto
+> `description`. Esto incluye `areaCode`.
 
 **UX rules**:
 
@@ -408,6 +433,8 @@ Ruta envuelta en `<ProtectedRoute>` — anónimos van a `/login?from=...`.
 2. **Plazas automáticas**: `useEffect` sobre `selectedGame.bggId` hace `setValue('maxPlayers', game.maxPlayers)` al cambiar el juego. Si BGG no aporta el dato (cooperativos), no toca.
 3. **Descripción 0/500**: contador en vivo arriba del textarea (`aria-live="polite"`), pasa a `text-red` si excede.
 4. **Picker fecha custom**: ver `<SessionDateTimePicker>` abajo.
+5. **Acompañantes con regla "≥1 plaza libre"**: si `1 + creatorGuests ≥ maxPlayers`, el submit pre-bloquea con `setError('creatorGuests', ...)`. El backend tiene la misma validación con `error.session.guests.exceed.max`.
+6. **Submit a través del publish bar**: el botón "Publicar partida" vive dentro de `<SessionLivePreview>` y es el `type="submit"` del form. No hay botón submit duplicado.
 
 ### `<GameWithExpansionsPicker>` (reusable, en `features/games/`)
 
@@ -420,6 +447,47 @@ Composición sobre `<GameTypeahead>` para el patrón "1 juego base + N expansion
 - **Búsqueda de expansiones**: `gamesApi.search({ type: 'EXPANSION', baseGameId, size: 50 })`. El backend ignora `q` en este modo; el filtrado por texto se hace client-side sobre los resultados.
 
 Tests cubren los 6 flujos clave (vacío, selección base, card, hasExpansions=false, quitar base limpia, chips ✕, dedupe).
+
+### `<SessionLivePreview>` (en `features/sessions/components/`)
+
+Componente del aside del create form. Construye un `SessionSummary` "fake"
+desde el estado del form (`watch()`) y lo pasa a la **`SessionCard` real**
+con `asStatic` para que no envuelva en `<Link>`. El usuario ve
+exactamente cómo se verá su partida en el listado mientras la rellena —
+cero duplicación de markup de card.
+
+Props (todas opcionales salvo `maxPlayers` y `creatorGuests`):
+
+```ts
+interface SessionLivePreviewProps {
+  title?: string
+  baseGame?: GameSearchResult | null
+  expansionCount: number
+  cityName?: string
+  areaName?: string
+  scheduledAt?: string   // "YYYY-MM-DDTHH:mm"
+  maxPlayers: number
+  creatorGuests: number
+  creator?: { userId: number; username: string } | null
+  isPending?: boolean
+}
+```
+
+**Empty-states**: cuando un campo no está, se sustituye por placeholder i18n
+para que la card nunca se vea rota — `title` → `"Tu partida"`, `baseGameName`
+→ `"Pendiente de elegir juego"`, `scheduledAt` → string inválida (el
+`relativeDateLabel` devuelve `"—"`).
+
+**Publish bar** (debajo de la card): card roja con `type="submit"` que ES el
+submit del form. Texto pequeño "Todo listo" + título display "Publicar
+partida" + pill blanco/20 con icono dado "Crear". Mientras `isPending`,
+muestra "Publicando…" y se deshabilita con `cursor-wait opacity-80`.
+
+**Banner azul-soft**: debajo del publish bar, mensaje contextual con
+`publishHint` y pluralización por `count = spotsLeft`:
+
+- 1 plaza: `"…hasta llenar la última plaza libre."`
+- N plazas: `"…hasta llenar las {count} plazas libres."`
 
 ### `<SessionDateTimePicker>` (en `features/sessions/components/`)
 

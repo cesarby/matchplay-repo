@@ -111,8 +111,27 @@ se ejecutan automáticamente sobre los archivos staged. No hace falta correr
 `npm run format` antes de commit. Si el hook modifica archivos, los incluye
 en el mismo commit (no quedan cambios pendientes).
 
-### Push a `master`
+### Commits y push — flujo de cierre de sesión
+
+**Commits**: se pueden hacer libremente al ir cerrando trozos coherentes de
+trabajo. Cada commit debe ser autocontenido (compila + tests verde) por si
+hace falta volver atrás.
+
+**Push**: **NO pushear sin permiso explícito del usuario**. El push ocurre
+al final de la sesión, cuando el usuario lo pide (típicamente con un
+"haz push" / "cierra la sesión" / "terminamos por hoy" / similar). Ese
+mismo momento es cuando se actualiza la documentación.
+
+**Cierre de sesión** (cuando el usuario lo indica): hacer en este orden:
+
+1. Asegurarse de que los specs (`docs/**`) reflejan lo cambiado en la
+   sesión. Revisar `docs/backend/modules/*.md`, `docs/frontend/spec.md` y
+   `docs/frontend/modules/*.md`.
+2. Si hay un cambio en el spec o en regla de proyecto que merece quedar
+   anotado para sesiones futuras, actualizar este `CLAUDE.md`.
+3. Hacer el último commit con los cambios de docs si hace falta.
+4. Hacer `git push origin master`. El auto-mode classifier puede bloquear
+   el push directo a master — el usuario confirma cuando se le pide.
 
 Convención del repo: trabajamos directo sobre `master` (no usamos feature
-branches ni PR review en este proyecto). El auto-mode classifier puede
-bloquear el push directo — el user confirma cuando es el flujo habitual.
+branches ni PR review en este proyecto).

@@ -587,6 +587,7 @@ Cada componente generado por shadcn se **adapta a las variables CSS** anteriores
 | Landing pública (`/`) | `frontend/mockups/landing.html` | ✅ Aprobado (2026-05-25) |
 | Datepicker create partida (Opción A/B+D/C) | `frontend/mockups/create-session-datepicker-{A,B-D,C}.html` | ✅ Aprobado C, implementado (2026-05-26) |
 | Menú móvil (Opción A/B/C) | `frontend/mockups/mobile-menu-{A-drawer,B-bottomsheet,C-fullscreen}.html` | ✅ Aprobado C, implementado (2026-05-26) |
+| Rediseño Crear partida (Opción A/B) | `frontend/mockups/create-session-redesign-{A-cards,B-preview}.html` | ✅ Aprobado B (live preview), implementado (2026-05-26) |
 | Login + Registro | — | Pendiente |
 | Detalle de partida | — | Pendiente |
 | Perfil de usuario | — | Pendiente |
