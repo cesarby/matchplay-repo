@@ -585,6 +585,8 @@ Cada componente generado por shadcn se **adapta a las variables CSS** anteriores
 |----------|---------|--------|
 | Home / listado de partidas | `frontend/mockups/home.html` | ✅ Aprobado |
 | Landing pública (`/`) | `frontend/mockups/landing.html` | ✅ Aprobado (2026-05-25) |
+| Datepicker create partida (Opción A/B+D/C) | `frontend/mockups/create-session-datepicker-{A,B-D,C}.html` | ✅ Aprobado C, implementado (2026-05-26) |
+| Menú móvil (Opción A/B/C) | `frontend/mockups/mobile-menu-{A-drawer,B-bottomsheet,C-fullscreen}.html` | ✅ Aprobado C, implementado (2026-05-26) |
 | Login + Registro | — | Pendiente |
 | Detalle de partida | — | Pendiente |
 | Perfil de usuario | — | Pendiente |
@@ -592,6 +594,23 @@ Cada componente generado por shadcn se **adapta a las variables CSS** anteriores
 Los mockups son **HTML estático con Tailwind via CDN**, sin build. Sirven para
 validar look & feel antes de implementar. Se tiran al finalizar el bootstrap del
 proyecto React.
+
+### Layout: `<SiteHeader>` + `<MobileMenu>`
+
+`app/layouts/SiteHeader.tsx` envuelve toda la app. **Dos modos responsive**:
+
+- **Desktop (`md:+`)**: 3 zonas con `flex-1` cada una — logo izquierda, nav central (Partidas pill rojo si activo), acciones a la derecha (username · logout · `<LanguageSwitcher>`).
+- **Móvil (`<md`)**: solo logo + botón hamburguesa estilo "dado" (`size-[42px] rounded-xl bg-foreground` con borde interno blanco/20 + `<Dices>` icon) que abre `<MobileMenu>`.
+
+`<MobileMenu>` es fullscreen overlay con personalidad board-game-café:
+
+- Decoración: 2 cuadrados rotados (rojo 220×220 opacity 0.08 top-right, amarillo 180×180 opacity 0.15 bottom-left).
+- Header: logo + botón cerrar.
+- User block: avatar 64×64 con gradiente rojo→amarillo rotado -3°, saludo `"¡Hola, {username}!"` en font-display, stat pills (rating + puntos) en cápsulas.
+- Items grandes (`rounded-2xl border-[1.5px] px-4 py-3.5`) con icon-box coloreado: Partidas (rojo), Crear partida (amarillo), Mis partidas (verde · `Próximamente`), Mi perfil (azul · `Próximamente`). Activo en `bg-foreground text-background`.
+- Footer: language toggle `bg-muted` compact + botón logout rojo full-width.
+- Cierra con: botón X, Escape, navegación interna o click en cualquier `<Link>` (vía `useEffect` que watch `location.pathname` con guard de mount inicial vía `useRef` — evita el bug de "cierra al abrir").
+- A11y: `role="dialog"`, `aria-modal="true"`, scroll del body bloqueado mientras está abierto.
 
 ### Reglas de uso de la paleta (contraste y a11y)
 

@@ -126,9 +126,68 @@ Mensajes en `messages_es.properties` / `messages_en.properties`.
 
 ## Fuera de alcance de este módulo
 
-- **Persistencia en `games` y `game_expansions`**: se hace en el módulo de Partidas, cuando el usuario selecciona un juego al crear una partida. En ese momento se hace `upsert` por `bggId` y se materializa la relación base ↔ expansión solo si es necesaria.
 - **Listado de juegos del usuario / favoritos**: pertenece al módulo Usuarios.
 - **Catálogo administrable**: pertenece al módulo Admin.
+
+---
+
+## Persistencia de juegos — `GameService.findOrFetch` (Fase 1.2)
+
+Mientras la **búsqueda** (`GameSearchService`) consulta BGG directamente y no
+persiste, la **referencia** a un juego por `bggId` desde otros módulos sí lo
+hace. La pieza encargada es `GameService` (no confundir con `GameSearchService`).
+
+### API
+
+```java
+public interface GameService {
+    Game findOrFetch(Long bggId);   // lazy-load cache
+}
+```
+
+**Comportamiento**:
+
+1. `gameRepository.findById(bggId)` — hit local → devuelve.
+2. Miss → `bggClient.getThing(bggId)`.
+3. Si BGG no lo conoce → `BaseGameNotFoundException` (`404 error.games.base.not.found`).
+4. Si lo conoce → `BggGameMapper.toEntity(item)` y `gameRepository.save`.
+
+### Schema relacionado (V7)
+
+`V7__game_metadata_and_session_expansions.sql` añade:
+
+```sql
+ALTER TABLE games
+    ADD COLUMN is_expansion     BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN base_game_bgg_id BIGINT  NULL;
+```
+
+- `is_expansion` se rellena desde `BggThingResult.Item.type == "boardgameexpansion"`.
+- `base_game_bgg_id` se rellena del primer link `boardgameexpansion` con `inbound=true` (solo en expansiones; NULL en bases).
+- Sin FK sobre `base_game_bgg_id` para evitar problemas de orden al cachear lazy.
+
+### Consumidores actuales
+
+- `GameSessionServiceImpl.create()` — resolución del juego base.
+- `GameSessionServiceImpl` (create/update) — resolución de cada expansión + validación
+  `isExpansion && baseGameBggId == base.bggId`.
+
+### La relación base ↔ expansión vive en `games.base_game_bgg_id`
+
+No hay tabla join separada. La columna `games.base_game_bgg_id` añadida en V7
+codifica la pareja base–expansión sin duplicación: si la fila tiene
+`is_expansion = TRUE` y `base_game_bgg_id = X`, sabemos que es una expansión
+de X.
+
+Para "expansiones conocidas del juego X" basta una query indexada:
+
+```sql
+SELECT * FROM games WHERE base_game_bgg_id = ?;
+```
+
+(usa `idx_games_base_game_bgg_id`).
+
+**Histórico**: la tabla `game_expansions` (M:N `base_game_id` ↔ `expansion_game_id` + `sort_order`) existía desde el baseline V1 pero quedó redundante con `base_game_bgg_id`. La migración `V8__drop_game_expansions.sql` la elimina junto con la entidad `GameExpansion`.
 
 ---
 
@@ -139,14 +198,20 @@ com.matchplay.game/
 ├── controller/
 │   └── GameSearchController.java
 ├── service/
-│   ├── GameSearchService.java
-│   └── GameSearchServiceImpl.java
+│   ├── GameSearchService.java      ← busca en BGG (no persiste)
+│   ├── GameSearchServiceImpl.java
+│   ├── GameService.java            ← findOrFetch (cache local)
+│   └── GameServiceImpl.java
 ├── client/
-│   ├── BggClient.java            ← interfaz
-│   └── BggClientImpl.java        ← WebClient / RestClient contra BGG XML API
+│   ├── BggClient.java
+│   └── BggClientImpl.java
 ├── dto/
-│   ├── GameSearchResponse.java   ← record
-│   └── GameSearchType.java       ← enum: BASE, EXPANSION
+│   ├── GameSearchResponse.java
+│   └── GameSearchType.java
+├── entity/
+│   └── Game.java                   ← +isExpansion, +baseGameBggId
+├── repository/
+│   └── GameRepository.java
 └── mapper/
-    └── BggGameMapper.java
+    └── BggGameMapper.java          ← toResponse + toEntity
 ```

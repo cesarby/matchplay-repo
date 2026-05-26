@@ -466,6 +466,149 @@ Total backend tras Fase 1.1: **101/101 ✅**.
 
 ---
 
+## Expansiones de partida (Fase 1.2) ✅ implementada
+
+> Soporte para asociar **N expansiones** de BGG a una partida, además de su juego base.
+> Reusa el mismo cacheado de `games` que el base, ahora con lazy-load via
+> {@code GameService.findOrFetch}.
+
+### Decisiones cerradas
+
+| Decisión | Valor | Notas |
+|----------|-------|-------|
+| Modelo | Tabla M:N `game_session_expansions` | FK a `games.bgg_id`, no JSON column. Permite indexar y aplicar FK reales. |
+| Orden | Columna `position INT` | Preserva orden de inserción (`@OrderColumn` en JPA). |
+| Cardinalidad por partida | `0..20` | Bean Validation `@Size(max = 20)`. |
+| Pertenencia | Cada expansión debe tener `games.base_game_bgg_id == session.base_game_id` | Si no, `400 error.session.expansion.wrong.base`. |
+| `isExpansion` | Cada id debe corresponder a un juego con `games.is_expansion = TRUE` | Si no, `400 error.session.expansion.not.expansion`. |
+| Cacheado | `gameService.findOrFetch(bggId)` por cada id (base + expansiones). | Lazy-load: si no está en local, se trae de BGG y se persiste con `is_expansion`/`base_game_bgg_id` rellenos. |
+| Duplicados en request | **Dedupe silencioso** | El service usa `LinkedHashSet` preservando orden. |
+| Listados | `SessionSummaryResponse.expansionCount: int` | Solo el conteo, no la lista. Mantiene payload ligero. |
+| Detalle | `SessionDetailResponse.expansions: List<ExpansionSummary>` | `{ bggId, name, thumbnailUrl }` en orden. |
+| Filtrado por expansión | **Deferred** | `SessionSearchCriteria` no añade `expansionBggId` en v1. |
+| Update | `UpdateSessionRequest.expansionBggIds` opcional | PATCH semantics: `null` = no se toca, `[]` = vacía, `[...]` = reemplaza la lista entera. |
+| Restricción de cambio | `baseGameId` **sigue inmutable** | Cambiar expansiones sí está permitido al creador. |
+
+### Schema — `V7__game_metadata_and_session_expansions.sql`
+
+```sql
+ALTER TABLE games
+    ADD COLUMN is_expansion     BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN base_game_bgg_id BIGINT  NULL;
+
+CREATE INDEX idx_games_base_game_bgg_id ON games (base_game_bgg_id);
+
+CREATE TABLE game_session_expansions (
+    session_id   BIGINT NOT NULL,
+    expansion_id BIGINT NOT NULL,
+    position     INT    NOT NULL DEFAULT 0,
+    PRIMARY KEY (session_id, expansion_id),
+    CONSTRAINT fk_gse_session   FOREIGN KEY (session_id)   REFERENCES game_sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_gse_expansion FOREIGN KEY (expansion_id) REFERENCES games(bgg_id),
+    INDEX idx_gse_session   (session_id),
+    INDEX idx_gse_expansion (expansion_id)
+);
+```
+
+Notas:
+
+- `games.is_expansion` / `games.base_game_bgg_id` se rellenan al persistir lazy desde BGG (`BggGameMapper.toEntity`).
+- `base_game_bgg_id` **sin FK formal** para evitar problemas de orden de inserción cuando se cachean lazy (la expansión se inserta antes que su base en algunos flujos).
+- `ON DELETE CASCADE` sobre `session_id` limpia al borrar la sesión; sin cascada sobre `expansion_id` (el catálogo `games` no se borra).
+
+### Entity — `GameSession`
+
+```java
+@ManyToMany(fetch = FetchType.LAZY)
+@JoinTable(
+    name = "game_session_expansions",
+    joinColumns = @JoinColumn(name = "session_id"),
+    inverseJoinColumns = @JoinColumn(name = "expansion_id", referencedColumnName = "bgg_id")
+)
+@OrderColumn(name = "position")
+private List<Game> expansions = new ArrayList<>();
+```
+
+### DTOs
+
+**`CreateSessionRequest`** — campo nuevo opcional:
+
+```java
+@Size(max = 20)
+List<@NotNull Long> expansionBggIds   // null o vacío = sin expansiones
+```
+
+**`UpdateSessionRequest`** — añade el mismo campo con la regla PATCH: `null` = no se toca; `[]` = vacía la lista; lista no vacía = reemplaza.
+
+**`SessionDetailResponse`** — añade:
+
+```java
+List<ExpansionSummary> expansions   // record { Long bggId; String name; String thumbnailUrl; }
+```
+
+**`SessionSummaryResponse`** — añade:
+
+```java
+int expansionCount
+```
+
+Nuevo record:
+
+```java
+public record ExpansionSummary(Long bggId, String name, String thumbnailUrl) {}
+```
+
+### Validaciones en `GameSessionService` (create / update)
+
+1. `gameService.findOrFetch(baseGameId)` — lazy-load del base. Si BGG no lo conoce, `404 error.games.base.not.found`.
+2. Para cada `expansionBggId`:
+   1. `gameService.findOrFetch(bggId)` — lazy-load. Mismo error si BGG no lo conoce.
+   2. `expansion.isExpansion() == true` — si no, `400 error.session.expansion.not.expansion`.
+   3. `expansion.baseGameBggId == session.baseGame.bggId` — si no, `400 error.session.expansion.wrong.base`.
+3. Dedupe preservando orden (`LinkedHashSet`).
+4. Persistir en `game_session_expansions` con `position = índice` (vía `@OrderColumn` al guardar la sesión). La relación base ↔ expansión queda implícita en `games.base_game_bgg_id`, sin tabla join auxiliar.
+
+### Códigos de error nuevos (i18n)
+
+| Clave | HTTP | Cuándo |
+|-------|------|--------|
+| `error.session.expansion.not.expansion` | 400 | El id apunta a un juego con `is_expansion=false` |
+| `error.session.expansion.wrong.base`    | 400 | La expansión no pertenece al juego base de la partida |
+| `error.games.base.not.found`            | 404 | BGG no conoce el `bggId` (reusada para base y expansiones) |
+
+> `>20` expansiones se rechaza con `error.validation` (Bean Validation `@Size(max=20)`).
+> No hay clave dedicada `expansions.too.many` — se trata como validación de campo.
+
+### Tests añadidos (✅ todos pasando — 115/115)
+
+**`GameSessionServiceImplTest`** (+6):
+
+- `create_withValidExpansions_persistsThemInOrderWithoutDuplicates`
+- `create_withExpansionOfDifferentBase_throws`
+- `create_withBaseGameInExpansionList_throws`
+- `update_withNullExpansions_keepsExistingList`
+- `update_withEmptyExpansionsList_clearsThem`
+- `update_withNewExpansionsList_replacesEntirely`
+
+**`GameSessionControllerTest`** (+2):
+
+- `create_withExpansions_returns201_andResponseIncludesThem`
+- `create_with21Expansions_returns400`
+
+**`GameServiceImplTest`** (nuevo, +4) — cubre el lazy-load:
+
+- `findOrFetch_whenCachedLocally_returnsWithoutHittingBgg`
+- `findOrFetch_whenNotCached_fetchesFromBggAndPersists`
+- `findOrFetch_whenBggDoesNotKnowId_throws`
+- `findOrFetch_withNullId_throws`
+
+### Cambios colaterales
+
+- `GameSessionServiceImpl` ya no inyecta `GameRepository` directamente; usa `GameService.findOrFetch` para resolver base + expansiones de forma uniforme. Esto **también** corrige el bug pre-existente de que `create` esperaba juegos pre-seedeados.
+- `BggGameMapper.toEntity(BggThingResult.Item)` nuevo método para mapear a `Game` con flags poblados (antes solo existía `toResponse` para el DTO de búsqueda).
+
+---
+
 ## Pendientes / siguiente fase
 
 ### Fase 2 (engagement)

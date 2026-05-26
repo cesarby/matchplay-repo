@@ -64,13 +64,27 @@ derecha, tile amarillo rotado abajo-derecha, dots foreground arriba-izquierda.
 
 ### `<SessionFilters>` cards interactivas
 
-- Cada filtro renderiza una "card-pill" con icono coloreado (azul=provincia,
-  verde=ciudad, amarillo=zona) + label arriba + valor seleccionado abajo +
-  chevron a la derecha.
+- Cada filtro geo (Provincia / Ciudad / Zona) renderiza una "card-pill" con
+  icono coloreado (azul=provincia, verde=ciudad, amarillo=zona) + label arriba
+  + valor seleccionado abajo + chevron a la derecha.
 - Por debajo, un `<select>` real con `appearance-none + absolute inset-0
   opacity-0` para conservar a11y (teclado, screen reader, mobile native picker).
 - Cascading: cambiar provincia limpia ciudad/zona; cambiar ciudad limpia
   zona. Selects en cascada se deshabilitan visualmente con `opacity-50`.
+- **Filtro de juego**: reutiliza `<GameTypeahead>` con `labelSrOnly` (mismo
+  componente que `CreateSessionForm`). El placeholder + el icono de búsqueda
+  comunican intención sin label visible. Sin filtro de expansión (out of scope
+  para el listado).
+- Grid `lg:grid-cols-4 lg:items-center` — 4 celdas del mismo ancho. El typeahead
+  de juego no necesita doble columna (truncamiento del nombre seleccionado es
+  aceptable, coherente con cómo trunca Zona).
+- **Botón "Limpiar filtros"**: pill `bg-red-soft text-red`, hover → `bg-red
+  text-white` + `scale-105`, icono `X` que rota 90° en hover. Texto dinámico
+  con `count` y plural i18n: `"Limpiar 1 filtro"` / `"Limpiar 3 filtros"`.
+  Solo aparece si hay ≥ 1 filtro activo.
+- **Filtro de fecha**: eliminado en v1.2 (poca utilidad real, complicaba el
+  layout). El backend sigue soportando `scheduledFrom`/`scheduledTo` por si
+  hace falta más adelante.
 
 ### Animaciones registradas en `tailwind.config.ts`
 
@@ -376,20 +390,54 @@ Ruta envuelta en `<ProtectedRoute>` — anónimos van a `/login?from=...`.
 | Campo | Validación cliente | Componente |
 |-------|--------------------|------------|
 | `title` | `@NotBlank`, `Size(max 150)` | `TextField` |
-| `description` | `Size(max 5000)`, opcional | `<textarea>` inline |
-| `game` (BGG) | requerido (Controller) | `<GameTypeahead>` |
+| `description` | `Size(max 500)`, opcional, contador `n / 500` | `<textarea>` con `maxLength={500}` |
+| `game` (BGG) + `expansions` | base requerido (Controller), N expansiones opcionales | `<GameWithExpansionsPicker>` |
 | `provinceCode` | requerido | `SelectField` |
 | `cityCode` | requerido, depende de provincia | `SelectField` (cascading) |
-| `areaCode` | opcional, depende de ciudad | `SelectField` |
-| `scheduledAt` | `datetime-local` válido y futuro | `TextField` type=datetime-local |
-| `maxPlayers` | `Min(2)`, `Max(20)`. Si hay juego seleccionado, label muestra `(min–max BGG)` | `TextField` type=number |
+| `areaCode` | requerido, depende de ciudad | `SelectField` |
+| `scheduledAt` | válido y futuro | `<SessionDateTimePicker>` (custom) |
+| `maxPlayers` | `Min(2)`, `Max(20)`. Auto-rellena con `game.maxPlayers` al elegir juego. Label muestra `(min–max BGG)` | `TextField` type=number |
+
+> **Regla de producto v1.2**: todos los campos son obligatorios excepto
+> `description`. Esto incluye `areaCode` (antes opcional).
+
+**UX rules**:
+
+1. **Prefill localización**: al montar, si el `useAuth().user` tiene `province/city/area`, se rellenan en cascada (con 3 `useEffect` gated por `citiesQuery.data` y `areasQuery.data` para esperar a que la opción exista en el `<select>` antes de hacer `setValue`).
+2. **Plazas automáticas**: `useEffect` sobre `selectedGame.bggId` hace `setValue('maxPlayers', game.maxPlayers)` al cambiar el juego. Si BGG no aporta el dato (cooperativos), no toca.
+3. **Descripción 0/500**: contador en vivo arriba del textarea (`aria-live="polite"`), pasa a `text-red` si excede.
+4. **Picker fecha custom**: ver `<SessionDateTimePicker>` abajo.
+
+### `<GameWithExpansionsPicker>` (reusable, en `features/games/`)
+
+Composición sobre `<GameTypeahead>` para el patrón "1 juego base + N expansiones del mismo base".
+
+- **Sin base seleccionado** → `GameTypeahead` para el base.
+- **Con base seleccionado** → card con thumbnail + nombre + año + jugadores + ✕. El input desaparece.
+- **Si `baseGame.hasExpansions === true`** → aparece debajo un sub-buscador multi-select de expansiones del mismo base. Chips bajo el input con ✕ por chip. Las ya añadidas aparecen con check en el dropdown (click ignorado).
+- **Cambiar/quitar base** → limpia silenciosamente todas las expansiones (regla de pertenencia: las expansiones están atadas al base).
+- **Búsqueda de expansiones**: `gamesApi.search({ type: 'EXPANSION', baseGameId, size: 50 })`. El backend ignora `q` en este modo; el filtrado por texto se hace client-side sobre los resultados.
+
+Tests cubren los 6 flujos clave (vacío, selección base, card, hasExpansions=false, quitar base limpia, chips ✕, dedupe).
+
+### `<SessionDateTimePicker>` (en `features/sessions/components/`)
+
+Picker custom con calendario `react-day-picker` v10 + grid de slots de 30 min.
+
+- **Trigger** botón con icono `CalendarDays` rojo + texto formateado (`"sáb 30 may 2026 · 20:00"` o `"Selecciona fecha y hora"`).
+- **Popover**: calendario tematizado board-game-café + strip de 29 slots (08:00 → 22:00 en pasos de 30 min, 22:00 incluido) en grid de 6 cols.
+- **Modificadores** vía `modifiersClassNames` (no `classNames` — v10 separa UI parts de modificadores): día seleccionado `!bg-red !text-white`, hoy `!bg-yellow-soft !border-yellow`, pasado `opacity-40 line-through`, fuera del mes `opacity-30`.
+- **Valor controlado**: string `"YYYY-MM-DDTHH:mm"` (formato datetime-local) para mantener compatibilidad con el resto del form. Internamente parsea con `date-fns.parse`.
+- **Locale español**, semana empieza en lunes (`weekStartsOn={1}`).
+- **Cerrar**: botón "Hecho", click fuera, o Escape.
 
 **Submit:**
 
 1. zod parse local. Si falla → `setError` por campo.
 2. Convierte `scheduledAt` (datetime-local, asumido en zona local) → `new Date(value).toISOString()`.
-3. POST `/sessions`. Si éxito → `navigate('/sessions/:id')` con el id devuelto.
-4. Si error backend:
+3. POST `/sessions` con `expansionBggIds: number[]` si hay expansiones.
+4. Si éxito → `navigate('/sessions/:id')` con el id devuelto.
+5. Si error backend:
    - Si trae `fieldErrors` (Bean Validation) → `setError` por cada campo.
    - Si no, usa `mapSessionError(err)`:
      - `channel: 'field'` → `setError(field, t(i18nKey))`.
@@ -468,9 +516,10 @@ Total frontend del módulo: **33 tests**. El total global frontend tras Fase 1 =
 
 ## Pendientes / siguiente fase
 
-- **EditSessionPage** (`/sessions/:id/edit`) — botón "Editar" del detail ya enlaza pero la página no existe en v1.
-- **MySessionsPage** — depende de `GET /sessions/mine?scope=...` (backend Fase 2).
+- **EditSessionPage** (`/sessions/:id/edit`) — botón "Editar" del detail ya enlaza pero la página no existe en v1. Cuando se haga, debe reusar `<GameWithExpansionsPicker>` y `<SessionDateTimePicker>` igual que el create.
+- **MySessionsPage** + **Profile page** — referenciadas como "Próximamente" en el `<MobileMenu>`. Dependen de `GET /sessions/mine?scope=...` (backend Fase 2) y endpoints de perfil.
 - **Sala de chat por sesión** — depende de endpoint backend Fase 2.
 - **Confirmación al cancelar** — modal "¿Seguro?" antes del `changeStatus({ CANCELLED })`. Hoy es un click directo.
 - **Toast de éxito** — al unirse / salir, mostrar feedback efímero. Requiere infra de toasts (no existe en v1).
 - **Optimistic updates** en join/leave — mejora la sensación de respuesta. Hoy se espera la respuesta del backend.
+- **Detail card de fecha** (mockup B+D guardado en `mockups/create-session-datepicker-B-D.html`) — card "billete" con número grande del día, día de semana y countdown. Pensada para el detalle de partida (visual informativo), no para crear/editar.
