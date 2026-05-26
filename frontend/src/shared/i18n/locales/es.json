@@ -136,7 +136,6 @@
       "closeRegistrations": "Cerrar inscripciones",
       "reopenRegistrations": "Reabrir inscripciones",
       "edit": "Editar",
-      "editButton": "Editar",
       "closeButton": "Cerrar mesa"
     },
     "close": {
@@ -151,6 +150,7 @@
       "scheduledAt": "Fecha y hora",
       "maxPlayers": "Plazas máximas",
       "maxPlayersHint": "Mínimo {{min}} (los ya apuntados).",
+      "maxPlayersBelowMin": "No puedes bajar de {{min}} (hay jugadores apuntados).",
       "waitlistNote": "ℹ️ Hay {{count}} personas en cola — mantendrán su posición.",
       "submit": "Guardar cambios",
       "cancel": "Cancelar"

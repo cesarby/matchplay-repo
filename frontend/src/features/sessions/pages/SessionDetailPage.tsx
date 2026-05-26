@@ -1,5 +1,4 @@
-import { Calendar, Lock, MapPin, Pencil, Users } from 'lucide-react'
-import { useState } from 'react'
+import { Calendar, MapPin, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
@@ -7,15 +6,10 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { SeoHead } from '@/shared/components/SeoHead'
 import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
-import { CloseSessionModal } from '../components/CloseSessionModal'
-import { EditSessionModal } from '../components/EditSessionModal'
+import { CreatorActions } from '../components/CreatorActions'
 import { SessionActions } from '../components/SessionActions'
 import { SessionPlayerRow } from '../components/SessionPlayerRow'
-import {
-  useCloseSessionMutation,
-  useSessionDetailQuery,
-  useUpdateSessionMutation,
-} from '../hooks/useSessions'
+import { useSessionDetailQuery } from '../hooks/useSessions'
 
 /**
  * Página `/sessions/:id` — detalle público de una partida.
@@ -36,14 +30,6 @@ export default function SessionDetailPage() {
   const { data, isLoading, isError, error } = useSessionDetailQuery(
     Number.isFinite(sessionId) ? sessionId : undefined,
   )
-
-  const [editOpen, setEditOpen] = useState(false)
-  const [closeOpen, setCloseOpen] = useState(false)
-
-  // Hooks must be called unconditionally — id 0 is safe: mutations won't fire
-  // before data arrives (buttons only appear after data is loaded).
-  const updateMut = useUpdateSessionMutation(data?.id ?? 0)
-  const closeMut = useCloseSessionMutation(data?.id ?? 0)
 
   if (!Number.isFinite(sessionId)) {
     return <Navigate to="/sessions" replace />
@@ -81,7 +67,6 @@ export default function SessionDetailPage() {
 
   const isCreator = !!user && user.username === data.creatorUsername
   const canEdit = isCreator && (data.status === 'OPEN' || data.status === 'FULL')
-  const canClose = isCreator && data.status === 'OPEN'
 
   const creatorUsername = data.creatorUsername
   const players = data.players.filter((p) => p.role === 'PLAYER')
@@ -179,30 +164,7 @@ export default function SessionDetailPage() {
               </li>
             </ul>
 
-            {(canEdit || canClose) && (
-              <div className="mt-4 flex gap-2 border-t border-border pt-3">
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => setEditOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-semibold hover:bg-muted"
-                  >
-                    <Pencil size={14} aria-hidden="true" />
-                    {t('sessions.detail.editButton')}
-                  </button>
-                )}
-                {canClose && (
-                  <button
-                    type="button"
-                    onClick={() => setCloseOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-red/40 bg-card px-3 py-1.5 text-sm font-semibold text-red hover:bg-red/10"
-                  >
-                    <Lock size={14} aria-hidden="true" />
-                    {t('sessions.detail.closeButton')}
-                  </button>
-                )}
-              </div>
-            )}
+            {canEdit && <CreatorActions session={data} />}
           </section>
 
           {/* Descripción */}
@@ -275,51 +237,6 @@ export default function SessionDetailPage() {
           </div>
         </aside>
       </div>
-
-      <EditSessionModal
-        open={editOpen}
-        initialScheduledAt={toLocalDatetimeInput(data.scheduledAt)}
-        initialMaxPlayers={data.maxPlayers}
-        registeredPlayers={data.registeredPlayers}
-        waitlistCount={data.waitlistCount}
-        isPending={updateMut.isPending}
-        onClose={() => setEditOpen(false)}
-        onSubmit={(payload) => {
-          updateMut.mutate(
-            {
-              scheduledAt: new Date(payload.scheduledAt).toISOString(),
-              maxPlayers: payload.maxPlayers,
-            },
-            { onSuccess: () => setEditOpen(false) },
-          )
-        }}
-      />
-      <CloseSessionModal
-        open={closeOpen}
-        registeredPlayers={data.registeredPlayers}
-        waitlistCount={data.waitlistCount}
-        isPending={closeMut.isPending}
-        onClose={() => setCloseOpen(false)}
-        onConfirm={() => closeMut.mutate(undefined, { onSuccess: () => setCloseOpen(false) })}
-      />
     </div>
   )
-}
-
-// ---------------------------------------------------------------------------
-// helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Convierte un ISO instant (e.g. "2030-01-15T20:00:00Z") a formato
- * datetime-local "YYYY-MM-DDTHH:mm" en la zona horaria local del navegador.
- */
-function toLocalDatetimeInput(iso: string): string {
-  const d = new Date(iso)
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
 }

@@ -136,7 +136,6 @@
       "closeRegistrations": "Close registrations",
       "reopenRegistrations": "Reopen registrations",
       "edit": "Edit",
-      "editButton": "Edit",
       "closeButton": "Close table"
     },
     "close": {
@@ -151,6 +150,7 @@
       "scheduledAt": "Date and time",
       "maxPlayers": "Maximum spots",
       "maxPlayersHint": "Minimum {{min}} (already registered).",
+      "maxPlayersBelowMin": "You cannot lower below {{min}} (there are already registered players).",
       "waitlistNote": "ℹ️ There are {{count}} people in the queue — they will keep their position.",
       "submit": "Save changes",
       "cancel": "Cancel"

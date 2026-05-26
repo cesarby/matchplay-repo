@@ -50,7 +50,7 @@ describe('EditSessionModal', () => {
     await userEvent.click(screen.getByRole('button', { name: /guardar/i }))
     expect(onSubmit).not.toHaveBeenCalled()
     expect(screen.getByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('alert').textContent).toMatch(/mínimo/i)
+    expect(screen.getByRole('alert').textContent).toMatch(/no puedes bajar/i)
   })
 
   it('muestra nota de waitlist cuando hay gente en cola', () => {

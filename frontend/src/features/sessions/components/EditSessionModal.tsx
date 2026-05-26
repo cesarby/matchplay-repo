@@ -41,7 +41,7 @@ export function EditSessionModal({
 
   function handleSubmit() {
     if (maxPlayers < minMax) {
-      setError(t('sessions.edit.maxPlayersHint', { min: minMax }))
+      setError(t('sessions.edit.maxPlayersBelowMin', { min: minMax }))
       return
     }
     setError(null)
