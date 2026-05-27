@@ -10,12 +10,6 @@ import { SessionChatDrawer } from './SessionChatDrawer'
 
 interface SessionChatButtonProps {
   session: SessionDetail
-  /**
-   * Callback opcional para el estado outsider: cuando un no participante hace
-   * click en la caja informativa del chat, se le redirige al CTA "Unirme" o
-   * a login según el caso. Lo decide el padre (SessionDetailPage).
-   */
-  onJoinPrompt?: () => void
 }
 
 /**
@@ -24,27 +18,25 @@ interface SessionChatButtonProps {
  * 1. **Participante** (chatUnreadCount !== null): card-banner clicable con borde
  *    rojo, contador total + badge de no leídos. Click abre el drawer.
  * 2. **Outsider con sesión activa** (chatUnreadCount === null && chatMessageCount !== null):
- *    caja muted con borde dashed, clicable. Click llama a {@code onJoinPrompt}.
+ *    caja informativa NO clicable (role="note"). Solo muestra la info del chat.
  * 3. **Sesión cerrada** (chatMessageCount === null): no renderiza nada.
  */
-export function SessionChatButton({ session, onJoinPrompt }: SessionChatButtonProps) {
+export function SessionChatButton({ session }: SessionChatButtonProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   // Estado 3: sesión cerrada / cancelada → no aplica el chat
   if (session.chatMessageCount === null) return null
 
-  // Estado 2: outsider — caja informativa clicable
+  // Estado 2: outsider — caja informativa NO clicable
   if (session.chatUnreadCount === null) {
     return (
-      <button
-        type="button"
-        onClick={() => onJoinPrompt?.()}
-        aria-label={t('sessions.chat.outsiderNotice', { count: session.chatMessageCount })}
-        className="flex w-full items-center gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4 text-left transition hover:bg-muted/50"
+      <div
+        role="note"
+        className="flex w-full items-center gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4 opacity-70"
       >
         <MessageSquare size={20} aria-hidden="true" className="text-muted-foreground" />
-        <div className="flex-1" aria-hidden="true">
+        <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">
             {t('sessions.chat.totalMessages', { count: session.chatMessageCount })}
           </p>
@@ -52,7 +44,7 @@ export function SessionChatButton({ session, onJoinPrompt }: SessionChatButtonPr
             {t('sessions.chat.outsiderNotice', { count: session.chatMessageCount })}
           </p>
         </div>
-      </button>
+      </div>
     )
   }
 

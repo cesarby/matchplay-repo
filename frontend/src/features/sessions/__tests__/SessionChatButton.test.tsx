@@ -1,8 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { HelmetProvider } from 'react-helmet-async'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { SessionChatButton } from '../components/SessionChatButton'
 import type { SessionDetail } from '../types/session.types'
@@ -44,12 +43,12 @@ function baseSession(overrides: Partial<SessionDetail> = {}): SessionDetail {
   }
 }
 
-function renderButton(s: SessionDetail, props: { onJoinPrompt?: () => void } = {}) {
+function renderButton(s: SessionDetail) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <HelmetProvider>
       <QueryClientProvider client={qc}>
-        <SessionChatButton session={s} onJoinPrompt={props.onJoinPrompt} />
+        <SessionChatButton session={s} />
       </QueryClientProvider>
     </HelmetProvider>,
   )
@@ -74,14 +73,14 @@ describe('SessionChatButton', () => {
     expect(screen.getByText('5')).toBeInTheDocument()
   })
 
-  it('outsider con chatMessageCount > 0 renderiza caja muted clicable', async () => {
-    const onJoinPrompt = vi.fn()
-    renderButton(baseSession({ chatUnreadCount: null, chatMessageCount: 7 }), { onJoinPrompt })
+  it('outsider con chatMessageCount > 0 renderiza caja informativa NO clicable', () => {
+    renderButton(baseSession({ chatUnreadCount: null, chatMessageCount: 7 }))
+    // Contenido visible
     expect(screen.getByText(/7 mensajes — apúntate/i)).toBeInTheDocument()
-    // No tiene badge unread
-    expect(screen.queryByText('7', { selector: 'span[aria-label]' })).not.toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button'))
-    expect(onJoinPrompt).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/7 mensajes$/i)).toBeInTheDocument()
+    // NO debe ser un button (es role="note")
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    expect(screen.getByRole('note')).toBeInTheDocument()
   })
 
   it('outsider con chatMessageCount = 0 muestra mensaje sin mensajes', () => {

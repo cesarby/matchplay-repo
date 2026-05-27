@@ -96,15 +96,6 @@ export default function SessionDetailPage() {
           }
         : null
 
-  function scrollToJoinCta() {
-    const el = document.getElementById('join-cta')
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    if (el) {
-      el.classList.add('ring-2', 'ring-red', 'ring-offset-2')
-      setTimeout(() => el.classList.remove('ring-2', 'ring-red', 'ring-offset-2'), 1500)
-    }
-  }
-
   return (
     <div className="container py-8">
       <SeoHead
@@ -267,7 +258,7 @@ export default function SessionDetailPage() {
             ) : null}
           </section>
 
-          <SessionChatButton session={data} onJoinPrompt={scrollToJoinCta} />
+          <SessionChatButton session={data} />
 
           <div className="border-t border-border pt-4">
             <SessionActions session={data} />
