@@ -10,15 +10,19 @@ interface MyHistoryTableProps {
 }
 
 /**
- * Tabla compacta para el tab Historial de Mis partidas.
- * Desktop: tabla con 6 columnas. Mobile (sm-): el grid colapsa a 1 columna
- * y cada fila se ve como una mini-card apilada.
+ * Tabla compacta para el tab Historial de Mis partidas. Layout calcado del
+ * mockup `docs/superpowers/brainstorm/.../historial-v2.html`:
  *
- * Sub-fila de expansiones solo cuando la partida las tiene
- * ({@code session.expansionNames?.length > 0}).
+ * - Contenedor: border + radius + bg-card (cream casi blanco), overflow hidden.
+ * - Header: bg-muted/30 ≈ #FAF6EF (mockup #F8F4EC), uppercase 10px tracking-wider.
+ * - Body row: padding 10px 14px (py-2.5 px-3.5), border-bottom 1px border-muted
+ *   ≈ #F0EAE0 (mockup #F0EBE0).
+ * - Sub-fila de expansiones: padding 2px 14px 10px (pt-0.5 pb-2.5 px-3.5),
+ *   bg-muted/15 ≈ #FCF9F2 (mockup #FBF8F2), border-bottom propio para crear
+ *   la línea de separación con la siguiente sesión.
  *
- * Botón Duplicar navega a {@code /sessions/new?from={id}}; CreateSessionPage
- * detecta el query param y precarga el formulario.
+ * Botón Duplicar navega a /sessions/new?from={id}; CreateSessionPage detecta
+ * el query param y precarga el formulario.
  */
 export function MyHistoryTable({ rows }: MyHistoryTableProps) {
   const { t, i18n } = useTranslation()
@@ -54,9 +58,9 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-card">
-      {/* Cabecera — solo visible en sm+. bg-muted/30 ≈ mockup #F8F4EC */}
-      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-border bg-muted/30 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+    <div className="overflow-hidden rounded-md border border-muted bg-card">
+      {/* Cabecera — solo visible en sm+. */}
+      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-muted bg-muted/30 px-3.5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
         <span>{t('sessions.mine.history.columns.date')}</span>
         <span>{t('sessions.mine.history.columns.name')}</span>
         <span>{t('sessions.mine.history.columns.game')}</span>
@@ -65,13 +69,21 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
         <span></span>
       </div>
 
-      {rows.map((s) => {
+      {rows.map((s, idx) => {
         const hasExp = s.expansionNames != null && s.expansionNames.length > 0
         const location = [s.cityName, s.areaName].filter(Boolean).join(' · ') || '—'
+        const isLast = idx === rows.length - 1
         return (
-          <div key={s.id} className="border-b border-border last:border-b-0">
-            {/* Fila principal */}
-            <div className="grid grid-cols-1 gap-1.5 px-3 py-2 text-xs sm:grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] sm:items-center sm:gap-3">
+          <div key={s.id}>
+            {/* Fila principal. border-bottom separa de la sub-fila o de la
+                siguiente sesión. La última fila de la última sesión sin
+                sub-fila no lleva borde. */}
+            <div
+              className={cn(
+                'grid grid-cols-1 gap-1.5 border-b border-muted px-3.5 py-2.5 text-xs sm:grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] sm:items-center sm:gap-3',
+                isLast && !hasExp && 'border-b-0',
+              )}
+            >
               <span className="whitespace-nowrap text-foreground">
                 {formatScheduledAt(s.scheduledAt)}
               </span>
@@ -92,15 +104,14 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
               </button>
             </div>
 
-            {/* Sub-fila de expansiones — bg-muted/15 ≈ mockup #FBF8F2 (warm cream
-                muy sutil que crea cohesión visual con la fila de arriba sin
-                competir). Diferenciación adicional via italic + text-[11px] +
-                muted-foreground + ↳ alineado con la columna de fecha. */}
+            {/* Sub-fila de expansiones — bg-muted/15 ≈ mockup #FBF8F2, border-bottom
+                propio para separar de la siguiente sesión. */}
             {hasExp && (
               <div
                 className={cn(
-                  'bg-muted/15 px-3 pb-2 pt-0 text-[11px] italic text-muted-foreground',
+                  'border-b border-muted bg-muted/15 px-3.5 pb-2.5 pt-0.5 text-[11px] italic text-muted-foreground',
                   'sm:grid sm:grid-cols-[110px_1fr] sm:gap-3',
+                  isLast && 'border-b-0',
                 )}
               >
                 <span
