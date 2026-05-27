@@ -58,6 +58,7 @@ export function SessionLivePreview({
     baseGameName: baseGame?.name ?? t('sessions.create.preview.placeholderGame'),
     baseGameThumbnailUrl: baseGame?.thumbnailUrl ?? null,
     expansionCount,
+    expansionNames: null,
     cityCode: null,
     cityName: cityName ?? null,
     areaCode: null,

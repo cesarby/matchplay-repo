@@ -1,6 +1,8 @@
 // Types del módulo sessions — alineados con el backend (DTOs Java).
 // Evitar drift: cualquier cambio de shape va sincronizado.
 
+import type { PageResponse } from '@/shared/api/PageResponse'
+
 export type SessionStatus = 'OPEN' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 
 export type ParticipantRole = 'PLAYER' | 'WAITLIST'
@@ -22,6 +24,11 @@ export interface SessionSummary {
   baseGameThumbnailUrl: string | null
   /** Nº de expansiones asociadas a la partida (0..N). Solo el conteo en listados. */
   expansionCount: number
+  /**
+   * Nombres de las expansiones de la partida. Solo populado en el tab Historial
+   * de Mis partidas; null en listado público y otros tabs.
+   */
+  expansionNames: string[] | null
   cityCode: string | null
   cityName: string | null
   areaCode: string | null
@@ -134,4 +141,20 @@ export interface SessionSearchParams {
   status?: SessionStatus
   page?: number
   size?: number
+}
+
+// ---------- Mis sesiones ----------
+
+export type MyTab = 'CREATED' | 'PLAYER' | 'WAITLIST' | 'HISTORY'
+
+export interface TabCounts {
+  created: number
+  player: number
+  waitlist: number
+  history: number
+}
+
+export interface MySessionsResponse {
+  items: PageResponse<SessionSummary>
+  counts: TabCounts
 }

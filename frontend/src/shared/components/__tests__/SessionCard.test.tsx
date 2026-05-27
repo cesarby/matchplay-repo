@@ -25,6 +25,7 @@ function renderCard(props: Partial<Parameters<typeof SessionCard>[0]> = {}) {
     creatorUsername: 'alice',
     baseGameThumbnailUrl: null,
     expansionCount: 0,
+    expansionNames: null,
   }
   return render(
     <MemoryRouter>
@@ -107,5 +108,6 @@ function buildSession(): SessionSummary {
     creatorUsername: 'alice',
     baseGameThumbnailUrl: null,
     expansionCount: 0,
+    expansionNames: null,
   }
 }
