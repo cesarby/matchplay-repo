@@ -1,7 +1,7 @@
 # Módulo Partidas (sessions) — Spec
 
 > Gestión de partidas de juegos de mesa: listado público, detalle, creación,
-> participación con lista de espera infinita y transiciones de estado.
+> participación con lista de espera infinita, transiciones de estado y chat por partida.
 
 Referencia capa: [../spec.md](../spec.md) · Global: [../../spec.md](../../spec.md)
 
@@ -15,11 +15,11 @@ Cubre el ciclo de vida completo de una partida desde la perspectiva del backend:
 2. **CRUD del creador** — crear, actualizar parcial, cambiar estado.
 3. **Participación** — unirse, salirse, autopromoción de waitlist a plaza.
 4. **Validación de reglas de negocio** — fechas futuras, plazas dentro de los límites del juego BGG, transiciones de estado válidas.
+5. **Chat por partida** — mensajería entre participantes (jugadores y creador) mientras la partida está activa.
 
 Lo que está **fuera de scope** en esta fase (deferred):
 
 - `/sessions/mine` con scopes (Fase 2).
-- Chat asociado a la partida (Fase 2).
 - Ratings post-evento (Fase 3).
 - Notificaciones cuando se promociona a alguien desde waitlist (Fase 2 con módulo de notificaciones).
 
@@ -45,7 +45,7 @@ Lo que está **fuera de scope** en esta fase (deferred):
 | `waitlistCount` | Calculado al vuelo (no cacheado en la fila) | Coste despreciable con índice (`session_id, role, position`). |
 | Idempotencia de `changeStatus` | Sí | Pedir el estado actual devuelve detalle sin persistir. |
 | Estados terminales | `COMPLETED`, `CANCELLED` | No admiten más transiciones ni participación. |
-| `IN_PROGRESS` / `COMPLETED` | Solo se pueden alcanzar por job programado (deferred) | En v1 solo se llega a CANCELLED manualmente. |
+| `IN_PROGRESS` / `COMPLETED` | `IN_PROGRESS → COMPLETED` está habilitada; el resto requiere job programado (deferred) | `IN_PROGRESS → COMPLETED` se añadió con el módulo de chat para el lifecycle de mensajes. |
 
 ---
 
@@ -252,6 +252,8 @@ Respuesta `200`:
   "status": "OPEN",
   "creatorId": 1,
   "creatorUsername": "alice",
+  "chatUnreadCount": 2,
+  "chatMessageCount": 5,
   "players": [SessionPlayerResponse, ...],
   "yourRole": "PLAYER",
   "createdAt": "2026-01-01T10:00:00Z",
@@ -263,6 +265,15 @@ Respuesta `200`:
 - `players` incluye **PLAYER y WAITLIST** ordenados por `joinedAt asc`.
 - `baseGameSummary`: resumen generado por LLM (Claude Haiku) del juego base, en el idioma del `Accept-Language` de la petición. `null` si no hay resumen cacheado o el juego no tiene descripción en BGG.
 - `creatorGuests`: número de acompañantes del creador (no usuarios registrados). Incluido en `registeredPlayers`.
+- `chatUnreadCount`: mensajes del chat no leídos por el caller.
+  - `null` si el caller es anónimo o no es participante ni creador.
+  - `0` si el caller es el creador (siempre al día) o si la sesión está en estado terminal (`COMPLETED`/`CANCELLED`).
+  - `N > 0` si el caller es participante con N mensajes posteriores a su `last_chat_read_at` (excluyendo los propios).
+- `chatMessageCount`: total de mensajes en el chat, visible para cualquier visitante incluyendo anónimos.
+  - `null` si la sesión es `COMPLETED` o `CANCELLED` (chat no aplica, mensajes borrados).
+  - `0` o `N` si la sesión está activa.
+- **Serialización importante**: `SessionDetailResponse` está anotado con `@JsonInclude(JsonInclude.Include.ALWAYS)` para que Jackson serialice los campos `null` de chat explícitamente. Sin esto, el frontend recibiría `undefined` en lugar de `null` y no podría distinguir "anónimo/cerrado" de "al día". El test `getDetail_serializesNullChatFieldsExplicitly` lo blinda.
+- **En `create`**: el service pasa `chatUnreadCount = 0` y `chatMessageCount = 0` directamente (creador, partida recién creada sin mensajes). En `update` y las demás operaciones se construye el detalle con `buildDetail` que calcula ambos campos.
 
 ### `SessionPlayerResponse`
 
@@ -394,9 +405,11 @@ Transiciones permitidas:
 |--------|------|------|-------------|-----------|-----------|
 | `OPEN` | — | ✅ | ❌ | ❌ | ✅ |
 | `FULL` | ✅ | — | ❌ | ❌ | ✅ |
-| `IN_PROGRESS` | ❌ | ❌ | — | ❌ | ✅ |
+| `IN_PROGRESS` | ❌ | ❌ | — | ✅ | ✅ |
 | `COMPLETED` | ❌ | ❌ | ❌ | — | ❌ |
 | `CANCELLED` | ❌ | ❌ | ❌ | ❌ | — |
+
+`IN_PROGRESS → COMPLETED` se habilitó con el módulo de chat: es también lo natural en el ciclo de vida de una partida.
 
 Estado pedido == estado actual → **idempotente**, no falla.
 
@@ -453,6 +466,9 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 | `error.session.guests.exceed.max` | 400 | `creatorGuests` declarados superan la capacidad: `1 + creatorGuests > maxPlayers`. |
 | `error.session.empty.cannot.close` | 400 | `close` cuando no hay terceros apuntados (`registeredPlayers - 1 - creatorGuests < 1`). |
 | `error.session.status.invalid.transition` | 409 | Transición no permitida (incluye `join` en estado terminal) |
+| `error.session.chat.forbidden` | 403 | Acceder al chat siendo outsider (no participante ni creador). `SessionChatForbiddenException`. |
+| `error.session.chat.write.forbidden` | 403 | Intentar enviar un mensaje siendo WAITLIST. `SessionChatWriteForbiddenException`. |
+| `error.session.chat.closed` | 409 | Intentar enviar un mensaje en sesión COMPLETED o CANCELLED. `SessionChatClosedException`. |
 
 ---
 
@@ -462,7 +478,8 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions").permitAll()
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions/*").permitAll()
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions/*/players").permitAll()
-// POST /sessions/{id}/close, PATCH /sessions/{id}, etc. → .anyRequest().authenticated()
+// POST /sessions/{id}/close, PATCH /sessions/{id}, chat, etc. → .anyRequest().authenticated()
+// GET /sessions/{id}/messages requiere auth; la autorización granular (participante/creador) la aplica SessionChatService
 ```
 
 `creator` se resuelve siempre del `CurrentUserProvider` (no se manda en el body de `POST`).
@@ -474,27 +491,34 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 ```
 session/
 ├── controller/
-│   └── GameSessionController.java     (REST endpoints + OpenAPI)
+│   ├── GameSessionController.java     (REST endpoints + OpenAPI)
+│   └── SessionChatController.java     (endpoints /sessions/{id}/messages)
 ├── service/
 │   ├── GameSessionService.java        (interfaz)
-│   └── GameSessionServiceImpl.java    (reglas, transacciones, promotion logic)
+│   ├── GameSessionServiceImpl.java    (reglas, transacciones, promotion logic)
+│   ├── SessionChatService.java        (interfaz)
+│   └── SessionChatServiceImpl.java    (list, send, markRead)
 ├── repository/
 │   ├── GameSessionRepository.java     (JpaSpecificationExecutor + counts del trust strip)
 │   ├── GameSessionSpecifications.java (predicates dinámicos para search)
-│   └── SessionParticipantRepository.java
+│   ├── SessionParticipantRepository.java
+│   └── SessionMessageRepository.java  (chat: list, count, deleteBySessionId)
 ├── entity/
 │   ├── GameSession.java
 │   ├── SessionStatus.java
 │   ├── SessionParticipant.java
-│   └── ParticipantRole.java
+│   ├── ParticipantRole.java
+│   └── SessionMessage.java            (id, session, user, content, createdAt; LAZY associations)
 ├── dto/
 │   ├── SessionSearchCriteria.java     (record con filtros)
 │   ├── SessionSummaryResponse.java
-│   ├── SessionDetailResponse.java
+│   ├── SessionDetailResponse.java     (@JsonInclude ALWAYS para serializar nulls de chat)
 │   ├── SessionPlayerResponse.java
 │   ├── CreateSessionRequest.java
 │   ├── UpdateSessionRequest.java
-│   └── ChangeStatusRequest.java
+│   ├── ChangeStatusRequest.java
+│   ├── SessionMessageResponse.java    (id, userId, username, content, createdAt)
+│   └── CreateMessageRequest.java      (@NotBlank @Size(max=500) content)
 └── mapper/
     └── SessionMapper.java             (entity → DTOs)
 ```
@@ -659,12 +683,118 @@ public record ExpansionSummary(Long bggId, String name, String thumbnailUrl) {}
 
 ---
 
+## Chat por partida (Fase 2) ✅ implementado
+
+> Mensajería entre participantes mientras la partida está activa. Solo PLAYER y creador pueden escribir; WAITLIST puede leer. Al pasar a COMPLETED o CANCELLED, los mensajes se borran.
+
+### Schema — `V11__session_messages_and_chat_read.sql`
+
+```sql
+CREATE TABLE session_messages (
+    id         BIGINT        NOT NULL AUTO_INCREMENT,
+    session_id BIGINT        NOT NULL,
+    user_id    BIGINT        NOT NULL,
+    content    VARCHAR(500)  NOT NULL,
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_sm_session FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_sm_user    FOREIGN KEY (user_id)    REFERENCES users(id),
+    INDEX idx_sm_session_created (session_id, created_at)
+);
+
+ALTER TABLE session_participants
+    ADD COLUMN last_chat_read_at DATETIME NULL;
+```
+
+- `ON DELETE CASCADE` en `session_id` como red de seguridad; el borrado explícito se hace en el lifecycle hook (ver más abajo).
+- `last_chat_read_at` base del cálculo de `chatUnreadCount` en `SessionDetailResponse`.
+
+### Entidad — `SessionMessage`
+
+`com.matchplay.session.entity.SessionMessage`. Campos:
+
+- `session: GameSession` (`@ManyToOne(fetch = LAZY)`)
+- `user: User` (`@ManyToOne(fetch = LAZY)`)
+- `content: String`
+- `createdAt: Instant` (`@CreationTimestamp`)
+
+### Repository — `SessionMessageRepository`
+
+| Método | Propósito |
+|--------|-----------|
+| `findBySessionIdOrderByCreatedAtAsc(id)` | Lista todos los mensajes ASC (con `JOIN FETCH m.user` para evitar N+1) |
+| `findBySessionIdAndCreatedAtAfterOrderByCreatedAtAsc(id, since)` | Lista mensajes desde `since` ASC (idem JOIN FETCH) |
+| `countUnread(sessionId, excludeUserId, since)` | Cuenta mensajes del session posteriores a `since` que no son del propio caller |
+| `countBySessionId(sessionId)` | Cuenta total de mensajes (base del `chatMessageCount` público) |
+| `deleteBySessionId(sessionId)` | `@Modifying @Transactional` — limpieza en lifecycle hook |
+
+### Service — `SessionChatService(Impl)`
+
+Tres métodos con autorización propia:
+
+**`list(sessionId, since?)`**
+
+- Autorización: participante (PLAYER o WAITLIST) o creador. Si no, `SessionChatForbiddenException` (403).
+- Si `since` presente, usa `findBySessionIdAndCreatedAtAfter`; si no, `findBySessionIdOrderByCreatedAtAsc`.
+- Devuelve `List<SessionMessageResponse>` ordenada ASC.
+
+**`send(sessionId, request)`**
+
+- Autorización en orden (evita state leakage):
+  1. `assertParticipantOrCreator` → 403 `SessionChatForbiddenException` si outsider.
+  2. Status check → 409 `SessionChatClosedException` si `COMPLETED` o `CANCELLED`.
+  3. Role check → 403 `SessionChatWriteForbiddenException` si `WAITLIST`.
+- Persiste `SessionMessage`. Devuelve `SessionMessageResponse` con **HTTP 201**.
+
+**`markRead(sessionId)`**
+
+- Actualiza `last_chat_read_at = now()` en el `SessionParticipant` del caller.
+- No-op para el creador (no tiene fila en `session_participants`).
+- 403 si outsider.
+- Devuelve 204 No Content.
+
+### Excepciones nuevas
+
+Todas en `com.matchplay.exception`, extienden `MatchplayException`:
+
+| Clase | HTTP | Clave i18n |
+|-------|------|------------|
+| `SessionChatForbiddenException` | 403 | `error.session.chat.forbidden` |
+| `SessionChatWriteForbiddenException` | 403 | `error.session.chat.write.forbidden` |
+| `SessionChatClosedException` | 409 | `error.session.chat.closed` |
+
+### Endpoints REST
+
+Base: `/api/v1/sessions/{id}/messages`. Todos requieren JWT.
+
+| Método | Path | Auth granular | Descripción | HTTP |
+|--------|------|---------------|-------------|------|
+| `GET` | `/sessions/{id}/messages` | Participante o creador | Lista mensajes ASC. `?since=ISO` opcional | 200 |
+| `POST` | `/sessions/{id}/messages` | PLAYER o creador | Crea mensaje | 201 |
+| `POST` | `/sessions/{id}/messages/mark-read` | Cualquier participante | Actualiza `last_chat_read_at` | 204 |
+
+### `SessionDetailResponse` — campos de chat
+
+Ambos campos están presentes siempre en el JSON (anotación `@JsonInclude(ALWAYS)` en el record):
+
+| Campo | Tipo Java | Semántica |
+|-------|-----------|-----------|
+| `chatUnreadCount` | `Integer` | `null` si caller anónimo o outsider; `0` si creador o sesión terminal; `N` si hay N mensajes sin leer |
+| `chatMessageCount` | `Integer` | `null` si sesión `COMPLETED` o `CANCELLED`; `0` o `N` total de mensajes en sesión activa |
+
+`chatUnreadCount` va justo después de `creatorUsername`; `chatMessageCount` va después de `chatUnreadCount`.
+
+### Lifecycle hook en `changeStatus`
+
+Cuando el nuevo status es `COMPLETED` o `CANCELLED`, `GameSessionServiceImpl.changeStatus` llama a `messageRepository.deleteBySessionId(sessionId)` dentro de la misma transacción, antes de persistir el cambio de estado. El `last_chat_read_at` de los participantes queda en `NULL` (no se vuelve a consultar).
+
+---
+
 ## Pendientes / siguiente fase
 
 ### Fase 2 (engagement)
 
 - `GET /api/v1/sessions/mine?scope=ORGANIZING|JOINED|UPCOMING|PAST` paginado.
-- Chat por sesión: `GET/POST /api/v1/sessions/{id}/messages` con polling (sin SSE en v1).
 - Notificación cuando un WAITLIST se promociona a PLAYER (depende de módulo de notificaciones).
 - Rate limit en `POST /sessions` y `POST .../messages` (Bucket4j por usuario).
 - Job programado para transiciones `OPEN/FULL → IN_PROGRESS → COMPLETED` por fecha.

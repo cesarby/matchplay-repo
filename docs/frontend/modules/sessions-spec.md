@@ -1,7 +1,6 @@
 # Frontend · Módulo Sessions — Spec
 
-> Listado público, detalle, creación y participación en partidas. Fase 1 + 1.1
-> del módulo (sin "mis partidas", chat ni ratings — esos en fases siguientes).
+> Listado público, detalle, creación, participación y chat por partida. Fase 1 + 1.1 + chat MVP + editorial v3.
 
 Referencia capa: [../spec.md](../spec.md) · Backend: [../../backend/modules/sessions-spec.md](../../backend/modules/sessions-spec.md)
 
@@ -12,7 +11,7 @@ Referencia capa: [../spec.md](../spec.md) · Backend: [../../backend/modules/ses
 Cubre tres pantallas y todos los flujos derivados:
 
 1. **`/sessions`** — listado paginado con filtros (deep-linkable, alimentado por el QuickSearch de la landing).
-2. **`/sessions/:id`** — detalle público con sección de jugadores, lista de espera y acciones contextuales.
+2. **`/sessions/:id`** — detalle público con sección de jugadores, lista de espera, acciones contextuales y chat.
 3. **`/sessions/new`** — formulario de creación (protegido). Incluye typeahead BGG, geo cascading y validación cliente.
 
 Estos cuatro componentes shared se diseñaron para reutilizarse desde la landing y futuras vistas (perfil, mis partidas):
@@ -147,20 +146,28 @@ features/sessions/
 ├── components/
 │   ├── SessionFilters.tsx          # filtros del listado
 │   ├── SessionActions.tsx          # botones del detail según contexto
-│   ├── SessionPlayerRow.tsx        # fila de jugador: variant player o guestOf
+│   ├── SessionPlayerRow.tsx        # fila de jugador: variant player o guestOf (con avatar coloreado)
 │   ├── CreatorActions.tsx          # acciones del creador (Editar + Cerrar mesa)
 │   ├── EditSessionModal.tsx        # modal PATCH /sessions/{id}
 │   ├── CloseSessionModal.tsx       # modal POST /sessions/{id}/close
 │   ├── SessionExpansionsBlock.tsx  # bloque "Expansiones (N)" con accordion lazy
+│   ├── GameCover.tsx               # imagen de portada BGG o placeholder
+│   ├── GameCoverPlaceholder.tsx    # caja con gradient + icono Dices si no hay thumbnail
+│   ├── SessionChatButton.tsx       # mini-card del sidebar (3 estados: null/outsider/activo)
+│   ├── SessionChatDrawer.tsx       # drawer de chat con polling 20s
+│   ├── ChatMessageRow.tsx          # fila de mensaje (mine vs ajeno, pending si id < 0)
+│   ├── JoinCallToAction.tsx        # CTA full-width solo mobile
 │   └── CreateSessionForm.tsx       # form RHF+zod
 ├── api/
-│   └── sessionsApi.ts              # 9 endpoints (añade close)
+│   ├── sessionsApi.ts              # 9 endpoints (añade close)
+│   └── messagesApi.ts              # list, send, markRead
 ├── hooks/
-│   └── useSessions.ts              # queries + mutations + sessionKeys
+│   ├── useSessions.ts              # queries + mutations + sessionKeys
+│   └── useChatMessages.ts          # useChatMessagesQuery, useSendMessageMutation, useMarkChatReadMutation
 ├── lib/
 │   └── errorMapping.ts             # códigos error.session.* → field|banner + i18n
 ├── types/
-│   └── session.types.ts            # alineado con DTOs Java
+│   └── session.types.ts            # alineado con DTOs Java (incluye SessionMessage)
 └── __tests__/                      # SessionFilters, SessionsListPage,
                                     # SessionDetailPage, CreateSessionForm
 ```
@@ -174,6 +181,14 @@ features/sessions/
 ```ts
 export type SessionStatus = 'OPEN' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type ParticipantRole = 'PLAYER' | 'WAITLIST'
+
+export interface SessionMessage {
+  id: number
+  userId: number
+  username: string
+  content: string
+  createdAt: string  // ISO Instant
+}
 
 export interface SessionSummary {
   id: number
@@ -216,6 +231,8 @@ export interface SessionDetail extends Omit<SessionSummary, 'creatorId' | 'creat
   creatorId: number | null
   creatorUsername: string | null
   creatorGuests: number             // acompañantes del creador (no usuarios registrados)
+  chatUnreadCount: number | null    // null si outsider o anónimo; 0 si al día; N si N no leídos
+  chatMessageCount: number | null   // null si sesión cerrada; 0 o N total de mensajes
   players: SessionPlayer[]
   expansions: ExpansionSummary[]
   yourRole: ParticipantRole | null
@@ -274,6 +291,14 @@ sessionsApi.join(id)             // POST   /sessions/{id}/join
 sessionsApi.leave(id)            // DELETE /sessions/{id}/join
 ```
 
+`features/sessions/api/messagesApi.ts`:
+
+```ts
+messagesApi.list(id, since?)   // GET  /sessions/{id}/messages[?since=ISO]  → SessionMessage[]
+messagesApi.send(id, content)  // POST /sessions/{id}/messages              → SessionMessage (201)
+messagesApi.markRead(id)       // POST /sessions/{id}/messages/mark-read    → 204
+```
+
 Paths **relativos a `baseURL`** del `httpClient` (que ya incluye `/api/v1`). Es un error
 prefijar el path con `/api/v1/...` aquí (duplica el prefix). Patrón consistente con
 `authApi` y `geoApi`.
@@ -314,6 +339,23 @@ Las mutations comparten un helper `syncCacheFromDetail(qc, detail)` que:
 
 `invalidateQueries` devuelve una `Promise` que **no se espera** (`void`) — fire-and-forget intencional.
 
+`features/sessions/hooks/useChatMessages.ts`:
+
+```ts
+useChatMessagesQuery(sessionId, enabled)
+// Polling cada 20s mientras enabled=true (drawer abierto).
+// Query key incluye i18next.language (coherente con el resto del módulo).
+
+useSendMessageMutation(sessionId, currentUser)
+// Optimistic insert con id temporal negativo.
+// Al success, reemplaza con el mensaje real devuelto por el backend.
+// En error, rollback silencioso.
+
+useMarkChatReadMutation(sessionId)
+// Optimistic clear del badge chatUnreadCount a 0.
+// Llama POST /sessions/{id}/messages/mark-read (204).
+```
+
 ---
 
 ## SessionsListPage (`/sessions`)
@@ -343,32 +385,40 @@ Las mutations comparten un helper `syncCacheFromDetail(qc, detail)` que:
 
 ## SessionDetailPage (`/sessions/:id`)
 
+Layout v3 (editorial refactor). Diseño 2-col en `sm+` para el header, 2-col en `lg+` para el cuerpo.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ [OPEN] [Apuntado / En cola #N]                              │  ← status + youRole badges
+│ [OPEN] [Apuntado / En cola #N]                              │  ← status + yourRole badges (sm+: en header)
+│ ┌──────────┬──────────────────────────────────────────────┐ │
+│ │ GameCover│ # Catan Night (font-display)                 │ │  ← header 2-col sm+
+│ │ 160px    │ Catan (italic muted)                         │ │
+│ │          │ Organiza @alice                              │ │
+│ │          │ 📅 Hoy 20:00  📍 Madrid  👥 3/4 · 2 en cola │ │
+│ │          │ [CreatorActions si isOwner]                  │ │
+│ └──────────┴──────────────────────────────────────────────┘ │
 │                                                             │
-│ # Catan Night                                               │  ← H1
-│ Catan                                                       │  ← juego base
-│ Organiza alice                                              │  ← creator
+│ [Unirme a esta mesa — solo mobile, si aplica]               │  ← JoinCallToAction
 ├──────────────────────────────────┬──────────────────────────┤
 │ MAIN                             │ SIDEBAR                  │
 │                                  │                          │
-│ 📅 Hoy 20:00                     │ Apuntados (3/4)          │
-│ 📍 Madrid · Centro               │ ┌──────────────────────┐ │
-│ 👥 3/4 plazas · 2 en cola        │ │ alice (creator NO    │ │
-│                                  │ │  está aquí v1)       │ │
-│ ## Descripción                   │ │ bob                  │ │
-│ Mesa nocturna…                   │ │ carol                │ │
+│ ## Sobre Catan                   │ Apuntados (3/4)          │
+│ Resumen LLM…                     │ ┌──────────────────────┐ │
+│                                  │ │ (A) alice            │ │  ← avatar coloreado por inicial
+│ ## Expansiones (N)               │ │ (B) bob              │ │
+│ [accordion lazy]                 │ │ (C) carol            │ │
 │                                  │ └──────────────────────┘ │
-│                                  │                          │
-│                                  │ Lista de espera (2)      │
+│ ## Descripción                   │                          │
+│ Mesa nocturna…                   │ Lista de espera (2)      │
 │                                  │ ┌──────────────────────┐ │
 │                                  │ │ #1  eve              │ │
 │                                  │ │ #2  frank            │ │
 │                                  │ └──────────────────────┘ │
 │                                  │                          │
+│                                  │ [SessionChatButton]      │
+│                                  │                          │
 │                                  │ ──────────────────────── │
-│                                  │ [Acciones contextuales]  │
+│                                  │ [SessionActions]         │
 └──────────────────────────────────┴──────────────────────────┘
 ```
 
@@ -406,23 +456,38 @@ no `id` (el `CurrentUser` del módulo auth usa `userId`).
 - Players y waitlist se separan filtrando por `role` y ordenando waitlist por `position asc`.
 - SeoHead con `canonical=/sessions/:id`.
 
+**Header editorial (v3)**:
+
+Layout 2-col en `sm+` (`grid-cols-[160px_1fr]`): `<GameCover>` izquierda, bloque de info derecha.
+En mobile: stacked, cover centrado 144px.
+
+El bloque de info incluye (de arriba abajo): badges de status + yourRole → H1 en `font-display` → nombre del juego en italic muted → "organiza @..." → meta vertical (fecha / ubicación / plazas) → `<CreatorActions>` si `isOwner`.
+
 **Bloques del área principal** (en orden, de arriba abajo):
 
-1. **Meta** — fecha, ubicación, plazas. El contador "Apuntados (N/M)" usa
-   `data.registeredPlayers / data.maxPlayers`.
-2. **Sobre {gameName}** — bloque con borde izquierdo amarillo y fondo `bg-yellow-soft/30`.
+1. **Sobre {gameName}** — bloque con borde izquierdo amarillo y fondo `bg-yellow-soft/30`.
    Solo se renderiza si `baseGameSummary?.trim() && baseGameName`. Título i18n
    `sessions.detail.aboutGameHeading` ("Sobre {{game}}" / "About {{game}}").
-3. **`<SessionExpansionsBlock>`** — renderiza "Expansiones (N)" / "Expansión (1)" (plural i18n)
+2. **`<SessionExpansionsBlock>`** — renderiza "Expansiones (N)" / "Expansión (1)" (plural i18n)
    debajo del bloque "Sobre el juego". Cards horizontales clicables; solo una expandida a
    la vez (mutex). Click → dispara `useGameDetailQuery(bggId, enabled)` lazy → muestra
    summary del juego, o skeleton/error. `aria-expanded` + `aria-controls` vinculados.
-4. **Descripción** — texto libre de la partida.
+3. **Descripción** — texto libre de la partida.
 
-**Sidebar — filas de acompañantes**:
+**CTA mobile — `<JoinCallToAction>`**:
 
-La lista de apuntados muestra, bajo la fila del creador, una fila por cada
-`creatorGuests`. `<SessionPlayerRow>` acepta una API discriminada:
+Renderizado justo bajo el header, solo en `sm-` (`sm:hidden`). Devuelve `null` si:
+sesión terminal, caller ya es participante, o no quedan plazas. Anónimo →
+`<Link to="/login?next=/sessions/{id}">` con clave i18n `sessions.detail.joinLoginCta`.
+Autenticado → `<button>` que dispara `useJoinSessionMutation`. Wrapper tiene `id="join-cta"`.
+
+**Sidebar — filas de apuntados con avatar coloreado**:
+
+Cada `<SessionPlayerRow>` muestra un círculo con la inicial mayúscula del username coloreado
+por `pickAvatarColor(username)` (helper `shared/lib/avatarColor.ts`, determinístico, 6 clases
+Tailwind). Las filas de waitlist incluyen el número de posición.
+
+`<SessionPlayerRow>` acepta una API discriminada:
 
 ```ts
 // variant jugador
@@ -433,6 +498,53 @@ La lista de apuntados muestra, bajo la fila del creador, una fila por cada
 
 La fila `guestOf` muestra "+1 acompañante de @{creator}" en estilo muted
 (`border-dashed bg-muted/30 italic`). No necesita pasar un player dummy.
+
+**Sidebar — `<SessionChatButton>`**:
+
+Mini-card del sidebar con 3 estados exclusivos (compara con `== null` loose para cubrir `undefined`):
+
+1. `chatMessageCount == null` → no renderiza nada (sesión cerrada).
+2. `chatUnreadCount == null` → caja muted dashed con `role="note"`, no clicable, opacity 70. Muestra conteo de mensajes + aviso "Apúntate para participar." (clave `sessions.chat.outsiderNotice`). No es un botón.
+3. Caso base → card-banner clicable con icono `MessageSquare` + "CHAT" uppercase + conteo de mensajes + badge rojo si `chatUnreadCount > 0`. Click abre `<SessionChatDrawer>`.
+
+**Sidebar — orden**:
+
+Apuntados → Lista de espera (header siempre, body solo si `waitlistCount > 0`) → `<SessionChatButton>` → divider → `<SessionActions>`. En mobile el sidebar va al final de la página.
+
+---
+
+## Componentes de chat
+
+### `<GameCover>` + `<GameCoverPlaceholder>`
+
+`features/sessions/components/GameCover.tsx` / `GameCoverPlaceholder.tsx`.
+
+- `<GameCover thumbnailUrl name>`: renderiza `<img object-cover>` si `thumbnailUrl` está presente; `<GameCoverPlaceholder>` si es `null`.
+- `<GameCoverPlaceholder>`: caja `aspect-[3/4]` con gradient `from-yellow-soft to-red/10`, icono `Dices` de lucide-react y nombre del juego en `font-display` (2 líneas truncado). Sin imágenes externas.
+
+### `<SessionChatDrawer>`
+
+Drawer que se abre desde `<SessionChatButton>` (click). Montado en `SessionDetailPage`, controlado por estado local `chatOpen`.
+
+- **Posición**: derecho, 420px en desktop (`sm+`), full-screen en mobile.
+- **Apertura**: `useMarkChatReadMutation` se dispara al abrir (optimistic clear del badge). El drawer llama a `useChatMessagesQuery` con `enabled = open` para iniciar/parar el polling.
+- **Polling**: cada 20 segundos mientras el drawer está abierto.
+- **Lista de mensajes**: `<ChatMessageRow>` por cada mensaje. Auto-scroll inteligente: solo baja automáticamente si el usuario estaba cerca del fondo (no interrumpe si ha scrolleado arriba a leer historial).
+- **Input**: `<textarea>` con autoresize hasta 3 líneas. `Enter` envía, `Shift+Enter` inserta newline. Límite 500 caracteres con contador `X/500` visible. Botón `Send` a la derecha.
+- **Variante WAITLIST**: input y botón se ocultan completamente. Se muestra el aviso `sessions.chat.waitlistNotice`.
+- **Cierre**: Escape, click en backdrop (`aria-hidden`, no duplica el botón), botón `×`.
+
+### `<ChatMessageRow>`
+
+Fila de mensaje individual.
+
+- **Mine** (`message.userId === currentUser.userId`): alineado a la derecha, color de fondo propio.
+- **Ajeno**: alineado a la izquierda, avatar coloreado con la inicial por `pickAvatarColor`.
+- **Pending** (id < 0, insertado optimistamente): `opacity-60`. Al success, el id temporal se reemplaza con el id real. En error, rollback silencioso.
+
+### `pickAvatarColor` helper
+
+`shared/lib/avatarColor.ts`. `pickAvatarColor(username: string): string` devuelve una de 6 clases Tailwind de color de fondo de forma determinística (hash sobre el username). Aplicado en `<SessionPlayerRow>` (círculo inicial en sidebar) y en `<ChatMessageRow>` (avatar ajeno).
 
 ---
 
@@ -589,7 +701,7 @@ Mapea cada código `error.session.*` del backend a `{ channel, field?, i18nKey }
 
 ## i18n
 
-Claves nuevas bajo `sessions.*` en `shared/i18n/locales/{es,en}.json`:
+Claves bajo `sessions.*` en `shared/i18n/locales/{es,en}.json`:
 
 ```
 sessions.status.{OPEN|FULL|IN_PROGRESS|COMPLETED|CANCELLED}
@@ -599,8 +711,13 @@ sessions.filters.{province, city, area, game, from, to, status, apply, clear}
 sessions.detail.{playersHeading, waitlistHeading, descriptionHeading, noDescription,
                  join, leave, cancelSession, closeRegistrations, reopenRegistrations, edit,
                  closeButton, aboutGameHeading, guestOf,
+                 joinCta, joinLoginCta,
                  expansionsHeading_one, expansionsHeading_other,
                  expansionLoadError, expansionNoSummary}
+sessions.chat.{title, headerTitle, inputPlaceholder, waitlistNotice, send, empty, loadError,
+               sendError, unreadBadge_one, unreadBadge_other,
+               totalMessages_zero, totalMessages_one, totalMessages_other,
+               outsiderNotice}
 sessions.edit.{title, scheduledAt, maxPlayers, waitlistNote, submit}
 sessions.close.{title, confirmNoWaitlist, confirmWithWaitlist, submit}
 sessions.create.{title, submit, submitting, fields.*}
@@ -612,7 +729,11 @@ sessions.errors.{required, tooLong, notFound, full, alreadyJoined, joinOwn,
 Key highlights:
 - `sessions.detail.guestOf` — ES "+1 acompañante de @{{username}}" / EN "+1 guest of @{{username}}".
 - `sessions.detail.aboutGameHeading` — ES "Sobre {{game}}" / EN "About {{game}}".
+- `sessions.detail.joinCta` / `sessions.detail.joinLoginCta` — CTA mobile de unirse (auth y anónimo respectivamente).
 - `sessions.detail.expansionsHeading_one/_other` — plural por count (ES "Expansión (1)" / "Expansiones (2)").
+- `sessions.chat.outsiderNotice` — aviso en `<SessionChatButton>` cuando `chatUnreadCount == null` (outsider).
+- `sessions.chat.unreadBadge_one/_other` — badge rojo en el drawer con cuenta de no leídos.
+- `sessions.chat.totalMessages_zero/_one/_other` — conteo en la mini-card del sidebar.
 
 `sessions.card.*` se usa también desde la landing (preview hero). No duplicar.
 
@@ -638,18 +759,19 @@ Key highlights:
 | `SessionCard.test.tsx` (shared) | render, badges, link, asStatic | 8 |
 | `SessionFilters.test.tsx` | cascading, clear, status, disabled | 7 |
 | `SessionsListPage.test.tsx` | header, empty, data, URL→params, paginación, CTA por auth | 6 |
-| `SessionDetailPage.test.tsx` | render, login CTA, join/leave por role, acciones owner, waitlist con position, cancel PATCH, hidden si CANCELLED | 8 |
+| `SessionDetailPage.test.tsx` | render, login CTA, join/leave por role, acciones owner, waitlist con position, cancel PATCH, hidden si CANCELLED, chat button estados (cerrado/outsider/activo), JoinCallToAction mobile | 8+ |
 | `CreateSessionForm.test.tsx` | render campos, required, fecha pasada, submit OK con payload mapeado, error backend → field | 4 |
 
-Total frontend del módulo: **33 tests**. El total global frontend tras Fase 1 = **67**.
+Total frontend del módulo: **33+ tests**.
 
 ---
 
 ## Pendientes / siguiente fase
 
 - **MySessionsPage** + **Profile page** — referenciadas como "Próximamente" en el `<MobileMenu>`. Dependen de `GET /sessions/mine?scope=...` (backend Fase 2) y endpoints de perfil.
-- **Sala de chat por sesión** — depende de endpoint backend Fase 2.
 - **Confirmación al cancelar** — modal "¿Seguro?" antes del `changeStatus({ CANCELLED })`. Hoy es un click directo.
-- **Toast de éxito** — al unirse / salir, mostrar feedback efímero. Requiere infra de toasts (no existe en v1).
+- **Toast de éxito** — al unirse / salir / enviar mensaje, mostrar feedback efímero. Requiere infra de toasts (no existe en v1).
 - **Optimistic updates** en join/leave — mejora la sensación de respuesta. Hoy se espera la respuesta del backend.
 - **Detail card de fecha** (mockup B+D guardado en `mockups/create-session-datepicker-B-D.html`) — card "billete" con número grande del día, día de semana y countdown. Pensada para el detalle de partida (visual informativo), no para crear/editar.
+- **SSE / WebSocket** — el chat usa polling 20s. SSE o WebSocket mejoraría la latencia percibida (Fase 3).
+- **Rate limit** en send mensaje — Bucket4j por usuario en backend (deferred, coordinado con backend Fase 2).
