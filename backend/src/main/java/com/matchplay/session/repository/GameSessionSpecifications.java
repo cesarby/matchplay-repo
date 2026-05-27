@@ -73,4 +73,48 @@ public final class GameSessionSpecifications {
                 com.matchplay.session.entity.SessionStatus.FULL
         );
     }
+
+    // ---------------------------------------------------------------------
+    // Specifications usadas por "Mis partidas" (MySessionsService).
+    // ---------------------------------------------------------------------
+
+    /** Partidas creadas por el usuario indicado. */
+    public static Specification<GameSession> creatorIs(Long userId) {
+        return (root, query, cb) -> cb.equal(root.get("creator").get("id"), userId);
+    }
+
+    /**
+     * Partidas donde el usuario figura como participante con el rol indicado.
+     * Usa subquery EXISTS sobre session_participants — más barato que un JOIN
+     * cuando hay paginación.
+     */
+    public static Specification<GameSession> participantIs(
+            Long userId, com.matchplay.session.entity.ParticipantRole role) {
+        return (root, query, cb) -> {
+            var sub = query.subquery(Long.class);
+            var p = sub.from(com.matchplay.session.entity.SessionParticipant.class);
+            sub.select(p.get("id"))
+               .where(cb.equal(p.get("session"), root),
+                      cb.equal(p.get("user").get("id"), userId),
+                      cb.equal(p.get("role"), role));
+            return cb.exists(sub);
+        };
+    }
+
+    /** Status activo (no terminal): OPEN, FULL, IN_PROGRESS. */
+    public static Specification<GameSession> statusActive() {
+        return (root, query, cb) -> root.get("status").in(
+                com.matchplay.session.entity.SessionStatus.OPEN,
+                com.matchplay.session.entity.SessionStatus.FULL,
+                com.matchplay.session.entity.SessionStatus.IN_PROGRESS
+        );
+    }
+
+    /** Status terminal: COMPLETED, CANCELLED. */
+    public static Specification<GameSession> statusTerminal() {
+        return (root, query, cb) -> root.get("status").in(
+                com.matchplay.session.entity.SessionStatus.COMPLETED,
+                com.matchplay.session.entity.SessionStatus.CANCELLED
+        );
+    }
 }
