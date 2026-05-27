@@ -60,6 +60,7 @@ function ExpansionRow({ expansion, open, onToggle }: ExpansionRowProps) {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
+        aria-controls={`expansion-panel-${expansion.bggId}`}
         className="flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-muted/50"
       >
         {expansion.thumbnailUrl ? (
@@ -83,7 +84,10 @@ function ExpansionRow({ expansion, open, onToggle }: ExpansionRowProps) {
         />
       </button>
       {open && (
-        <div className="border-t border-border p-3 text-sm">
+        <div
+          id={`expansion-panel-${expansion.bggId}`}
+          className="border-t border-border p-3 text-sm"
+        >
           {isLoading && <p className="italic text-muted-foreground">{t('common.loading')}</p>}
           {isError && <p className="text-red">{t('sessions.detail.expansionLoadError')}</p>}
           {data &&

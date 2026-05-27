@@ -107,5 +107,11 @@ describe('SessionExpansionsBlock', () => {
     await userEvent.click(screen.getByRole('button', { name: /second/i }))
     expect(await screen.findByText(/summary of 2/i)).toBeInTheDocument()
     expect(screen.queryByText(/summary of 1/i)).not.toBeInTheDocument()
+
+    const firstBtn = screen.getByRole('button', { name: /first/i })
+    expect(firstBtn).toHaveAttribute('aria-expanded', 'false')
+
+    const secondBtn = screen.getByRole('button', { name: /second/i })
+    expect(secondBtn).toHaveAttribute('aria-expanded', 'true')
   })
 })

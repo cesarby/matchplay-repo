@@ -363,7 +363,7 @@ describe('<SessionDetailPage>', () => {
     )
     mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
     renderDetail()
-    expect(await screen.findByText(/expansiones \(1\)/i)).toBeInTheDocument()
+    expect(await screen.findByText(/expansi[oó]n \(1\)/i)).toBeInTheDocument()
     expect(screen.getByText('Marine Worlds')).toBeInTheDocument()
   })
 })

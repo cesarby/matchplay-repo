@@ -138,7 +138,8 @@
       "reopenRegistrations": "Reopen registrations",
       "edit": "Edit",
       "closeButton": "Close table",
-      "expansionsHeading": "Expansions ({{count}})",
+      "expansionsHeading_one": "Expansion ({{count}})",
+      "expansionsHeading_other": "Expansions ({{count}})",
       "expansionLoadError": "Could not load this expansion's details.",
       "expansionNoSummary": "Summary not yet generated for this expansion."
     },
