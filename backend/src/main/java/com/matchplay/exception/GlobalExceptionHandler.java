@@ -10,6 +10,9 @@ import com.matchplay.game.exception.BggUnavailableException;
 import com.matchplay.game.exception.GameNotFoundException;
 import com.matchplay.game.exception.InvalidGameSearchException;
 import com.matchplay.geo.exception.GeoCodeNotFoundException;
+import com.matchplay.exception.SessionChatForbiddenException;
+import com.matchplay.exception.SessionChatWriteForbiddenException;
+import com.matchplay.exception.SessionChatClosedException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,6 +151,30 @@ public class GlobalExceptionHandler {
         String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionChatForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleSessionChatForbidden(
+            SessionChatForbiddenException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, "Forbidden", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionChatWriteForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleSessionChatWriteForbidden(
+            SessionChatWriteForbiddenException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, "Forbidden", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(SessionChatClosedException.class)
+    public ResponseEntity<ErrorResponse> handleSessionChatClosed(
+            SessionChatClosedException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict", ex.getMessageKey(), message, request.getRequestURI()));
     }
 
     @ExceptionHandler(UnauthorizedActionException.class)
