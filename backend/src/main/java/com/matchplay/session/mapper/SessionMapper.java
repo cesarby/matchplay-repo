@@ -24,10 +24,20 @@ import java.util.List;
 public class SessionMapper {
 
     public SessionSummaryResponse toSummary(GameSession session) {
-        return toSummary(session, 0);
+        return toSummary(session, 0, false);
     }
 
     public SessionSummaryResponse toSummary(GameSession session, int waitlistCount) {
+        return toSummary(session, waitlistCount, false);
+    }
+
+    public SessionSummaryResponse toSummary(GameSession session, int waitlistCount, boolean withExpansionNames) {
+        List<String> names = null;
+        if (withExpansionNames && session.getExpansions() != null) {
+            names = session.getExpansions().stream()
+                    .map(Game::getName)
+                    .toList();
+        }
         return new SessionSummaryResponse(
                 session.getId(),
                 session.getTitle(),
@@ -45,7 +55,8 @@ public class SessionMapper {
                 waitlistCount,
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
-                session.getCreator() != null ? session.getCreator().getUsernameValue() : null
+                session.getCreator() != null ? session.getCreator().getUsernameValue() : null,
+                names
         );
     }
 

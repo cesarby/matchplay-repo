@@ -3,6 +3,7 @@ package com.matchplay.session.mapper;
 import com.matchplay.game.entity.Game;
 import com.matchplay.geo.entity.City;
 import com.matchplay.session.dto.SessionDetailResponse;
+import com.matchplay.session.dto.SessionSummaryResponse;
 import com.matchplay.session.entity.GameSession;
 import com.matchplay.session.entity.SessionStatus;
 import com.matchplay.user.entity.User;
@@ -102,5 +103,40 @@ class SessionMapperTest {
         SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null, null);
 
         assertThat(out.baseGameSummary()).isNull();
+    }
+
+    // ---------- toSummary expansionNames tests ----------
+
+    @Test
+    void toSummary_withExpansionNames_includesNames() {
+        GameSession s = minimalSession(gameWithSummaries(null, null));
+        Game expA = new Game(); expA.setBggId(100L); expA.setName("Expansion A");
+        Game expB = new Game(); expB.setBggId(101L); expB.setName("Expansion B");
+        s.setExpansions(List.of(expA, expB));
+
+        SessionSummaryResponse out = mapper.toSummary(s, 0, true);
+
+        assertThat(out.expansionNames()).containsExactly("Expansion A", "Expansion B");
+    }
+
+    @Test
+    void toSummary_withoutFlag_leavesExpansionNamesNull() {
+        GameSession s = minimalSession(gameWithSummaries(null, null));
+        Game exp = new Game(); exp.setBggId(100L); exp.setName("Expansion A");
+        s.setExpansions(List.of(exp));
+
+        SessionSummaryResponse out = mapper.toSummary(s, 0);
+
+        assertThat(out.expansionNames()).isNull();
+    }
+
+    @Test
+    void toSummary_withFlagButNoExpansions_returnsNullNames() {
+        GameSession s = minimalSession(gameWithSummaries(null, null));
+        s.setExpansions(List.of());
+
+        SessionSummaryResponse out = mapper.toSummary(s, 0, true);
+
+        assertThat(out.expansionNames()).isNullOrEmpty();
     }
 }
