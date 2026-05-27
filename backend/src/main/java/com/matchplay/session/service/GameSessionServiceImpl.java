@@ -196,7 +196,7 @@ public class GameSessionServiceImpl implements GameSessionService {
 
         log.info("Session created: id={}, creator={} (auto-PLAYER), scheduledAt={}, expansions={}",
                 saved.getId(), creator.getId(), saved.getScheduledAt(), expansions.size());
-        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER, null);
+        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER, null, null);
     }
 
     @Override
@@ -386,8 +386,9 @@ public class GameSessionServiceImpl implements GameSessionService {
                 .orElse(null);
 
         Integer chatUnreadCount = computeChatUnreadCount(session, participants, currentUserIdOpt);
+        Integer chatMessageCount = computeChatMessageCount(session);
 
-        return mapper.toDetail(session, participants, yourRole, chatUnreadCount);
+        return mapper.toDetail(session, participants, yourRole, chatUnreadCount, chatMessageCount);
     }
 
     /**
@@ -425,6 +426,19 @@ public class GameSessionServiceImpl implements GameSessionService {
         }
         long count = messageRepository.countUnread(session.getId(), uid, since);
         return (int) count;
+    }
+
+    /**
+     * Total de mensajes en el chat de la sesión, visible para CUALQUIER visitante
+     * (incluso anónimo). Devuelve null si la sesión es terminal — los mensajes
+     * ya fueron borrados y el bloque del chat no aplica.
+     */
+    private Integer computeChatMessageCount(GameSession session) {
+        if (session.getStatus() == SessionStatus.COMPLETED
+                || session.getStatus() == SessionStatus.CANCELLED) {
+            return null;
+        }
+        return (int) messageRepository.countBySessionId(session.getId());
     }
 
     private GameSession requireSession(Long sessionId) {

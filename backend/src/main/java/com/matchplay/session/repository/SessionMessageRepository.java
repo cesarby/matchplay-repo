@@ -35,6 +35,9 @@ public interface SessionMessageRepository extends JpaRepository<SessionMessage, 
                      @Param("excludeUserId") Long excludeUserId,
                      @Param("since") Instant since);
 
+    /** Total de mensajes en una sesión. Usado para chatMessageCount público. */
+    long countBySessionId(Long sessionId);
+
     /** Borrado masivo usado al cerrar/cancelar la partida. */
     @Modifying
     @Transactional

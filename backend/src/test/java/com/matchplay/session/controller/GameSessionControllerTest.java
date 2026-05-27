@@ -124,7 +124,7 @@ class GameSessionControllerTest {
                 42L, "Catan Night", "Desc", 13L, "Catan", null, null, List.of(),
                 "MAD01", "Madrid", null, null,
                 future, 4, 0, 0, 0, SessionStatus.OPEN,
-                1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
 
         given(service.create(any())).willReturn(created);
 
@@ -150,7 +150,7 @@ class GameSessionControllerTest {
                 ),
                 "MAD01", "Madrid", null, null,
                 future, 4, 0, 0, 0, SessionStatus.OPEN,
-                1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
 
         given(service.create(any())).willReturn(created);
 
@@ -189,7 +189,7 @@ class GameSessionControllerTest {
                 10L, "Catan", null, 13L, "Catan", null, null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 2, 0, 0,
-                SessionStatus.OPEN, 1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                SessionStatus.OPEN, 1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
 
         given(service.join(eq(10L))).willReturn(d);
 
@@ -204,7 +204,7 @@ class GameSessionControllerTest {
                 10L, "Catan", null, 13L, "Catan", null, null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0, 0,
-                SessionStatus.OPEN, 1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                SessionStatus.OPEN, 1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
 
         given(service.leave(eq(10L))).willReturn(d);
 
@@ -219,7 +219,7 @@ class GameSessionControllerTest {
                 10L, "Catan", null, 13L, "Catan", null, null, List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 2, 2, 0, 0,
-                SessionStatus.FULL, 1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                SessionStatus.FULL, 1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
 
         given(service.close(eq(10L))).willReturn(d);
 

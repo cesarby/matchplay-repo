@@ -69,7 +69,7 @@ class SessionMapperTest {
         LocaleContextHolder.setLocale(Locale.forLanguageTag("es"));
         GameSession s = minimalSession(gameWithSummaries("Resumen ES", "Summary EN"));
 
-        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null);
+        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null, null);
 
         assertThat(out.baseGameSummary()).isEqualTo("Resumen ES");
     }
@@ -79,7 +79,7 @@ class SessionMapperTest {
         LocaleContextHolder.setLocale(Locale.forLanguageTag("en"));
         GameSession s = minimalSession(gameWithSummaries("Resumen ES", "Summary EN"));
 
-        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null);
+        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null, null);
 
         assertThat(out.baseGameSummary()).isEqualTo("Summary EN");
     }
@@ -89,7 +89,7 @@ class SessionMapperTest {
         LocaleContextHolder.setLocale(Locale.forLanguageTag("fr"));
         GameSession s = minimalSession(gameWithSummaries("Resumen ES", "Summary EN"));
 
-        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null);
+        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null, null);
 
         assertThat(out.baseGameSummary()).isEqualTo("Resumen ES");
     }
@@ -99,7 +99,7 @@ class SessionMapperTest {
         LocaleContextHolder.setLocale(Locale.forLanguageTag("es"));
         GameSession s = minimalSession(null);
 
-        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null);
+        SessionDetailResponse out = mapper.toDetail(s, List.of(), null, null, null);
 
         assertThat(out.baseGameSummary()).isNull();
     }

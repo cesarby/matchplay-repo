@@ -103,7 +103,7 @@ class GameSessionServiceImplTest {
             s.setId(99L);
             return s;
         });
-        given(mapper.toDetail(any(GameSession.class), any(), any(), any())).willReturn(detail(99L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(GameSession.class), any(), any(), any(), any())).willReturn(detail(99L, SessionStatus.OPEN));
 
         SessionDetailResponse result = service.create(req);
 
@@ -180,7 +180,7 @@ class GameSessionServiceImplTest {
             s.setId(50L);
             return s;
         });
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(50L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(50L, SessionStatus.OPEN));
 
         service.create(req);
 
@@ -246,7 +246,7 @@ class GameSessionServiceImplTest {
             s.setId(7L);
             return s;
         });
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(7L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(7L, SessionStatus.OPEN));
 
         service.create(req); // no debe lanzar
     }
@@ -273,7 +273,7 @@ class GameSessionServiceImplTest {
             s.setId(101L);
             return s;
         });
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(101L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(101L, SessionStatus.OPEN));
 
         service.create(req);
 
@@ -340,7 +340,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.update(10L, new UpdateSessionRequest("Nuevo título", null, null, null, null, null));
 
@@ -358,7 +358,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.update(10L, new UpdateSessionRequest(null, null, null, null, null, List.of()));
 
@@ -379,7 +379,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.update(10L, new UpdateSessionRequest(null, null, null, null, null, List.of(926L)));
 
@@ -406,12 +406,12 @@ class GameSessionServiceImplTest {
                 .willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.empty());
         SessionDetailResponse expected = detail(s.getId(), SessionStatus.OPEN);
-        given(mapper.toDetail(any(GameSession.class), any(), any(), any())).willReturn(expected);
+        given(mapper.toDetail(any(GameSession.class), any(), any(), any(), any())).willReturn(expected);
 
         SessionDetailResponse out = service.findById(s.getId());
 
         assertThat(out).isSameAs(expected);
-        verify(mapper).toDetail(any(GameSession.class), any(), any(), any());
+        verify(mapper).toDetail(any(GameSession.class), any(), any(), any(), any());
     }
 
     // ---------- JOIN ----------
@@ -424,7 +424,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.join(10L);
 
@@ -441,7 +441,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.existsBySessionIdAndUserId(10L, 2L)).willReturn(false);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.join(10L);
 
@@ -483,7 +483,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.findMaxPositionBySessionIdAndRole(10L, ParticipantRole.WAITLIST)).willReturn(0);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.join(10L);
 
@@ -510,7 +510,7 @@ class GameSessionServiceImplTest {
                 .willReturn(10);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.join(10L);
 
@@ -550,7 +550,7 @@ class GameSessionServiceImplTest {
                 .willReturn(Optional.of(first));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of(first));
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.leave(10L);
 
@@ -577,7 +577,7 @@ class GameSessionServiceImplTest {
                 .willReturn(Optional.empty());
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         service.leave(10L);
 
@@ -596,7 +596,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.findBySessionIdAndUserId(10L, 2L)).willReturn(Optional.of(me));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(2L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.leave(10L);
 
@@ -651,7 +651,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         service.update(10L, new UpdateSessionRequest(null, null, null, null, 4, null));
 
@@ -684,7 +684,7 @@ class GameSessionServiceImplTest {
         given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.CANCELLED));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.CANCELLED));
 
         service.changeStatus(10L, new ChangeStatusRequest(SessionStatus.CANCELLED));
 
@@ -721,7 +721,7 @@ class GameSessionServiceImplTest {
         given(currentUserProvider.requireCurrentUserId()).willReturn(1L);
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.OPEN));
 
         SessionDetailResponse result = service.changeStatus(10L, new ChangeStatusRequest(SessionStatus.OPEN));
 
@@ -740,7 +740,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(10L)).willReturn(List.of());
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(1L));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(10L, SessionStatus.FULL));
 
         SessionDetailResponse result = service.close(10L);
 
@@ -841,7 +841,7 @@ class GameSessionServiceImplTest {
                 List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 0, 0, 0, status,
-                1L, "creator", null, List.of(), null, Instant.now(), Instant.now());
+                1L, "creator", null, null, List.of(), null, Instant.now(), Instant.now());
     }
 
     private User user(Long id, String username) {
@@ -892,7 +892,17 @@ class GameSessionServiceImplTest {
                 List.of(),
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 0, 0, 0, status,
-                1L, "creator", chatUnreadCount, List.of(), null, Instant.now(), Instant.now());
+                1L, "creator", chatUnreadCount, null, List.of(), null, Instant.now(), Instant.now());
+    }
+
+    private SessionDetailResponse detailWithCounts(Long id, SessionStatus status,
+                                                    Integer chatUnreadCount, Integer chatMessageCount) {
+        return new SessionDetailResponse(id, "t", null, 13L, "Catan", null,
+                null,
+                List.of(),
+                "MAD01", "Madrid", null, null,
+                Instant.now(), 4, 0, 0, 0, status,
+                1L, "creator", chatUnreadCount, chatMessageCount, List.of(), null, Instant.now(), Instant.now());
     }
 
     // ---------- changeStatus: borrado de mensajes en estados terminales ----------
@@ -906,7 +916,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(s.getCreator().getId()));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.COMPLETED));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.COMPLETED));
 
         service.changeStatus(s.getId(), new ChangeStatusRequest(SessionStatus.COMPLETED));
 
@@ -921,7 +931,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(s.getCreator().getId()));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.CANCELLED));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.CANCELLED));
 
         service.changeStatus(s.getId(), new ChangeStatusRequest(SessionStatus.CANCELLED));
 
@@ -936,7 +946,7 @@ class GameSessionServiceImplTest {
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
         given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(s.getCreator().getId()));
-        given(mapper.toDetail(any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.FULL));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willReturn(detail(s.getId(), SessionStatus.FULL));
 
         service.changeStatus(s.getId(), new ChangeStatusRequest(SessionStatus.FULL));
 
@@ -952,7 +962,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.OPEN, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -967,7 +977,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.OPEN, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -984,7 +994,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.COMPLETED, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -1005,7 +1015,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participants);
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.COMPLETED, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -1031,7 +1041,7 @@ class GameSessionServiceImplTest {
                 .willReturn(participants);
         given(messageRepository.countUnread(s.getId(), me.getUser().getId(),
                 Instant.parse("2026-01-01T10:00:00Z"))).willReturn(3L);
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.OPEN, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -1047,7 +1057,7 @@ class GameSessionServiceImplTest {
         given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
         given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
                 .willReturn(participantsOf(s));
-        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
                 detailWithUnread(s.getId(), SessionStatus.OPEN, inv.getArgument(3)));
 
         SessionDetailResponse out = service.findById(s.getId());
@@ -1055,5 +1065,57 @@ class GameSessionServiceImplTest {
         assertThat(out.chatUnreadCount()).isZero();
         // CRÍTICO: countUnread NUNCA se llama para el creador
         verify(messageRepository, never()).countUnread(any(), any(), any());
+    }
+
+    // ---------- chatMessageCount en buildDetail ----------
+
+    @Test
+    void getDetail_chatMessageCount_returnsTotalCount_forActiveSession() {
+        GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.empty());
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(participantsOf(s));
+        given(messageRepository.countBySessionId(s.getId())).willReturn(7L);
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
+                detailWithCounts(s.getId(), SessionStatus.OPEN, inv.getArgument(3), inv.getArgument(4)));
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out.chatMessageCount()).isEqualTo(7);
+    }
+
+    @Test
+    void getDetail_chatMessageCount_isNullWhenCompleted() {
+        GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
+        s.setStatus(SessionStatus.COMPLETED);
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.empty());
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(participantsOf(s));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
+                detailWithCounts(s.getId(), SessionStatus.COMPLETED, inv.getArgument(3), inv.getArgument(4)));
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out.chatMessageCount()).isNull();
+        verify(messageRepository, never()).countBySessionId(any());
+    }
+
+    @Test
+    void getDetail_chatMessageCount_isNullWhenCancelled() {
+        GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
+        s.setStatus(SessionStatus.CANCELLED);
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.empty());
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(participantsOf(s));
+        given(mapper.toDetail(any(), any(), any(), any(), any())).willAnswer(inv ->
+                detailWithCounts(s.getId(), SessionStatus.CANCELLED, inv.getArgument(3), inv.getArgument(4)));
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out.chatMessageCount()).isNull();
+        verify(messageRepository, never()).countBySessionId(any());
     }
 }

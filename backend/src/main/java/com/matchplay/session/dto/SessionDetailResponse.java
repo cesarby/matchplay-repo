@@ -38,6 +38,7 @@ public record SessionDetailResponse(
         Long creatorId,
         String creatorUsername,
         Integer chatUnreadCount,
+        Integer chatMessageCount,
         List<SessionPlayerResponse> players,
         ParticipantRole yourRole,
         Instant createdAt,
