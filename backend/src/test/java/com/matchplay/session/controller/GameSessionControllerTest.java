@@ -1,5 +1,6 @@
 package com.matchplay.session.controller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.matchplay.config.LocaleConfig;
@@ -33,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -62,7 +64,10 @@ class GameSessionControllerTest {
         localeResolver.setDefaultLocale(new Locale("es"));
         localeResolver.setSupportedLocales(List.of(new Locale("es"), Locale.ENGLISH));
 
-        objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        // Mimic production: application.properties sets spring.jackson.default-property-inclusion=non_null
+        objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter(objectMapper);
 
         mockMvc = MockMvcBuilders
@@ -236,5 +241,31 @@ class GameSessionControllerTest {
         mockMvc.perform(post("/api/v1/sessions/10/close"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("error.session.empty.cannot.close"));
+    }
+
+    /**
+     * Verifica que los campos null de SessionDetailResponse se serializan
+     * explícitamente (presentes con valor null) incluso con el default global
+     * non_null de Jackson. Esto es crítico para que el FE reciba null y no
+     * undefined al comparar chatUnreadCount/chatMessageCount.
+     */
+    @Test
+    void getDetail_serializesNullChatFieldsExplicitly() throws Exception {
+        // Escenario outsider: chatUnreadCount=null (no participante), chatMessageCount=null (sesión cerrada)
+        SessionDetailResponse resp = new SessionDetailResponse(
+                10L, "Catan", null, 13L, "Catan", null, null, List.of(),
+                "MAD01", "Madrid", null, null,
+                Instant.now().plus(1, ChronoUnit.DAYS), 4, 0, 0, 0,
+                SessionStatus.OPEN, 1L, "creator", null, null, List.of(), null,
+                Instant.now(), Instant.now());
+
+        given(service.findById(10L)).willReturn(resp);
+
+        mockMvc.perform(get("/api/v1/sessions/10"))
+                .andExpect(status().isOk())
+                // Los campos deben estar PRESENTES en el JSON con valor null,
+                // no omitidos (lo que causaría undefined en el FE)
+                .andExpect(jsonPath("$.chatUnreadCount").value(nullValue()))
+                .andExpect(jsonPath("$.chatMessageCount").value(nullValue()));
     }
 }

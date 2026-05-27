@@ -26,10 +26,12 @@ export function SessionChatButton({ session }: SessionChatButtonProps) {
   const [open, setOpen] = useState(false)
 
   // Estado 3: sesión cerrada / cancelada → no aplica el chat
-  if (session.chatMessageCount === null) return null
+  // eslint-disable-next-line eqeqeq -- loose equality cubre null y undefined (JSON omitido por Jackson non_null global)
+  if (session.chatMessageCount == null) return null
 
   // Estado 2: outsider — caja informativa NO clicable
-  if (session.chatUnreadCount === null) {
+  // eslint-disable-next-line eqeqeq -- loose equality cubre null y undefined (JSON omitido por Jackson non_null global)
+  if (session.chatUnreadCount == null) {
     return (
       <div
         role="note"

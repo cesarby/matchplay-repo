@@ -149,6 +149,24 @@ dentro de un `@Transactional` rolea-back todo y deja al sistema atascado
 (el caché no se guarda, próximo intento re-falla igual). Ver patrón en
 `ClaudeHaikuSummaryClient.truncate()`.
 
+### Jackson omite nulls por defecto — usa @JsonInclude(ALWAYS) cuando el null es semántico
+
+`application.properties` tiene `spring.jackson.default-property-inclusion=non_null`. Esto **omite campos null** del JSON de salida en TODOS los DTOs por defecto.
+
+Si en un DTO algún campo nullable es **semánticamente significativo** (el frontend necesita distinguir `null` de ausente/`undefined`, p.ej. `chatUnreadCount=null` ≠ `chatUnreadCount=0`), añade a nivel de record:
+
+```java
+@JsonInclude(JsonInclude.Include.ALWAYS)
+public record MyResponse(Integer optionalField, ...) {}
+```
+
+**Síntoma típico** del bug: el tipo TS dice `field: T | null`, el FE compara `field === null` y nunca matchea porque en runtime es `undefined`. El test de servicio pasa (la lógica devuelve null) pero la integración FE/BE falla en producción.
+
+**Cómo prevenirlo**:
+- Cuando añadas un DTO o campo nullable con semántica significativa, decide explícitamente si quieres serializar el null y anótalo con `@JsonInclude(ALWAYS)`.
+- En los tests del controller, configura el `ObjectMapper` con `setDefaultPropertyInclusion(NON_NULL)` para simular el comportamiento de producción, luego verifica con `.andExpect(jsonPath("$.field").value(nullValue()))` que el campo sí aparece.
+- En el FE, considera usar `== null` (loose equality, cubre `null` y `undefined`) en lugar de `=== null` como defensa en profundidad.
+
 ### Pre-commit hook
 
 El proyecto tiene **husky + lint-staged**: al commitear, prettier + eslint --fix

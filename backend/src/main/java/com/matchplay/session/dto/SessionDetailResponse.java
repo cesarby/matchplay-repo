@@ -1,5 +1,6 @@
 package com.matchplay.session.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.matchplay.session.entity.ParticipantRole;
 import com.matchplay.session.entity.SessionStatus;
 
@@ -16,6 +17,10 @@ import java.util.List;
  *
  * @param yourRole rol del usuario actual en esta partida; null si anónimo o no apuntado
  */
+// Los nulls de este DTO son semánticamente significativos (e.g. chatUnreadCount=null
+// indica outsider, chatMessageCount=null indica sesión cerrada). Forzamos serialización
+// explícita para que el frontend reciba null (no undefined) al comparar.
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public record SessionDetailResponse(
         Long id,
         String title,
