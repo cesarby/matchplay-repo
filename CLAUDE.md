@@ -104,6 +104,51 @@ En particular revisa:
 
 Si el cambio es un campo opcional, pásalo como `null` (Java) o omítelo (TS) en los fixtures existentes para minimizar cambios.
 
+### Configuración backend: `.env` + `application.properties`
+
+El backend usa **`spring-dotenv`** (`pom.xml`): carga automáticamente `backend/.env`
+al arrancar y mapea las variables como properties Spring. El archivo es
+**`.env`** (no `.env.local`) y está en `.gitignore` raíz. Hay un
+`backend/.env.example` como template — añade cualquier env var nueva ahí.
+
+El config file es **`application.properties`** (no `.yml`). Sintaxis típica
+para variables opcionales: `mi.prop=${MI_VAR:default}`. Sin default (`${MI_VAR}`)
+falla fast si no está en `.env`.
+
+Para integraciones con APIs externas que pueden no tener key configurada
+(ej. Anthropic), usa el patrón "bean Noop por defecto":
+
+```java
+@Bean
+public XClient xClient(@Value("${x.api-key:}") String apiKey) {
+    if (apiKey == null || apiKey.isBlank()) {
+        log.info("X disabled — no X_API_KEY configured");
+        return new NoopXClient();
+    }
+    log.info("X enabled");
+    return new RealXClient(apiKey);
+}
+```
+
+Así el sistema arranca y funciona en local sin la key, y los tests no
+necesitan mockear la integración real.
+
+### Columnas VARCHAR con contenido de fuentes externas (LLM, APIs)
+
+Si una columna `VARCHAR(N)` se rellena con texto que viene de un LLM o de
+una API que no controlas, **trunca client-side antes de persistir** con
+margen de seguridad bajo el límite. Defensa en profundidad:
+
+1. Prompt o petición pide longitud objetivo (~80% del límite).
+2. `max_tokens` o equivalente cap físico.
+3. Truncate en código a `N-50` cortando en palabra completa con `…`.
+
+Solo confiar en el prompt rompe la BBDD el día que el modelo se pase
+(error `Data truncation: Data too long for column X`), y como suele estar
+dentro de un `@Transactional` rolea-back todo y deja al sistema atascado
+(el caché no se guarda, próximo intento re-falla igual). Ver patrón en
+`ClaudeHaikuSummaryClient.truncate()`.
+
 ### Pre-commit hook
 
 El proyecto tiene **husky + lint-staged**: al commitear, prettier + eslint --fix
