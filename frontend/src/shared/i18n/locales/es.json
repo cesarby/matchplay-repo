@@ -145,6 +145,15 @@
       "chatHeading": "Chat",
       "chatComingSoon": "Próximamente: chat entre jugadores apuntados."
     },
+    "chat": {
+      "headerTitle": "Chat — {{session}}",
+      "inputPlaceholder": "Escribe un mensaje…",
+      "waitlistNotice": "Entrarás al chat al apuntarte como jugador.",
+      "send": "Enviar",
+      "empty": "Sé el primero en escribir.",
+      "loadError": "No se han podido cargar los mensajes.",
+      "sendError": "No se ha podido enviar tu mensaje."
+    },
     "close": {
       "title": "Cerrar mesa",
       "body": "Cerrarás esta mesa con {{count}} jugadores. Nadie nuevo podrá apuntarse.",

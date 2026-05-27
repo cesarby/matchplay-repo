@@ -145,6 +145,15 @@
       "chatHeading": "Chat",
       "chatComingSoon": "Coming soon: chat between registered players."
     },
+    "chat": {
+      "headerTitle": "Chat — {{session}}",
+      "inputPlaceholder": "Write a message…",
+      "waitlistNotice": "You'll join the chat when you sign up as a player.",
+      "send": "Send",
+      "empty": "Be the first to write something.",
+      "loadError": "Couldn't load the messages.",
+      "sendError": "Your message couldn't be sent."
+    },
     "close": {
       "title": "Close table",
       "body": "You will close this table with {{count}} players. No new players will be able to join.",
