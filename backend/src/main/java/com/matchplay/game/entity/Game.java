@@ -71,4 +71,12 @@ public class Game {
 
     @Column(name = "summary_en", length = 700)
     private String summaryEn;
+
+    /**
+     * Devuelve el resumen LLM del juego para el idioma indicado.
+     * Por defecto cae a español si el idioma no es "en".
+     */
+    public String getSummary(String lang) {
+        return "en".equals(lang) ? summaryEn : summaryEs;
+    }
 }

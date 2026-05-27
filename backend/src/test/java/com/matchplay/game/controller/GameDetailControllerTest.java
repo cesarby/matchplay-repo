@@ -98,6 +98,6 @@ class GameDetailControllerTest {
 
         mockMvc.perform(get("/api/v1/games/999").header("Accept-Language", "es"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("error.games.base.not.found"));
+                .andExpect(jsonPath("$.code").value("error.games.not.found"));
     }
 }

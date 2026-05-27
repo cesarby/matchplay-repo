@@ -7,6 +7,7 @@ import com.matchplay.auth.exception.RefreshTokenInvalidException;
 import com.matchplay.auth.exception.UsernameAlreadyExistsException;
 import com.matchplay.game.exception.BaseGameNotFoundException;
 import com.matchplay.game.exception.BggUnavailableException;
+import com.matchplay.game.exception.GameNotFoundException;
 import com.matchplay.game.exception.InvalidGameSearchException;
 import com.matchplay.geo.exception.GeoCodeNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -229,6 +230,15 @@ public class GlobalExceptionHandler {
         log.warn("Invalid game search: key={}, path={}", ex.getMessageKey(), request.getRequestURI());
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(GameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleGameNotFound(
+            GameNotFoundException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        log.warn("Game not found in local cache: path={}", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(404, "Not Found", ex.getMessageKey(), message, request.getRequestURI()));
     }
 
     @ExceptionHandler(BaseGameNotFoundException.class)

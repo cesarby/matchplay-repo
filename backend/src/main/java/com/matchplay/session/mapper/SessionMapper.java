@@ -67,12 +67,9 @@ public class SessionMapper {
                         .toList();
 
         String lang = LocaleContextHolder.getLocale().getLanguage();
-        String baseGameSummary = null;
-        if (session.getBaseGame() != null) {
-            baseGameSummary = "en".equals(lang)
-                    ? session.getBaseGame().getSummaryEn()
-                    : session.getBaseGame().getSummaryEs();
-        }
+        String baseGameSummary = session.getBaseGame() != null
+                ? session.getBaseGame().getSummary(lang)
+                : null;
 
         return new SessionDetailResponse(
                 session.getId(),

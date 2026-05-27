@@ -2,7 +2,7 @@ package com.matchplay.game.controller;
 
 import com.matchplay.game.dto.GameDetailResponse;
 import com.matchplay.game.entity.Game;
-import com.matchplay.game.exception.BaseGameNotFoundException;
+import com.matchplay.game.exception.GameNotFoundException;
 import com.matchplay.game.repository.GameRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/games")
 @RequiredArgsConstructor
-@Tag(name = "Games — detalle", description = "Lectura pública de juegos cacheados")
+@Tag(name = "Games", description = "Lectura pública de juegos cacheados")
 public class GameDetailController {
 
     private final GameRepository gameRepository;
@@ -25,9 +25,9 @@ public class GameDetailController {
     @Operation(summary = "Detalle de un juego (lectura del caché local; 404 si no está cacheado)")
     public GameDetailResponse findById(@PathVariable Long bggId) {
         Game g = gameRepository.findById(bggId)
-                .orElseThrow(() -> new BaseGameNotFoundException(bggId));
+                .orElseThrow(() -> new GameNotFoundException(bggId));
         String lang = LocaleContextHolder.getLocale().getLanguage();
-        String summary = "en".equals(lang) ? g.getSummaryEn() : g.getSummaryEs();
+        String summary = g.getSummary(lang);
         return new GameDetailResponse(
                 g.getBggId(),
                 g.getName(),
