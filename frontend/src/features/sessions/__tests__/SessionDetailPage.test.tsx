@@ -366,4 +366,22 @@ describe('<SessionDetailPage>', () => {
     expect(await screen.findByText(/expansi[oó]n \(1\)/i)).toBeInTheDocument()
     expect(screen.getByText('Marine Worlds')).toBeInTheDocument()
   })
+
+  it('muestra la lista de espera con contador 0 cuando no hay nadie en cola', async () => {
+    server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    renderDetail()
+    // baseDetail by default has no waitlist players
+    expect(await screen.findByText(/lista de espera/i)).toBeInTheDocument()
+    // counter "0" appears in the heading
+    const heading = screen.getByRole('heading', { name: /lista de espera/i })
+    expect(heading).toHaveTextContent('0')
+  })
+
+  it('muestra el placeholder de chat', async () => {
+    server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    renderDetail()
+    expect(await screen.findByText(/próximamente/i)).toBeInTheDocument()
+  })
 })

@@ -8,6 +8,7 @@ import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
 import { CreatorActions } from '../components/CreatorActions'
 import { SessionActions } from '../components/SessionActions'
+import { SessionChatPlaceholder } from '../components/SessionChatPlaceholder'
 import { SessionExpansionsBlock } from '../components/SessionExpansionsBlock'
 import { SessionPlayerRow } from '../components/SessionPlayerRow'
 import { useSessionDetailQuery } from '../hooks/useSessions'
@@ -236,22 +237,27 @@ export default function SessionDetailPage() {
           </section>
 
           {/* Waitlist */}
-          {waitlist.length > 0 && (
-            <section aria-labelledby="waitlist-heading">
-              <h2
-                id="waitlist-heading"
-                className="mb-3 flex items-center justify-between font-display text-lg font-bold text-foreground"
-              >
-                <span>{t('sessions.detail.waitlistHeading')}</span>
-                <span className="text-sm font-normal text-muted-foreground">{waitlist.length}</span>
-              </h2>
+          <section aria-labelledby="waitlist-heading">
+            <h2
+              id="waitlist-heading"
+              className="mb-3 flex items-center justify-between font-display text-lg font-bold text-foreground"
+            >
+              <span>{t('sessions.detail.waitlistHeading')}</span>
+              <span className="text-sm font-normal text-muted-foreground">{waitlist.length}</span>
+            </h2>
+            {waitlist.length > 0 ? (
               <ul className="space-y-2">
                 {waitlist.map((p) => (
                   <SessionPlayerRow key={p.userId} player={p} showPosition />
                 ))}
               </ul>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground">—</p>
+            )}
+          </section>
+
+          {/* Chat placeholder */}
+          <SessionChatPlaceholder />
 
           {/* Acciones */}
           <div className="border-t border-border pt-6">
