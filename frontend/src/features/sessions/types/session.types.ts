@@ -26,9 +26,9 @@ export interface SessionSummary {
   expansionCount: number
   /**
    * Nombres de las expansiones de la partida. Solo populado en el tab Historial
-   * de Mis partidas; null en listado público y otros tabs.
+   * de Mis partidas; ausente en listado público y otros tabs.
    */
-  expansionNames: string[] | null
+  expansionNames?: string[]
   cityCode: string | null
   cityName: string | null
   areaCode: string | null

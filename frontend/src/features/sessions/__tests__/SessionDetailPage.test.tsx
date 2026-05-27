@@ -29,7 +29,6 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
     baseGameThumbnailUrl: null,
     baseGameSummary: null,
     expansions: [],
-    expansionNames: null,
     creatorGuests: 0,
     cityCode: 'MAD01',
     cityName: 'Madrid',
