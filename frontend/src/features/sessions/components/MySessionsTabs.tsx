@@ -22,6 +22,16 @@ interface TabDef {
   outlineText: string
 }
 
+/**
+ * Configuración de tabs alineada con `historial-v2.html`. Los hex literales en
+ * `outlineText` y en HISTORY active replican los tonos oscuros del mockup, que
+ * no coinciden con los tokens 4-color del proyecto (más brillantes/saturados).
+ *
+ * - Outline pill: border con el color brand, text con el tono OSCURO del mismo
+ *   color para legibilidad sobre cream bg. opacity 0.7 (mockup usa 0.6).
+ * - Active pill: bg saturado, text contrastante.
+ * - Count badge: overlay claro en pills oscuras, oscuro en pill yellow (claro).
+ */
 const TABS: TabDef[] = [
   {
     tab: 'CREATED',
@@ -31,7 +41,7 @@ const TABS: TabDef[] = [
     activeBg: 'bg-yellow text-foreground',
     activeCountBg: 'bg-black/15',
     outlineBorder: 'border-yellow',
-    outlineText: 'text-yellow',
+    outlineText: 'text-[#6B4A00]',
   },
   {
     tab: 'PLAYER',
@@ -40,7 +50,7 @@ const TABS: TabDef[] = [
     activeBg: 'bg-green text-white',
     activeCountBg: 'bg-white/25',
     outlineBorder: 'border-green',
-    outlineText: 'text-green',
+    outlineText: 'text-[#0B5A3B]',
   },
   {
     tab: 'WAITLIST',
@@ -50,15 +60,15 @@ const TABS: TabDef[] = [
     activeBg: 'bg-blue text-white',
     activeCountBg: 'bg-white/25',
     outlineBorder: 'border-blue',
-    outlineText: 'text-blue',
+    outlineText: 'text-[#1F3A6B]',
   },
   {
     tab: 'HISTORY',
     labelKey: 'sessions.mine.tabs.history',
     emoji: '📚',
-    activeBg: 'bg-foreground text-background',
+    activeBg: 'bg-[#1F1F2E] text-white',
     activeCountBg: 'bg-white/20',
-    outlineBorder: 'border-muted-foreground',
+    outlineBorder: 'border-[#6B6B6B]',
     outlineText: 'text-muted-foreground',
   },
 ]
