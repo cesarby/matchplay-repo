@@ -119,9 +119,9 @@ describe('<SessionDetailPage>', () => {
     server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
     renderDetail()
     // SessionActions renders "Unirme" and JoinCallToAction renders "Unirme a esta mesa";
-    // both are present when the user can join — check there's at least one enabled join button.
+    // both are present when the user can join — one mobile CTA + one sidebar button.
     const btns = await screen.findAllByRole('button', { name: /unirme/i })
-    expect(btns.length).toBeGreaterThanOrEqual(1)
+    expect(btns.length).toBe(2)
     expect(btns.every((b) => !b.hasAttribute('disabled'))).toBe(true)
   })
 

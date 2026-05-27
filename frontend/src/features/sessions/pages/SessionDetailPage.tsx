@@ -1,5 +1,4 @@
 import { Calendar, MapPin, Users } from 'lucide-react'
-import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
@@ -24,17 +23,12 @@ import { useSessionDetailQuery } from '../hooks/useSessions'
  * - CTA "Unirme" prominente bajo header (solo mobile, solo cuando aplica).
  * - Cuerpo: "Sobre el juego" → Expansiones → Descripción → (mobile: sidebar abajo).
  * - Sidebar (sm+): Apuntados, Lista de espera, Chat, Acciones — cada uno mini-card.
- *
- * El `joinCtaRef` permite que `SessionChatButton` en estado outsider haga
- * scroll al CTA al click.
  */
 export default function SessionDetailPage() {
   const { t, i18n } = useTranslation()
   const { user, isAuthenticated } = useAuth()
   const { id } = useParams<{ id: string }>()
   const sessionId = id ? Number.parseInt(id, 10) : Number.NaN
-  const joinCtaRef = useRef<HTMLDivElement>(null)
-
   const { data, isLoading, isError, error } = useSessionDetailQuery(
     Number.isFinite(sessionId) ? sessionId : undefined,
   )
@@ -180,9 +174,7 @@ export default function SessionDetailPage() {
       </header>
 
       {/* CTA mobile prominente — solo si aplica */}
-      <div ref={joinCtaRef}>
-        <JoinCallToAction session={data} isAuthenticated={isAuthenticated} />
-      </div>
+      <JoinCallToAction session={data} isAuthenticated={isAuthenticated} />
 
       {/* Cuerpo 2-col en lg+, single col en mobile/tablet */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_1fr]">
