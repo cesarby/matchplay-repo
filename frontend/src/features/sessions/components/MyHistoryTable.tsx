@@ -56,7 +56,7 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
   return (
     <div className="overflow-hidden rounded-md border border-border bg-card">
       {/* Cabecera — solo visible en sm+ */}
-      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-border bg-muted/40 px-3.5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-border bg-background-alt/30 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
         <span>{t('sessions.mine.history.columns.date')}</span>
         <span>{t('sessions.mine.history.columns.name')}</span>
         <span>{t('sessions.mine.history.columns.game')}</span>
@@ -71,7 +71,7 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
         return (
           <div key={s.id} className="border-b border-border last:border-b-0">
             {/* Fila principal */}
-            <div className="grid grid-cols-1 gap-2 px-3.5 py-2.5 text-xs sm:grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] sm:items-center sm:gap-3">
+            <div className="grid grid-cols-1 gap-1.5 px-3 py-2 text-xs sm:grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] sm:items-center sm:gap-3">
               <span className="whitespace-nowrap text-foreground">
                 {formatScheduledAt(s.scheduledAt)}
               </span>
@@ -86,23 +86,23 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
               <button
                 type="button"
                 onClick={() => handleDuplicate(s.id)}
-                className="inline-flex items-center justify-center gap-1 rounded-md bg-red px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:opacity-90"
+                className="inline-flex items-center justify-center gap-1 rounded-md bg-red px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm hover:opacity-90"
               >
                 <span aria-hidden="true">↻</span> {t('sessions.mine.history.duplicate')}
               </button>
             </div>
 
-            {/* Sub-fila de expansiones */}
+            {/* Sub-fila de expansiones — bg muy sutil, mismo nivel visual que la fila */}
             {hasExp && (
               <div
                 className={cn(
-                  'px-3.5 pb-2.5 pt-0.5 text-[11px] italic text-muted-foreground sm:grid sm:grid-cols-[110px_1fr] sm:gap-3',
-                  'bg-muted/30',
+                  'px-3 pb-2 pt-0 text-[11px] italic text-muted-foreground sm:grid sm:grid-cols-[110px_1fr] sm:gap-3',
+                  'bg-background-alt/20',
                 )}
               >
                 <span
                   aria-hidden="true"
-                  className="hidden pr-1 text-right not-italic text-muted-foreground/60 sm:block"
+                  className="hidden pr-1 text-right not-italic text-muted-foreground/50 sm:block"
                 >
                   ↳
                 </span>
