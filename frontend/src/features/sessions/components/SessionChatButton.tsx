@@ -10,22 +10,54 @@ import { SessionChatDrawer } from './SessionChatDrawer'
 
 interface SessionChatButtonProps {
   session: SessionDetail
+  /**
+   * Callback opcional para el estado outsider: cuando un no participante hace
+   * click en la caja informativa del chat, se le redirige al CTA "Unirme" o
+   * a login según el caso. Lo decide el padre (SessionDetailPage).
+   */
+  onJoinPrompt?: () => void
 }
 
 /**
- * Punto de entrada al chat de coordinación de una partida. Solo visible para
- * participantes (PLAYER o WAITLIST) y para el creador — si {@code session.chatUnreadCount}
- * es null (anónimo / no participante), el componente devuelve null.
+ * Bloque del chat en la sidebar de la detail page. Tres estados exclusivos:
  *
- * Muestra un badge rojo con el número de mensajes no leídos. Click abre el drawer.
+ * 1. **Participante** (chatUnreadCount !== null): card-banner clicable con borde
+ *    rojo, contador total + badge de no leídos. Click abre el drawer.
+ * 2. **Outsider con sesión activa** (chatUnreadCount === null && chatMessageCount !== null):
+ *    caja muted con borde dashed, clicable. Click llama a {@code onJoinPrompt}.
+ * 3. **Sesión cerrada** (chatMessageCount === null): no renderiza nada.
  */
-export function SessionChatButton({ session }: SessionChatButtonProps) {
+export function SessionChatButton({ session, onJoinPrompt }: SessionChatButtonProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
-  if (session.chatUnreadCount === null) return null
+  // Estado 3: sesión cerrada / cancelada → no aplica el chat
+  if (session.chatMessageCount === null) return null
 
+  // Estado 2: outsider — caja informativa clicable
+  if (session.chatUnreadCount === null) {
+    return (
+      <button
+        type="button"
+        onClick={() => onJoinPrompt?.()}
+        className="flex w-full items-center gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4 text-left transition hover:bg-muted/50"
+      >
+        <MessageSquare size={20} aria-hidden="true" className="text-muted-foreground" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground">
+            {t('sessions.chat.totalMessages', { count: session.chatMessageCount })}
+          </p>
+          <p className="text-xs italic text-muted-foreground">
+            {t('sessions.chat.outsiderNotice', { count: session.chatMessageCount })}
+          </p>
+        </div>
+      </button>
+    )
+  }
+
+  // Estado 1: participante — card-banner clicable
   const unread = session.chatUnreadCount
+  const total = session.chatMessageCount
 
   return (
     <>
@@ -37,10 +69,17 @@ export function SessionChatButton({ session }: SessionChatButtonProps) {
           'text-left transition hover:bg-muted/40',
         )}
       >
-        <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-          <MessageSquare size={14} aria-hidden="true" />
-          {t('sessions.chat.title')}
-        </span>
+        <div className="flex items-center gap-2">
+          <MessageSquare size={14} aria-hidden="true" className="text-muted-foreground" />
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              {t('sessions.chat.title')}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t('sessions.chat.totalMessages', { count: total })}
+            </p>
+          </div>
+        </div>
         {unread > 0 && (
           <span
             aria-label={t('sessions.chat.unreadBadge', { count: unread })}

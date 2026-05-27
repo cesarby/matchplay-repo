@@ -153,7 +153,12 @@
       "send": "Enviar",
       "empty": "Sé el primero en escribir.",
       "loadError": "No se han podido cargar los mensajes.",
-      "sendError": "No se ha podido enviar tu mensaje."
+      "sendError": "No se ha podido enviar tu mensaje.",
+      "totalMessages_one": "{{count}} mensaje",
+      "totalMessages_other": "{{count}} mensajes",
+      "outsiderNotice_zero": "Sin mensajes aún — apúntate para participar.",
+      "outsiderNotice_one": "{{count}} mensaje — apúntate para participar.",
+      "outsiderNotice_other": "{{count}} mensajes — apúntate para participar."
     },
     "close": {
       "title": "Cerrar mesa",

@@ -153,7 +153,12 @@
       "send": "Send",
       "empty": "Be the first to write something.",
       "loadError": "Couldn't load the messages.",
-      "sendError": "Your message couldn't be sent."
+      "sendError": "Your message couldn't be sent.",
+      "totalMessages_one": "{{count}} message",
+      "totalMessages_other": "{{count}} messages",
+      "outsiderNotice_zero": "No messages yet — sign up to join the chat.",
+      "outsiderNotice_one": "{{count}} message — sign up to join the chat.",
+      "outsiderNotice_other": "{{count}} messages — sign up to join the chat."
     },
     "close": {
       "title": "Close table",
