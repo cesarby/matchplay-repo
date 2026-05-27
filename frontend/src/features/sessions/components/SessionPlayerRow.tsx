@@ -1,5 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
+import { pickAvatarColor } from '@/shared/lib/avatarColor'
+import { cn } from '@/shared/lib/cn'
+
 import type { SessionPlayer } from '../types/session.types'
 
 type SessionPlayerRowProps =
@@ -32,6 +35,15 @@ export function SessionPlayerRow({ player, showPosition = false, guestOf }: Sess
             {player.position}
           </span>
         )}
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-flex size-7 items-center justify-center rounded-full text-xs font-bold text-white',
+            pickAvatarColor(player.username),
+          )}
+        >
+          {player.username.charAt(0).toUpperCase()}
+        </span>
         <p className="text-sm font-medium text-foreground">@{player.username}</p>
       </div>
     </li>
