@@ -349,4 +349,21 @@ describe('<SessionDetailPage>', () => {
     await screen.findByRole('heading', { level: 1, name: /catan night/i })
     expect(screen.queryByRole('heading', { name: /sobre/i })).not.toBeInTheDocument()
   })
+
+  it('muestra el bloque de expansiones cuando data.expansions tiene elementos', async () => {
+    server.use(
+      http.get(`${API}/sessions/:id`, () =>
+        HttpResponse.json(
+          detail({
+            id: 7,
+            expansions: [{ bggId: 99, name: 'Marine Worlds', thumbnailUrl: null }],
+          }),
+        ),
+      ),
+    )
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    renderDetail()
+    expect(await screen.findByText(/expansiones \(1\)/i)).toBeInTheDocument()
+    expect(screen.getByText('Marine Worlds')).toBeInTheDocument()
+  })
 })

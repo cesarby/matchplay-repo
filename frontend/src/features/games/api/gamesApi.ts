@@ -1,7 +1,7 @@
 import { httpClient } from '@/shared/api/httpClient'
 import type { PageResponse } from '@/shared/api/PageResponse'
 
-import type { GameSearchResult, GameSearchType } from '../types/game.types'
+import type { GameDetail, GameSearchResult, GameSearchType } from '../types/game.types'
 
 export interface GameSearchParams {
   q?: string
@@ -22,4 +22,7 @@ export const gamesApi = {
       .get<PageResponse<GameSearchResult>>('/games', { params: query })
       .then((r) => r.data)
   },
+
+  getById: (bggId: number): Promise<GameDetail> =>
+    httpClient.get<GameDetail>(`/games/${bggId}`).then((r) => r.data),
 }

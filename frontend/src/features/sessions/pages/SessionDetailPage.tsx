@@ -8,6 +8,7 @@ import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
 import { CreatorActions } from '../components/CreatorActions'
 import { SessionActions } from '../components/SessionActions'
+import { SessionExpansionsBlock } from '../components/SessionExpansionsBlock'
 import { SessionPlayerRow } from '../components/SessionPlayerRow'
 import { useSessionDetailQuery } from '../hooks/useSessions'
 
@@ -184,6 +185,9 @@ export default function SessionDetailPage() {
               </p>
             </section>
           )}
+
+          {/* Expansiones */}
+          <SessionExpansionsBlock expansions={data.expansions} />
 
           {/* Descripción */}
           <section aria-labelledby="desc-heading">

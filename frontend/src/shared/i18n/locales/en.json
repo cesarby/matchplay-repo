@@ -137,7 +137,10 @@
       "closeRegistrations": "Close registrations",
       "reopenRegistrations": "Reopen registrations",
       "edit": "Edit",
-      "closeButton": "Close table"
+      "closeButton": "Close table",
+      "expansionsHeading": "Expansions ({{count}})",
+      "expansionLoadError": "Could not load this expansion's details.",
+      "expansionNoSummary": "Summary not yet generated for this expansion."
     },
     "close": {
       "title": "Close table",
