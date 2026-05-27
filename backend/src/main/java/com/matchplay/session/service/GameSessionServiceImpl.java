@@ -412,8 +412,12 @@ public class GameSessionServiceImpl implements GameSessionService {
             return 0;
         }
 
-        // El creador no tiene fila en session_participants → su "última lectura" no
-        // se persiste. Tratamos como "siempre al día" — 0. Pragmático para MVP.
+        // El creador no tiene fila en session_participants para trackear lastReadAt.
+        // Sin tracking, el unread count nunca bajaría porque markRead es no-op para él.
+        // Para MVP: creador = siempre al día = 0. Si necesitamos badge real para
+        // creador en el futuro, hay que persistir lastReadAt en otro sitio.
+        if (isCreator) return 0;
+
         Instant since = myParticipant.map(SessionParticipant::getLastChatReadAt).orElse(null);
         if (since == null) {
             // Nunca lo abrió: usar epoch para contar TODOS los mensajes ajenos.

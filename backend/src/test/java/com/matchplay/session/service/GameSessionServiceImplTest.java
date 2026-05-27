@@ -1015,4 +1015,22 @@ class GameSessionServiceImplTest {
 
         assertThat(out.chatUnreadCount()).isEqualTo(3);
     }
+
+    @Test
+    void getDetail_chatUnreadCount_isZeroForCreatorOnOpenSession() {
+        GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
+        given(currentUserProvider.getCurrentUserId())
+                .willReturn(Optional.of(s.getCreator().getId()));
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(participantsOf(s));
+        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+                detailWithUnread(s.getId(), SessionStatus.OPEN, inv.getArgument(3)));
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out.chatUnreadCount()).isZero();
+        // CRÍTICO: countUnread NUNCA se llama para el creador
+        verify(messageRepository, never()).countUnread(any(), any(), any());
+    }
 }
