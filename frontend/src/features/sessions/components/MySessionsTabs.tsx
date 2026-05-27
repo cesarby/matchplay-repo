@@ -10,7 +10,14 @@ interface TabDef {
   shortLabelKey?: string
   emoji: string
   activeBg: string
-  activeText: string
+  /**
+   * Bg del badge de count cuando la pill está activa. Sigue la regla del mockup:
+   * pill oscura (texto blanco) → overlay blanco para que el badge sea MÁS CLARO
+   * que el pill; pill clara (yellow + texto oscuro) → overlay negro para que el
+   * badge sea más oscuro que el pill. En ambos casos el badge contrasta con el
+   * fondo del pill, no compite con el texto.
+   */
+  activeCountBg: string
   outlineBorder: string
   outlineText: string
 }
@@ -22,7 +29,7 @@ const TABS: TabDef[] = [
     shortLabelKey: 'sessions.mine.tabs.createdShort',
     emoji: '✏️',
     activeBg: 'bg-yellow text-foreground',
-    activeText: 'text-foreground',
+    activeCountBg: 'bg-black/15',
     outlineBorder: 'border-yellow',
     outlineText: 'text-yellow',
   },
@@ -31,7 +38,7 @@ const TABS: TabDef[] = [
     labelKey: 'sessions.mine.tabs.player',
     emoji: '🎲',
     activeBg: 'bg-green text-white',
-    activeText: 'text-white',
+    activeCountBg: 'bg-white/25',
     outlineBorder: 'border-green',
     outlineText: 'text-green',
   },
@@ -41,7 +48,7 @@ const TABS: TabDef[] = [
     shortLabelKey: 'sessions.mine.tabs.waitlistShort',
     emoji: '⏳',
     activeBg: 'bg-blue text-white',
-    activeText: 'text-white',
+    activeCountBg: 'bg-white/25',
     outlineBorder: 'border-blue',
     outlineText: 'text-blue',
   },
@@ -50,7 +57,7 @@ const TABS: TabDef[] = [
     labelKey: 'sessions.mine.tabs.history',
     emoji: '📚',
     activeBg: 'bg-foreground text-background',
-    activeText: 'text-background',
+    activeCountBg: 'bg-white/20',
     outlineBorder: 'border-muted-foreground',
     outlineText: 'text-muted-foreground',
   },
@@ -112,7 +119,7 @@ export function MySessionsTabs({ active, counts, onChange }: MySessionsTabsProps
             <span
               className={cn(
                 'inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold',
-                isActive ? 'bg-black/15' : 'bg-black/10',
+                isActive ? tabDef.activeCountBg : 'bg-black/10',
               )}
             >
               {count}
