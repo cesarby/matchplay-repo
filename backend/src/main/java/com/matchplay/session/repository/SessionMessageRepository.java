@@ -14,12 +14,14 @@ import java.util.List;
 @Repository
 public interface SessionMessageRepository extends JpaRepository<SessionMessage, Long> {
 
-    /** Todos los mensajes de una partida, ASC por created_at. */
-    List<SessionMessage> findBySessionIdOrderByCreatedAtAsc(Long sessionId);
+    /** Todos los mensajes de una partida, ASC por created_at. JOIN FETCH evita N+1 en user. */
+    @Query("SELECT m FROM SessionMessage m JOIN FETCH m.user WHERE m.session.id = :sessionId ORDER BY m.createdAt ASC")
+    List<SessionMessage> findBySessionIdOrderByCreatedAtAsc(@Param("sessionId") Long sessionId);
 
-    /** Mensajes con created_at > since, ASC. Para polling delta. */
+    /** Mensajes con created_at > since, ASC. Para polling delta. JOIN FETCH evita N+1 en user. */
+    @Query("SELECT m FROM SessionMessage m JOIN FETCH m.user WHERE m.session.id = :sessionId AND m.createdAt > :since ORDER BY m.createdAt ASC")
     List<SessionMessage> findBySessionIdAndCreatedAtAfterOrderByCreatedAtAsc(
-            Long sessionId, Instant since);
+            @Param("sessionId") Long sessionId, @Param("since") Instant since);
 
     /**
      * Cuenta mensajes de la sesión posteriores a {@code since} y que NO sean
