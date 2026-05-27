@@ -40,10 +40,11 @@ export function SessionChatButton({ session, onJoinPrompt }: SessionChatButtonPr
       <button
         type="button"
         onClick={() => onJoinPrompt?.()}
+        aria-label={t('sessions.chat.outsiderNotice', { count: session.chatMessageCount })}
         className="flex w-full items-center gap-3 rounded-md border border-dashed border-border bg-muted/30 p-4 text-left transition hover:bg-muted/50"
       >
         <MessageSquare size={20} aria-hidden="true" className="text-muted-foreground" />
-        <div className="flex-1">
+        <div className="flex-1" aria-hidden="true">
           <p className="text-sm font-semibold text-foreground">
             {t('sessions.chat.totalMessages', { count: session.chatMessageCount })}
           </p>
