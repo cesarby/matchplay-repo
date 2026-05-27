@@ -47,6 +47,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -121,6 +122,9 @@ class GameSessionServiceImplTest {
         SessionParticipant savedParticipant = participantCaptor.getValue();
         assertThat(savedParticipant.getUser()).isSameAs(creator);
         assertThat(savedParticipant.getRole()).isEqualTo(ParticipantRole.PLAYER);
+
+        // El creador es participante en sesión recién abierta → chat counts deben ser 0, no null.
+        verify(mapper).toDetail(any(GameSession.class), any(), any(), eq(0), eq(0));
     }
 
     @Test

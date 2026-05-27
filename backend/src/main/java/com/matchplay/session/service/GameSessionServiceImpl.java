@@ -196,7 +196,7 @@ public class GameSessionServiceImpl implements GameSessionService {
 
         log.info("Session created: id={}, creator={} (auto-PLAYER), scheduledAt={}, expansions={}",
                 saved.getId(), creator.getId(), saved.getScheduledAt(), expansions.size());
-        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER, null, null);
+        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER, 0, 0);
     }
 
     @Override
