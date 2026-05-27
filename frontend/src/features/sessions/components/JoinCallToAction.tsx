@@ -31,7 +31,7 @@ export function JoinCallToAction({ session, isAuthenticated }: JoinCallToActionP
 
   if (!isAuthenticated) {
     return (
-      <div className="mb-6 sm:hidden">
+      <div id="join-cta" className="mb-6 sm:hidden">
         <Link
           to={`/login?next=/sessions/${session.id}`}
           className="block w-full rounded-md bg-red px-4 py-3 text-center text-base font-bold text-white shadow-md transition hover:opacity-90"
