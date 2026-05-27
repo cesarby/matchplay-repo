@@ -56,12 +56,14 @@ export function SessionChatDrawer({ session, open, onClose }: SessionChatDrawerP
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Auto-scroll al fondo al cambiar mensajes
+  // Auto-scroll al fondo SOLO si el usuario ya está cerca del fondo —
+  // no le arrancamos de donde está leyendo si ha scrolleado hacia arriba.
   const listRef = useRef<HTMLUListElement>(null)
   useEffect(() => {
-    if (open && listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight
-    }
+    if (!open || !listRef.current) return
+    const el = listRef.current
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+    if (nearBottom) el.scrollTop = el.scrollHeight
   }, [messages, open])
 
   if (!open) return null
@@ -92,7 +94,8 @@ export function SessionChatDrawer({ session, open, onClose }: SessionChatDrawerP
     >
       <button
         type="button"
-        aria-label="Cerrar"
+        aria-hidden="true"
+        tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 bg-foreground/40"
       />
