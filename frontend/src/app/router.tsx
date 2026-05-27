@@ -12,6 +12,7 @@ const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'))
 const SessionsListPage = lazy(() => import('@/features/sessions/pages/SessionsListPage'))
 const SessionDetailPage = lazy(() => import('@/features/sessions/pages/SessionDetailPage'))
 const CreateSessionPage = lazy(() => import('@/features/sessions/pages/CreateSessionPage'))
+const MySessionsPage = lazy(() => import('@/features/sessions/pages/MySessionsPage'))
 const NotFoundPage = lazy(() => import('@/features/sessions/pages/NotFoundPage'))
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'))
@@ -30,6 +31,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <CreateSessionPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/sessions/mine',
+            element: (
+              <ProtectedRoute>
+                <MySessionsPage />
               </ProtectedRoute>
             ),
           },

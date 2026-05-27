@@ -31,7 +31,8 @@ export function SiteHeader() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const isSessionsActive = location.pathname.startsWith('/sessions')
+  const isMyActive = location.pathname.startsWith('/sessions/mine')
+  const isSessionsActive = location.pathname.startsWith('/sessions') && !isMyActive
 
   return (
     <>
@@ -44,9 +45,9 @@ export function SiteHeader() {
             </Link>
           </div>
 
-          {/* Centro (sólo desktop): Partidas */}
+          {/* Centro (sólo desktop): Partidas · Mis partidas */}
           <nav
-            className="hidden flex-1 items-center justify-center text-sm md:flex"
+            className="hidden flex-1 items-center justify-center gap-2 text-sm md:flex"
             aria-label="Principal"
           >
             <Link
@@ -61,6 +62,20 @@ export function SiteHeader() {
             >
               {t('nav.sessions')}
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/sessions/mine"
+                aria-current={isMyActive ? 'page' : undefined}
+                className={cn(
+                  'rounded-full px-4 py-1.5 transition',
+                  isMyActive
+                    ? 'bg-green-soft font-semibold text-green'
+                    : 'font-medium text-foreground hover:bg-muted',
+                )}
+              >
+                {t('nav.mySessions')}
+              </Link>
+            )}
           </nav>
 
           {/* Derecha desktop: usuario · logout · idioma */}

@@ -52,18 +52,29 @@ describe('<MobileMenu>', () => {
   it('shows "Partidas" and "Crear partida" for authenticated users', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
     renderMenu()
-    expect(screen.getByRole('link', { name: /partidas/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^partidas$/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /crear partida/i })).toBeInTheDocument()
   })
 
-  it('renders disabled "Mis partidas" and "Mi perfil" with coming-soon badges', () => {
+  it('renders "Mis partidas" as a link to /sessions/mine for authenticated users', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
     renderMenu()
-    // No son links (disabled), pero el texto sí está
-    expect(screen.getByText(/mis partidas/i)).toBeInTheDocument()
+    const link = screen.getByRole('link', { name: /mis partidas/i })
+    expect(link).toHaveAttribute('href', '/sessions/mine')
+  })
+
+  it('does not render "Mis partidas" when anonymous', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null })
+    renderMenu()
+    expect(screen.queryByText(/mis partidas/i)).not.toBeInTheDocument()
+  })
+
+  it('renders disabled "Mi perfil" with coming-soon badge', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
+    renderMenu()
     expect(screen.getByText(/mi perfil/i)).toBeInTheDocument()
-    // Dos pills "Próximamente"
-    expect(screen.getAllByText(/próximamente/i)).toHaveLength(2)
+    // Una pill "Próximamente" (sólo perfil)
+    expect(screen.getAllByText(/próximamente/i)).toHaveLength(1)
   })
 
   it('shows login/register links and no logout when anonymous', () => {
@@ -95,7 +106,7 @@ describe('<MobileMenu>', () => {
   it('marks current route as active (aria-current=page)', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
     renderMenu()
-    const partidasLink = screen.getByRole('link', { name: /partidas/i })
+    const partidasLink = screen.getByRole('link', { name: /^partidas$/i })
     expect(partidasLink).toHaveAttribute('aria-current', 'page')
   })
 })

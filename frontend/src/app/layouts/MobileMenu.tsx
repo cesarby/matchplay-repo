@@ -31,9 +31,9 @@ interface MobileMenuProps {
  * font-display, avatar grande con gradiente rotado -3°, items grandes tipo
  * card y footer compacto con toggle de idioma + logout.</p>
  *
- * <p>Las páginas "Mis partidas" y "Mi perfil" todavía no existen
- * (Fase 2). Se renderizan deshabilitadas con un pill "Próximamente" para
- * mantener fidelidad al diseño y comunicar el roadmap al usuario.</p>
+ * <p>"Mis partidas" enlaza a {@code /sessions/mine} cuando hay usuario
+ * autenticado. "Mi perfil" todavía no existe (Fase 2) y se renderiza
+ * deshabilitada con un pill "Próximamente".</p>
  */
 export function MobileMenu({ onClose }: MobileMenuProps) {
   const { t } = useTranslation()
@@ -71,6 +71,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
   const initial = (user?.username ?? '?').slice(0, 1).toUpperCase()
   const isSessionsActive = location.pathname === '/sessions'
   const isCreateActive = location.pathname.startsWith('/sessions/new')
+  const isMyActive = location.pathname.startsWith('/sessions/mine')
 
   return (
     <div
@@ -160,11 +161,11 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
 
         {isAuthenticated && (
           <MenuItem
-            disabled
+            to="/sessions/mine"
+            active={isMyActive}
             icon={<CalendarCheck size={20} aria-hidden="true" />}
             iconBg="bg-green-soft"
             iconColor="text-green"
-            badge={t('nav.comingSoon')}
           >
             {t('nav.mySessions')}
           </MenuItem>
