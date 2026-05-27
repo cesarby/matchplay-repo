@@ -55,8 +55,8 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
 
   return (
     <div className="overflow-hidden rounded-md border border-border bg-card">
-      {/* Cabecera — solo visible en sm+ */}
-      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-border bg-muted/20 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
+      {/* Cabecera — solo visible en sm+. bg-muted/30 ≈ mockup #F8F4EC */}
+      <div className="hidden grid-cols-[110px_1.4fr_1.2fr_1fr_90px_100px] gap-3 border-b border-border bg-muted/30 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:grid">
         <span>{t('sessions.mine.history.columns.date')}</span>
         <span>{t('sessions.mine.history.columns.name')}</span>
         <span>{t('sessions.mine.history.columns.game')}</span>
@@ -92,13 +92,14 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
               </button>
             </div>
 
-            {/* Sub-fila de expansiones — sin bg, mismo nivel visual que la fila;
-                la diferenciación viene de la tipografía (italic + smaller + muted)
-                y la indentación del ↳ alineado con la columna de fecha. */}
+            {/* Sub-fila de expansiones — bg-muted/15 ≈ mockup #FBF8F2 (warm cream
+                muy sutil que crea cohesión visual con la fila de arriba sin
+                competir). Diferenciación adicional via italic + text-[11px] +
+                muted-foreground + ↳ alineado con la columna de fecha. */}
             {hasExp && (
               <div
                 className={cn(
-                  'px-3 pb-2 pt-0 text-[11px] italic text-muted-foreground',
+                  'bg-muted/15 px-3 pb-2 pt-0 text-[11px] italic text-muted-foreground',
                   'sm:grid sm:grid-cols-[110px_1fr] sm:gap-3',
                 )}
               >
