@@ -18,8 +18,9 @@ import java.util.Map;
 public class ClaudeHaikuSummaryClient implements AiSummaryClient {
 
     private static final String MODEL = "claude-haiku-4-5-20251001";
-    private static final int MAX_TOKENS = 400;
+    private static final int MAX_TOKENS = 200;
     private static final String DEFAULT_BASE_URL = "https://api.anthropic.com";
+    private static final int MAX_SUMMARY_CHARS = 650;
 
     private final RestClient http;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -56,12 +57,29 @@ public class ClaudeHaikuSummaryClient implements AiSummaryClient {
         return new GameSummary(es, en);
     }
 
+    /**
+     * Trunca el resumen si excede {@value #MAX_SUMMARY_CHARS} chars. Corta en la
+     * última palabra completa y añade "…". Garantiza que el INSERT a {@code games}
+     * no rompe la columna VARCHAR(700) pase lo que pase con la respuesta del LLM.
+     */
+    private static String truncate(String s) {
+        if (s == null || s.length() <= MAX_SUMMARY_CHARS) {
+            return s;
+        }
+        int cut = s.lastIndexOf(' ', MAX_SUMMARY_CHARS - 1);
+        if (cut < 200) {
+            // si no hay espacios razonables, corte duro
+            cut = MAX_SUMMARY_CHARS - 1;
+        }
+        return s.substring(0, cut).trim() + "…";
+    }
+
     private String callOnce(String text, String language) {
         String prompt = """
-                Eres un experto en juegos de mesa. Resume el siguiente texto en %s en un
-                párrafo de ~500 caracteres con tono editorial. Menciona qué haces, la mecánica
-                principal y a qué tipo de jugador le gusta. Sin saludos, sin meta-comentarios,
-                sin Markdown.
+                Eres un experto en juegos de mesa. Resume el siguiente texto en %s en UN
+                SOLO PÁRRAFO de MÁXIMO 500 caracteres (esto es un límite estricto, NO lo
+                excedas). Menciona qué haces, la mecánica principal y a qué tipo de jugador
+                le gusta. Sin saludos, sin meta-comentarios, sin Markdown, sin emojis.
 
                 Texto:
                 %s
@@ -85,7 +103,7 @@ public class ClaudeHaikuSummaryClient implements AiSummaryClient {
             JsonNode content = root.path("content");
             if (content.isArray() && content.size() > 0) {
                 String txt = content.get(0).path("text").asText(null);
-                if (txt != null && !txt.isBlank()) return txt.trim();
+                if (txt != null && !txt.isBlank()) return truncate(txt.trim());
             }
             log.warn("Anthropic response had no usable content (len={}): {}",
                     raw.length(),

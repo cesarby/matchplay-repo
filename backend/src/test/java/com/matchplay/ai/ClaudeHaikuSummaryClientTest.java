@@ -41,7 +41,7 @@ class ClaudeHaikuSummaryClientTest {
                 .withHeader("x-api-key", equalTo("test-key"))
                 .withHeader("anthropic-version", equalTo("2023-06-01"))
                 .withRequestBody(matchingJsonPath("$.model", equalTo("claude-haiku-4-5-20251001")))
-                .withRequestBody(matchingJsonPath("$.max_tokens", equalTo("400"))));
+                .withRequestBody(matchingJsonPath("$.max_tokens", equalTo("200"))));
     }
 
     @Test
@@ -60,5 +60,19 @@ class ClaudeHaikuSummaryClientTest {
         GameSummary out = client.summarize("   ");
         assertThat(out).isEqualTo(GameSummary.empty());
         wm.verify(0, postRequestedFor(urlEqualTo("/v1/messages")));
+    }
+
+    @Test
+    void truncatesSummaryExceeding650Chars() {
+        String longSummary = "Lorem ipsum dolor sit amet consectetur adipiscing elit ".repeat(20); // ~1100 chars
+        wm.stubFor(post(urlEqualTo("/v1/messages"))
+                .willReturn(okJson("""
+                    {"content":[{"type":"text","text":"%s"}]}
+                    """.formatted(longSummary))));
+
+        GameSummary out = client.summarize("Texto largo de BGG...");
+
+        assertThat(out.es()).hasSizeLessThanOrEqualTo(700);
+        assertThat(out.es()).endsWith("…");
     }
 }
