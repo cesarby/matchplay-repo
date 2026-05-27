@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Users } from 'lucide-react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
@@ -7,6 +8,8 @@ import { SeoHead } from '@/shared/components/SeoHead'
 import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
 import { CreatorActions } from '../components/CreatorActions'
+import { GameCover } from '../components/GameCover'
+import { JoinCallToAction } from '../components/JoinCallToAction'
 import { SessionActions } from '../components/SessionActions'
 import { SessionChatButton } from '../components/SessionChatButton'
 import { SessionExpansionsBlock } from '../components/SessionExpansionsBlock'
@@ -14,20 +17,23 @@ import { SessionPlayerRow } from '../components/SessionPlayerRow'
 import { useSessionDetailQuery } from '../hooks/useSessions'
 
 /**
- * Página `/sessions/:id` — detalle público de una partida.
+ * Página `/sessions/:id` — detalle público de una partida (layout editorial v3).
  *
- * - Estados: loading (skeleton) · 404 → Navigate a NotFound · error → mensaje genérico
- * - Header con título, juego, badge de status, badge "Apuntado" / "En cola" si aplica
- * - Meta (fecha, ubicación, plazas)
- * - Descripción si la hay
- * - Lista de PLAYERS y, en sección aparte, WAITLIST
- * - Acciones contextuales en sticky bottom bar (delegado a SessionActions)
+ * Estructura:
+ * - Header 2-col (≥sm): GameCover izq + título/badges/meta dcha. Mobile: stacked.
+ * - CTA "Unirme" prominente bajo header (solo mobile, solo cuando aplica).
+ * - Cuerpo: "Sobre el juego" → Expansiones → Descripción → (mobile: sidebar abajo).
+ * - Sidebar (sm+): Apuntados, Lista de espera, Chat, Acciones — cada uno mini-card.
+ *
+ * El `joinCtaRef` permite que `SessionChatButton` en estado outsider haga
+ * scroll al CTA al click.
  */
 export default function SessionDetailPage() {
   const { t, i18n } = useTranslation()
-  const { user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const { id } = useParams<{ id: string }>()
   const sessionId = id ? Number.parseInt(id, 10) : Number.NaN
+  const joinCtaRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading, isError, error } = useSessionDetailQuery(
     Number.isFinite(sessionId) ? sessionId : undefined,
@@ -50,7 +56,6 @@ export default function SessionDetailPage() {
   }
 
   if (isError || !data) {
-    // Distinguir 404 de error genérico via ApiError.status si está disponible
     const status = (error as { status?: number } | null)?.status
     if (status === 404) {
       return (
@@ -88,7 +93,6 @@ export default function SessionDetailPage() {
       ? { text: t('sessions.card.youArePlayer'), className: 'bg-green-soft' }
       : data.yourRole === 'WAITLIST'
         ? {
-            // Posición del usuario en la cola
             text: t('sessions.card.youAreWaitlist', {
               position:
                 data.players.find((p) => p.role === 'WAITLIST' && data.yourRole === 'WAITLIST')
@@ -98,6 +102,15 @@ export default function SessionDetailPage() {
           }
         : null
 
+  function scrollToJoinCta() {
+    const el = document.getElementById('join-cta')
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (el) {
+      el.classList.add('ring-2', 'ring-red', 'ring-offset-2')
+      setTimeout(() => el.classList.remove('ring-2', 'ring-red', 'ring-offset-2'), 1500)
+    }
+  }
+
   return (
     <div className="container py-8">
       <SeoHead
@@ -106,69 +119,74 @@ export default function SessionDetailPage() {
         canonical={`/sessions/${data.id}`}
       />
 
-      {/* Header */}
-      <header className="mb-6">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <SessionStatusBadge status={data.status} />
-          {youBadge && (
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-foreground ${youBadge.className}`}
-            >
-              {youBadge.text}
-            </span>
-          )}
+      {/* Header 2-col en sm+: cover izq + meta dcha. Mobile: stacked centrado. */}
+      <header className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr] sm:gap-6">
+        <div className="mx-auto w-36 sm:mx-0 sm:w-40">
+          <GameCover thumbnailUrl={data.baseGameThumbnailUrl} name={data.baseGameName ?? ''} />
         </div>
 
-        <h1 className="font-display text-3xl font-bold text-foreground lg:text-4xl">
-          {data.title}
-        </h1>
-        {data.baseGameName && (
-          <p className="mt-1 text-lg text-muted-foreground">{data.baseGameName}</p>
-        )}
-        {data.creatorUsername && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t('sessions.card.byCreator', { username: data.creatorUsername })}
-          </p>
-        )}
+        <div className="flex flex-col gap-2 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <SessionStatusBadge status={data.status} />
+            {youBadge && (
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-foreground ${youBadge.className}`}
+              >
+                {youBadge.text}
+              </span>
+            )}
+          </div>
+
+          <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+            {data.title}
+          </h1>
+          {data.baseGameName && (
+            <p className="text-sm italic text-muted-foreground">{data.baseGameName}</p>
+          )}
+          {data.creatorUsername && (
+            <p className="text-xs text-muted-foreground">
+              {t('sessions.card.byCreator', { username: data.creatorUsername })}
+            </p>
+          )}
+
+          {/* Meta vertical con iconos coloreados */}
+          <ul className="mt-2 space-y-2 border-t border-border pt-3 text-sm sm:text-left">
+            <li className="flex items-center justify-center gap-2 sm:justify-start">
+              <Calendar size={16} aria-hidden="true" className="shrink-0 text-blue" />
+              <time dateTime={data.scheduledAt}>{scheduled}</time>
+            </li>
+            <li className="flex items-center justify-center gap-2 sm:justify-start">
+              <MapPin size={16} aria-hidden="true" className="shrink-0 text-green" />
+              <span>{location}</span>
+            </li>
+            <li className="flex items-center justify-center gap-2 sm:justify-start">
+              <Users size={16} aria-hidden="true" className="shrink-0 text-red" />
+              <span>
+                {t('sessions.card.spots', {
+                  registered: data.registeredPlayers,
+                  max: data.maxPlayers,
+                })}
+              </span>
+              {data.waitlistCount > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  · {t('sessions.card.waitlist', { count: data.waitlistCount })}
+                </span>
+              )}
+            </li>
+          </ul>
+
+          {canEdit && <CreatorActions session={data} />}
+        </div>
       </header>
 
-      {/* Layout 2 columnas en desktop */}
+      {/* CTA mobile prominente — solo si aplica */}
+      <div ref={joinCtaRef}>
+        <JoinCallToAction session={data} isAuthenticated={isAuthenticated} />
+      </div>
+
+      {/* Cuerpo 2-col en lg+, single col en mobile/tablet */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_1fr]">
-        {/* Columna principal */}
         <div className="space-y-8">
-          {/* Meta */}
-          <section
-            aria-label="Información de la partida"
-            className="rounded border border-border bg-card p-4"
-          >
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2">
-                <Calendar size={16} aria-hidden="true" className="shrink-0 text-blue" />
-                <time dateTime={data.scheduledAt}>{scheduled}</time>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin size={16} aria-hidden="true" className="shrink-0 text-green" />
-                <span>{location}</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Users size={16} aria-hidden="true" className="shrink-0 text-red" />
-                <span>
-                  {t('sessions.card.spots', {
-                    registered: data.registeredPlayers,
-                    max: data.maxPlayers,
-                  })}
-                </span>
-                {data.waitlistCount > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    · {t('sessions.card.waitlist', { count: data.waitlistCount })}
-                  </span>
-                )}
-              </li>
-            </ul>
-
-            {canEdit && <CreatorActions session={data} />}
-          </section>
-
           {/* Sobre el juego */}
           {data.baseGameSummary?.trim() && data.baseGameName && (
             <section
@@ -187,7 +205,6 @@ export default function SessionDetailPage() {
             </section>
           )}
 
-          {/* Expansiones */}
           <SessionExpansionsBlock expansions={data.expansions} />
 
           {/* Descripción */}
@@ -207,16 +224,18 @@ export default function SessionDetailPage() {
           </section>
         </div>
 
-        {/* Sidebar: jugadores + waitlist + acciones */}
-        <aside className="space-y-6">
-          {/* Players */}
-          <section aria-labelledby="players-heading">
+        {/* Sidebar: cada bloque en su propia mini-card */}
+        <aside className="space-y-3">
+          <section
+            aria-labelledby="players-heading"
+            className="rounded border border-border bg-card p-4"
+          >
             <h2
               id="players-heading"
-              className="mb-3 flex items-center justify-between font-display text-lg font-bold text-foreground"
+              className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
               <span>{t('sessions.detail.playersHeading')}</span>
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="font-normal">
                 {data.registeredPlayers}/{data.maxPlayers}
               </span>
             </h2>
@@ -236,14 +255,16 @@ export default function SessionDetailPage() {
             )}
           </section>
 
-          {/* Waitlist */}
-          <section aria-labelledby="waitlist-heading">
+          <section
+            aria-labelledby="waitlist-heading"
+            className="rounded border border-border bg-card p-4"
+          >
             <h2
               id="waitlist-heading"
-              className="mb-3 flex items-center justify-between font-display text-lg font-bold text-foreground"
+              className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
               <span>{t('sessions.detail.waitlistHeading')}</span>
-              <span className="text-sm font-normal text-muted-foreground">{waitlist.length}</span>
+              <span className="font-normal">{waitlist.length}</span>
             </h2>
             {waitlist.length > 0 ? (
               <ul className="space-y-2">
@@ -251,16 +272,12 @@ export default function SessionDetailPage() {
                   <SessionPlayerRow key={p.userId} player={p} showPosition />
                 ))}
               </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">—</p>
-            )}
+            ) : null}
           </section>
 
-          {/* Chat */}
-          <SessionChatButton session={data} />
+          <SessionChatButton session={data} onJoinPrompt={scrollToJoinCta} />
 
-          {/* Acciones */}
-          <div className="border-t border-border pt-6">
+          <div className="border-t border-border pt-4">
             <SessionActions session={data} />
           </div>
         </aside>

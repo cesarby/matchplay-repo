@@ -118,8 +118,11 @@ describe('<SessionDetailPage>', () => {
     })
     server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
     renderDetail()
-    const btn = await screen.findByRole('button', { name: /unirme/i })
-    expect(btn).toBeEnabled()
+    // SessionActions renders "Unirme" and JoinCallToAction renders "Unirme a esta mesa";
+    // both are present when the user can join — check there's at least one enabled join button.
+    const btns = await screen.findAllByRole('button', { name: /unirme/i })
+    expect(btns.length).toBeGreaterThanOrEqual(1)
+    expect(btns.every((b) => !b.hasAttribute('disabled'))).toBe(true)
   })
 
   it('shows Leave button when yourRole is PLAYER', async () => {
@@ -373,11 +376,18 @@ describe('<SessionDetailPage>', () => {
     server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
     mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
     renderDetail()
-    // baseDetail by default has no waitlist players
     expect(await screen.findByText(/lista de espera/i)).toBeInTheDocument()
-    // counter "0" appears in the heading
     const heading = screen.getByRole('heading', { name: /lista de espera/i })
     expect(heading).toHaveTextContent('0')
+  })
+
+  it('renderiza GameCover (placeholder) cuando baseGameThumbnailUrl es null', async () => {
+    mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
+    server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
+    renderDetail()
+    // El nombre del juego aparece DOS veces: en el placeholder y en el subtítulo del header
+    const occurrences = await screen.findAllByText('Catan')
+    expect(occurrences.length).toBeGreaterThanOrEqual(2)
   })
 
   it('muestra el botón de chat cuando chatUnreadCount no es null', async () => {
