@@ -124,6 +124,35 @@ class MySessionsServiceImplTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    void findMine_player_excludesOwnSessions_byNotCreatorPredicate() {
+        // El creador se registra automáticamente como PLAYER en session_participants
+        // (ver GameSessionServiceImpl), así que el tab PLAYER tiene que excluirlas
+        // explícitamente vía Specification.not(creatorIs(userId)). Las Specifications
+        // son opacas para Mockito, pero podemos al menos verificar que se compuso
+        // alguna spec no-trivial (Specification.and devuelve una nueva instancia,
+        // distinta de la pasada para CREATED).
+        given(currentUserProvider.requireCurrentUserId()).willReturn(USER_ID);
+
+        Page<GameSession> emptyPage = new PageImpl<>(List.of());
+        given(sessionRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .willReturn(emptyPage);
+        given(sessionRepository.count(any(Specification.class))).willReturn(0L);
+
+        // Llama una vez con CREATED y otra con PLAYER para comparar las specs capturadas.
+        service.findMine(MySessionsService.Tab.CREATED, PageRequest.of(0, 20));
+        service.findMine(MySessionsService.Tab.PLAYER, PageRequest.of(0, 20));
+
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<Specification> specCaptor = ArgumentCaptor.forClass(Specification.class);
+        verify(sessionRepository, org.mockito.Mockito.times(2))
+                .findAll(specCaptor.capture(), any(Pageable.class));
+        List<Specification> captured = specCaptor.getAllValues();
+        // Specs distintas entre CREATED (creatorIs+active) y PLAYER (participantIs+notCreator+active).
+        assertThat(captured.get(0)).isNotSameAs(captured.get(1));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void findMine_player_doesNotPopulateExpansionNames() {
         given(currentUserProvider.requireCurrentUserId()).willReturn(USER_ID);
 

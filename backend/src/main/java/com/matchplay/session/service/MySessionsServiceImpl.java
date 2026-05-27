@@ -39,10 +39,17 @@ public class MySessionsServiceImpl implements MySessionsService {
     public MySessionsResponse findMine(Tab tab, Pageable pageable) {
         Long userId = currentUserProvider.requireCurrentUserId();
 
+        // PLAYER y WAITLIST excluyen las partidas propias: el creador se registra
+        // automáticamente como PLAYER en session_participants (ver GameSessionServiceImpl)
+        // pero esas viven en el tab "Creadas". Apuntado = partidas de otros donde estoy.
         Specification<GameSession> spec = switch (tab) {
             case CREATED  -> Specification.where(creatorIs(userId)).and(statusActive());
-            case PLAYER   -> Specification.where(participantIs(userId, ParticipantRole.PLAYER)).and(statusActive());
-            case WAITLIST -> Specification.where(participantIs(userId, ParticipantRole.WAITLIST)).and(statusActive());
+            case PLAYER   -> Specification.where(participantIs(userId, ParticipantRole.PLAYER))
+                    .and(Specification.not(creatorIs(userId)))
+                    .and(statusActive());
+            case WAITLIST -> Specification.where(participantIs(userId, ParticipantRole.WAITLIST))
+                    .and(Specification.not(creatorIs(userId)))
+                    .and(statusActive());
             case HISTORY  -> Specification.where(creatorIs(userId)).and(statusTerminal());
         };
 
@@ -72,8 +79,10 @@ public class MySessionsServiceImpl implements MySessionsService {
 
     private TabCounts computeCounts(Long userId) {
         long created  = sessionRepository.count(Specification.where(creatorIs(userId)).and(statusActive()));
-        long player   = sessionRepository.count(Specification.where(participantIs(userId, ParticipantRole.PLAYER)).and(statusActive()));
-        long waitlist = sessionRepository.count(Specification.where(participantIs(userId, ParticipantRole.WAITLIST)).and(statusActive()));
+        long player   = sessionRepository.count(Specification.where(participantIs(userId, ParticipantRole.PLAYER))
+                .and(Specification.not(creatorIs(userId))).and(statusActive()));
+        long waitlist = sessionRepository.count(Specification.where(participantIs(userId, ParticipantRole.WAITLIST))
+                .and(Specification.not(creatorIs(userId))).and(statusActive()));
         long history  = sessionRepository.count(Specification.where(creatorIs(userId)).and(statusTerminal()));
         return new TabCounts(created, player, waitlist, history);
     }
