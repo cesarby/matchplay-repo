@@ -235,6 +235,7 @@
     },
     "mine": {
       "title": "Mis partidas",
+      "tabsLabel": "Tabs de Mis partidas",
       "tabs": {
         "created": "Creadas por mí",
         "createdShort": "Creadas",

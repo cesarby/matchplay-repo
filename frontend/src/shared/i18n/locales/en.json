@@ -235,6 +235,7 @@
     },
     "mine": {
       "title": "My sessions",
+      "tabsLabel": "My sessions tabs",
       "tabs": {
         "created": "Created by me",
         "createdShort": "Created",

@@ -86,7 +86,7 @@ export function MySessionsTabs({ active, counts, onChange }: MySessionsTabsProps
   return (
     <div
       role="tablist"
-      aria-label="Mis partidas tabs"
+      aria-label={t('sessions.mine.tabsLabel')}
       className="sticky top-0 z-10 flex gap-2 overflow-x-auto whitespace-nowrap border-b border-border bg-card px-4 py-3 sm:px-6"
     >
       {TABS.map((tabDef) => {
