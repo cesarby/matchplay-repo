@@ -21,9 +21,13 @@ import java.time.Instant;
 /**
  * Mensaje del chat de coordinación de una partida.
  *
- * <p>Se borra en cascada cuando la {@link GameSession} pasa a COMPLETED o
- * CANCELLED (ver {@code GameSessionServiceImpl.changeStatus} y
- * {@code close}). No editable ni borrable individualmente por el usuario.</p>
+ * <p>Limpieza: los mensajes se borran vía {@code SessionMessageRepository.deleteBySessionId}
+ * cuando la partida pasa a COMPLETED o CANCELLED (ver
+ * {@code GameSessionServiceImpl.changeStatus}). El {@code ON DELETE CASCADE}
+ * de la FK es solo un safety net por si en el futuro se borra físicamente
+ * una {@link GameSession}; no se dispara en cambios de status.</p>
+ *
+ * <p>Los mensajes no son editables ni borrables individualmente por el usuario.</p>
  */
 @Entity
 @Table(

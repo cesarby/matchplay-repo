@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,6 +35,7 @@ public interface SessionMessageRepository extends JpaRepository<SessionMessage, 
 
     /** Borrado masivo usado al cerrar/cancelar la partida. */
     @Modifying
+    @Transactional
     @Query("DELETE FROM SessionMessage m WHERE m.session.id = :sessionId")
     int deleteBySessionId(@Param("sessionId") Long sessionId);
 }
