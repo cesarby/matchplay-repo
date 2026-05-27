@@ -40,6 +40,7 @@ function baseSession(overrides: Partial<SessionDetail> = {}): SessionDetail {
     creatorId: 1,
     creatorUsername: 'alice',
     chatUnreadCount: 0,
+    chatMessageCount: 0,
     players: [],
     yourRole: 'PLAYER',
     createdAt: '2026-01-01T10:00:00Z',

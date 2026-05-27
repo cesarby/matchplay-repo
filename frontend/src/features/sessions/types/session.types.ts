@@ -73,6 +73,11 @@ export interface SessionDetail extends Omit<
    * 0 si está al día o el chat está cerrado.
    */
   chatUnreadCount: number | null
+  /**
+   * Total de mensajes en el chat de esta partida, visible a cualquier visitante.
+   * null si la sesión es terminal (CANCELLED/COMPLETED) — bloque del chat no aplica.
+   */
+  chatMessageCount: number | null
   players: SessionPlayer[]
   yourRole: ParticipantRole | null // null si anónimo o no apuntado
   createdAt: string

@@ -42,6 +42,7 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
     creatorId: 1,
     creatorUsername: 'alice',
     chatUnreadCount: null,
+    chatMessageCount: 0,
     players: [
       {
         userId: 1,
