@@ -55,11 +55,11 @@ vi.mock('@/features/geo/hooks/useGeo', () => ({
   }),
 }))
 
-function renderForm() {
+function renderForm(initialUrl = '/sessions/new') {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/sessions/new']}>
+      <MemoryRouter initialEntries={[initialUrl]}>
         <Routes>
           <Route path="/sessions/new" element={<CreateSessionForm />} />
           <Route path="/sessions/:id" element={<div data-testid="detail">detail</div>} />
@@ -232,5 +232,73 @@ describe('<CreateSessionForm>', () => {
     await waitFor(() =>
       expect(screen.getByText(/máximo supera el límite del juego/i)).toBeInTheDocument(),
     )
+  })
+
+  it('precarga el form cuando hay ?from=ID en la URL', async () => {
+    server.use(
+      http.get(`${API}/sessions/42`, () =>
+        HttpResponse.json({
+          id: 42,
+          title: 'Mi partida vieja',
+          description: 'Descripción precargada',
+          baseGameId: 100,
+          baseGameName: 'Catan',
+          baseGameThumbnailUrl: null,
+          baseGameSummary: null,
+          expansions: [{ bggId: 200, name: 'Exp', thumbnailUrl: null }],
+          expansionCount: 1,
+          creatorGuests: 2,
+          cityCode: 'MAD01',
+          cityName: 'Madrid',
+          areaCode: 'MAD01-01',
+          areaName: 'Centro',
+          scheduledAt: '2026-01-15T19:00:00Z',
+          maxPlayers: 6,
+          registeredPlayers: 1,
+          waitlistCount: 0,
+          status: 'COMPLETED',
+          creatorId: 1,
+          creatorUsername: 'me',
+          chatUnreadCount: null,
+          chatMessageCount: null,
+          players: [],
+          yourRole: null,
+          createdAt: '2026-01-01T10:00:00Z',
+          updatedAt: '2026-01-01T10:00:00Z',
+        }),
+      ),
+    )
+    renderForm('/sessions/new?from=42')
+
+    // Título y descripción se precargan
+    expect(await screen.findByDisplayValue('Mi partida vieja')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Descripción precargada')).toBeInTheDocument()
+
+    // maxPlayers se precarga al valor de la sesión origen (6, no el default 4)
+    const maxInput = screen.getByLabelText(/plazas/i) as HTMLInputElement
+    expect(maxInput.value).toBe('6')
+
+    // creatorGuests NO se precarga (sigue a 0 aunque source tuviera 2)
+    const guestsInput = screen.getByLabelText(/vienes con alguien más/i) as HTMLInputElement
+    expect(guestsInput.value).toBe('0')
+
+    // scheduledAt NO se precarga — el input de fecha está vacío
+    const dateInput = screen.getByLabelText(/fecha/i) as HTMLInputElement
+    expect(dateInput.value).toBe('')
+
+    // El juego base aparece en la BaseGameCard (selector específico)
+    expect(screen.getByText('Catan', { selector: '.font-medium' })).toBeInTheDocument()
+    // El chip de la expansión aparece (el picker pinta el nombre dentro de un <li>)
+    expect(screen.getByRole('button', { name: /quitar exp/i })).toBeInTheDocument()
+  })
+
+  it('sin ?from= en URL el form arranca vacío', async () => {
+    renderForm('/sessions/new')
+    // El heading "Crear partida" está, lo que confirma que no hay spinner
+    expect(await screen.findByText(/crear partida/i)).toBeInTheDocument()
+    const titleInput = screen.getByLabelText(/título/i) as HTMLInputElement
+    expect(titleInput.value).toBe('')
+    const descriptionInput = screen.getByLabelText(/descripción/i) as HTMLInputElement
+    expect(descriptionInput.value).toBe('')
   })
 })

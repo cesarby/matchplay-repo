@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -13,7 +13,7 @@ import { SelectField } from '@/shared/components/SelectField'
 import { TextField } from '@/shared/components/TextField'
 import { cn } from '@/shared/lib/cn'
 
-import { useCreateSessionMutation } from '../hooks/useSessions'
+import { useCreateSessionMutation, useSessionDetailQuery } from '../hooks/useSessions'
 import { mapSessionError } from '../lib/errorMapping'
 import type { CreateSessionRequest } from '../types/session.types'
 
@@ -95,6 +95,15 @@ export function CreateSessionForm() {
   const { user } = useAuth()
   const [banner, setBanner] = useState<string | null>(null)
 
+  // Precarga "Duplicar" — si la URL trae ?from=ID, fetcheamos esa sesión y
+  // rellenamos el form con sus datos (excepto fecha y creatorGuests, que
+  // dependen del nuevo plan del usuario y deben elegirse desde cero).
+  const [searchParams] = useSearchParams()
+  const fromIdRaw = searchParams.get('from')
+  const fromIdParsed = fromIdRaw != null ? Number.parseInt(fromIdRaw, 10) : NaN
+  const fromId = Number.isFinite(fromIdParsed) && fromIdParsed > 0 ? fromIdParsed : null
+  const { data: source, isLoading: isLoadingSource } = useSessionDetailQuery(fromId ?? undefined)
+
   const {
     register,
     handleSubmit,
@@ -163,6 +172,64 @@ export function CreateSessionForm() {
     }
   }, [selectedGame?.bggId, selectedGame?.maxPlayers, setValue])
 
+  // 3) Precarga "Duplicar" — solo se ejecuta UNA vez cuando llega la source.
+  // El useRef evita re-prefill en renders posteriores: si el usuario ya
+  // empezó a editar, no queremos pisar sus cambios.
+  // NOTA: scheduledAt y creatorGuests NO se precargan a propósito — la fecha
+  // pertenece al plan nuevo y el nº de acompañantes puede cambiar.
+  const prefilledFromSourceRef = useRef(false)
+  useEffect(() => {
+    if (prefilledFromSourceRef.current) return
+    if (!source) return
+    prefilledFromSourceRef.current = true
+
+    setValue('title', source.title ?? '')
+    setValue('description', source.description ?? '')
+    setValue('maxPlayers', source.maxPlayers)
+    if (source.cityCode) setValue('cityCode', source.cityCode)
+    if (source.areaCode) setValue('areaCode', source.areaCode)
+
+    if (source.baseGameId != null) {
+      // SessionDetail no trae min/maxPlayers ni year del juego; reconstruimos
+      // un GameSearchResult con lo justo para que el picker lo pinte. El
+      // efecto (2) NO sobreescribirá maxPlayers porque maxPlayers viene null.
+      const baseGame: GameSearchResult = {
+        bggId: source.baseGameId,
+        name: source.baseGameName ?? '',
+        year: null,
+        minPlayers: null,
+        maxPlayers: null,
+        minPlayTimeMinutes: null,
+        maxPlayTimeMinutes: null,
+        thumbnailUrl: source.baseGameThumbnailUrl ?? null,
+        imageUrl: null,
+        isExpansion: false,
+        // Si la partida original tenía expansiones, las habilitamos para
+        // que el picker muestre el bloque de expansiones encima de los chips.
+        hasExpansions: source.expansions.length > 0,
+        baseGameBggId: null,
+      }
+      setValue('game', baseGame)
+    }
+    if (source.expansions.length > 0) {
+      const expansions: GameSearchResult[] = source.expansions.map((e) => ({
+        bggId: e.bggId,
+        name: e.name,
+        year: null,
+        minPlayers: null,
+        maxPlayers: null,
+        minPlayTimeMinutes: null,
+        maxPlayTimeMinutes: null,
+        thumbnailUrl: e.thumbnailUrl,
+        imageUrl: null,
+        isExpansion: true,
+        hasExpansions: false,
+        baseGameBggId: source.baseGameId,
+      }))
+      setValue('expansions', expansions)
+    }
+  }, [source, setValue])
+
   // Resolución de nombres geo para el preview (los selects sólo guardan códigos)
   const cityName = citiesQuery.data?.find((c) => c.code === cityCode)?.name
   const areaName = areasQuery.data?.find((a) => a.code === areaCode)?.name
@@ -225,6 +292,13 @@ export function CreateSessionForm() {
   })
 
   const isPending = mutation.isPending || isSubmitting
+
+  // Mientras esperamos la source en modo "Duplicar", mostramos un spinner
+  // simple para que el usuario no vea el form vacío y empiece a editarlo
+  // (lo cual rompería el guard prefilledFromSourceRef.current).
+  if (fromId != null && isLoadingSource) {
+    return <div className="py-12 text-center text-muted-foreground">{t('common.loading')}</div>
+  }
 
   return (
     <form noValidate onSubmit={onSubmit}>
