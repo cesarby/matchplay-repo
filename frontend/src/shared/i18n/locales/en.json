@@ -234,6 +234,24 @@
       "creatorCannotLeave": "You can't leave your own session. If you're not going to play, cancel it."
     },
     "mine": {
+      "title": "My sessions",
+      "tabs": {
+        "created": "Created by me",
+        "createdShort": "Created",
+        "player": "Joined",
+        "waitlist": "Waitlist",
+        "waitlistShort": "Queue",
+        "history": "History"
+      },
+      "empty": {
+        "created": "You haven't created any sessions yet.",
+        "createdCta": "Create session",
+        "player": "You haven't joined any session.",
+        "playerCta": "Explore sessions",
+        "waitlist": "You're not on any waitlist.",
+        "waitlistCta": "Explore sessions",
+        "history": "You don't have finished sessions yet."
+      },
       "history": {
         "columns": {
           "date": "Date",

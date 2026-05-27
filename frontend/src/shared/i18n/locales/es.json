@@ -234,6 +234,24 @@
       "creatorCannotLeave": "No puedes salirte de tu propia partida. Si no la vas a jugar, cancélala."
     },
     "mine": {
+      "title": "Mis partidas",
+      "tabs": {
+        "created": "Creadas por mí",
+        "createdShort": "Creadas",
+        "player": "Apuntado",
+        "waitlist": "En lista de espera",
+        "waitlistShort": "Cola",
+        "history": "Historial"
+      },
+      "empty": {
+        "created": "No has creado partidas todavía.",
+        "createdCta": "Crear partida",
+        "player": "No estás apuntado a ninguna partida.",
+        "playerCta": "Explorar partidas",
+        "waitlist": "No estás en cola en ninguna partida.",
+        "waitlistCta": "Explorar partidas",
+        "history": "Aún no tienes partidas finalizadas."
+      },
       "history": {
         "columns": {
           "date": "Fecha",

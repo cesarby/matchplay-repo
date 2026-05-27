@@ -20,7 +20,21 @@ interface SessionCardProps {
   asStatic?: boolean
   /** Delay (ms) para animación fade-up secuencial en grids. */
   animationDelayMs?: number
+  /**
+   * Color del borde lateral izquierdo. Usado en Mis partidas para señalizar
+   * el tab al que pertenece cada card (yellow=creadas, green=apuntado,
+   * blue=waitlist, muted=historial). Sin valor → sin border-left.
+   */
+  accentColor?: 'yellow' | 'green' | 'blue' | 'muted'
   className?: string
+}
+
+// Strings literales (no template) para que Tailwind detecte las clases en build.
+const ACCENT_CLASSES: Record<NonNullable<SessionCardProps['accentColor']>, string> = {
+  yellow: 'border-l-4 border-yellow',
+  green: 'border-l-4 border-green',
+  blue: 'border-l-4 border-blue',
+  muted: 'border-l-4 border-muted-foreground',
 }
 
 const STATUS_PILL: Record<SessionStatus, string> = {
@@ -74,6 +88,7 @@ export function SessionCard({
   yourPosition = null,
   asStatic = false,
   animationDelayMs = 0,
+  accentColor,
   className,
 }: SessionCardProps) {
   const { t, i18n } = useTranslation()
@@ -131,6 +146,7 @@ export function SessionCard({
       className={cn(
         'group relative animate-fade-up overflow-hidden rounded-3xl border border-border bg-card transition duration-300',
         !asStatic && 'hover:-translate-y-1 hover:border-red hover:shadow-hover',
+        accentColor && ACCENT_CLASSES[accentColor],
         className,
       )}
     >
