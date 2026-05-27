@@ -79,6 +79,14 @@ public class SessionParticipant {
     @Column(name = "promoted_at")
     private Instant promotedAt;
 
+    /**
+     * Última vez que el usuario ha consultado el chat de esta partida.
+     * NULL si nunca lo ha abierto. Usado para calcular {@code chatUnreadCount}
+     * en el detail response.
+     */
+    @Column(name = "last_chat_read_at")
+    private Instant lastChatReadAt;
+
     public SessionParticipant(GameSession session, User user) {
         this.session = session;
         this.user = user;
