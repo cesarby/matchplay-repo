@@ -26,13 +26,17 @@ const ACCENT_BY_TAB: Record<MyTab, 'yellow' | 'green' | 'blue' | 'muted'> = {
 
 /**
  * Página `/sessions/mine` — listado de partidas del usuario logueado
- * dividido en 4 tabs (CREATED / PLAYER / WAITLIST / HISTORY). El tab activo
- * y la página viven en query params (?tab=X&page=N). Anónimos redirigen
- * a /login con `?next=/sessions/mine`.
+ * dividido en 4 tabs (CREATED / PLAYER / WAITLIST / HISTORY).
  *
- * Tabs: pills coloreadas (yellow/green/blue/muted) que muestran counts.
- * Body: grid de SessionCard con acentos del tab; tab HISTORY usa
- * MyHistoryTable (tabla compacta con botón Duplicar).
+ * Layout calcado del mockup `historial-v2.html` Nivel 1 (`.mp-mockup`):
+ * card unificada con bg warm cream (#FAF7F2), border-radius 12px, overflow
+ * hidden y shadow suave envolviendo título + tabs + contenido. Las tabs
+ * tienen bg white para cortar el cream y crear jerarquía visual; el
+ * contenido (tabla o grid) lleva margin interno simulando el padding
+ * `16px 24px` de `.history-table`.
+ *
+ * Tab activo y página viven en query params (?tab=X&page=N). Anónimos
+ * redirigen a /login con ?next=/sessions/mine.
  */
 export default function MySessionsPage() {
   const { t } = useTranslation()
@@ -43,8 +47,7 @@ export default function MySessionsPage() {
   const page = Math.max(0, Number.parseInt(searchParams.get('page') ?? '0', 10) || 0)
 
   // Hook se llama SIEMPRE para mantener el orden estable. El guard sólo
-  // condiciona el render, no la llamada al hook. `enabled` evita el fetch
-  // cuando el usuario no está autenticado.
+  // condiciona el render, no la llamada al hook.
   const queryResult = useMySessionsQuery(tab, page)
 
   if (!isAuthenticated) {
@@ -89,7 +92,7 @@ export default function MySessionsPage() {
     } as const
     const cfg = map[tab]
     return (
-      <div className="py-12 text-center">
+      <div className="px-6 py-12 text-center">
         <p className="text-muted-foreground">{t(cfg.msgKey)}</p>
         {cfg.ctaKey && cfg.to && (
           <Link
@@ -106,7 +109,7 @@ export default function MySessionsPage() {
   function renderContent() {
     if (isLoading) {
       return (
-        <div className="space-y-3 p-4">
+        <div className="space-y-3 px-6 py-4">
           <div className="h-24 animate-pulse rounded bg-muted" />
           <div className="h-24 animate-pulse rounded bg-muted" />
           <div className="h-24 animate-pulse rounded bg-muted" />
@@ -115,7 +118,7 @@ export default function MySessionsPage() {
     }
     if (isError) {
       return (
-        <div className="py-12 text-center">
+        <div className="px-6 py-12 text-center">
           <p className="text-muted-foreground">{t('common.error')}</p>
           <button
             type="button"
@@ -132,8 +135,9 @@ export default function MySessionsPage() {
     if (items.length === 0) return renderEmpty()
 
     if (tab === 'HISTORY') {
+      // Padding 16px 24px replica el `margin: 16px 24px` de .history-table.
       return (
-        <div className="p-4">
+        <div className="px-6 py-4">
           <MyHistoryTable rows={items} />
         </div>
       )
@@ -141,7 +145,7 @@ export default function MySessionsPage() {
 
     const accent = ACCENT_BY_TAB[tab]
     return (
-      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 px-6 py-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((s, i) => (
           <SessionCard key={s.id} session={s} accentColor={accent} animationDelayMs={i * 60} />
         ))}
@@ -150,26 +154,34 @@ export default function MySessionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl py-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       <SeoHead
         title={`${t('sessions.mine.title')} | Match&Play`}
         description={t('sessions.mine.title')}
         noindex
       />
-      <h1 className="mb-4 px-4 font-display text-2xl font-bold sm:px-6 sm:text-3xl">
-        {t('sessions.mine.title')}
-      </h1>
-      <MySessionsTabs active={tab} counts={counts} onChange={changeTab} />
-      {renderContent()}
-      {data && data.items.totalPages > 1 && (
-        <div className="mt-4 px-4">
-          <Pagination
-            page={data.items.page}
-            totalPages={data.items.totalPages}
-            onPageChange={changePage}
-          />
+      {/* Outer card .mp-mockup — bg #FAF7F2 (warm cream), radius 12px,
+          overflow-hidden, shadow 0 6px 20px rgba(0,0,0,0.08). */}
+      <div className="overflow-hidden rounded-xl bg-[#FAF7F2] shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
+        {/* Título — padding 20px 24px 0 (sin bottom padding, el siguiente
+            bloque controla su separación). */}
+        <div className="px-6 pt-5">
+          <h1 className="m-0 font-display text-2xl font-bold leading-tight">
+            {t('sessions.mine.title')}
+          </h1>
         </div>
-      )}
+        <MySessionsTabs active={tab} counts={counts} onChange={changeTab} />
+        {renderContent()}
+        {data && data.items.totalPages > 1 && (
+          <div className="px-6 pb-4">
+            <Pagination
+              page={data.items.page}
+              totalPages={data.items.totalPages}
+              onPageChange={changePage}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

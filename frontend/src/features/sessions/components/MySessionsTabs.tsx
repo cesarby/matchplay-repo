@@ -104,7 +104,7 @@ export function MySessionsTabs({ active, counts, onChange }: MySessionsTabsProps
     <div
       role="tablist"
       aria-label={t('sessions.mine.tabsLabel')}
-      className="sticky top-0 z-10 flex gap-2 overflow-x-auto whitespace-nowrap border-b border-border bg-card px-4 py-3 sm:px-6"
+      className="flex gap-2 overflow-x-auto whitespace-nowrap border-b border-[#E8E2D5] bg-white px-6 py-3.5"
     >
       {TABS.map((tabDef) => {
         const isActive = active === tabDef.tab
