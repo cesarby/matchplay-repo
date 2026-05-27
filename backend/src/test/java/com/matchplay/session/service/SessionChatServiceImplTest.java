@@ -230,6 +230,20 @@ class SessionChatServiceImplTest {
                 .isInstanceOf(SessionChatClosedException.class);
     }
 
+    @Test
+    void send_outsiderOnClosedSession_throwsForbiddenNotClosed() {
+        // Outsider intenta postear en sesión cerrada → debe recibir Forbidden
+        // (no Closed), evitando state leakage.
+        session.setStatus(SessionStatus.COMPLETED);
+        when(currentUserProvider.requireCurrentUser()).thenReturn(outsider);
+        when(sessionRepository.findById(10L)).thenReturn(Optional.of(session));
+        when(participantRepository.findBySessionIdAndUserId(10L, outsider.getId()))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.send(10L, new CreateMessageRequest("hola")))
+                .isInstanceOf(SessionChatForbiddenException.class);
+    }
+
     // ---------- markRead ----------
 
     @Test
@@ -256,6 +270,20 @@ class SessionChatServiceImplTest {
         service.markRead(10L);
 
         verify(participantRepository, never()).save(any());
+    }
+
+    @Test
+    void markRead_setsLastChatReadAt_forWaitlistParticipant() {
+        when(currentUserProvider.requireCurrentUserId()).thenReturn(waitlistUser.getId());
+        when(sessionRepository.findById(10L)).thenReturn(Optional.of(session));
+        SessionParticipant p = participant(waitlistUser, ParticipantRole.WAITLIST);
+        when(participantRepository.findBySessionIdAndUserId(10L, waitlistUser.getId()))
+                .thenReturn(Optional.of(p));
+
+        service.markRead(10L);
+
+        assertThat(p.getLastChatReadAt()).isNotNull();
+        verify(participantRepository, times(1)).save(p);
     }
 
     @Test

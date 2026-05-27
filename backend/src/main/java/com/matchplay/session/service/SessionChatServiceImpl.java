@@ -55,19 +55,24 @@ public class SessionChatServiceImpl implements SessionChatService {
         GameSession session = requireSession(sessionId);
         User user = currentUserProvider.requireCurrentUser();
 
+        // Auth FIRST — outsiders no deben saber siquiera si la sesión está cerrada
+        boolean isCreator = session.getCreator().getId().equals(user.getId());
+        SessionParticipant participant = null;
+        if (!isCreator) {
+            participant = participantRepository
+                    .findBySessionIdAndUserId(sessionId, user.getId())
+                    .orElseThrow(SessionChatForbiddenException::new);
+        }
+
+        // Status check AFTER — solo participantes/creator descubren que está cerrada
         if (session.getStatus() == SessionStatus.COMPLETED
                 || session.getStatus() == SessionStatus.CANCELLED) {
             throw new SessionChatClosedException();
         }
 
-        boolean isCreator = session.getCreator().getId().equals(user.getId());
-        if (!isCreator) {
-            SessionParticipant participant = participantRepository
-                    .findBySessionIdAndUserId(sessionId, user.getId())
-                    .orElseThrow(SessionChatForbiddenException::new);
-            if (participant.getRole() != ParticipantRole.PLAYER) {
-                throw new SessionChatWriteForbiddenException();
-            }
+        // Role check al final — WAITLIST que ha pasado auth pero no puede escribir
+        if (!isCreator && participant.getRole() != ParticipantRole.PLAYER) {
+            throw new SessionChatWriteForbiddenException();
         }
 
         SessionMessage saved = messageRepository.save(

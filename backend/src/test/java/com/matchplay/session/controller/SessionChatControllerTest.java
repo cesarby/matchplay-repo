@@ -88,7 +88,7 @@ class SessionChatControllerTest {
     }
 
     @Test
-    void send_returns200_withCreatedMessage() throws Exception {
+    void send_returns201_withCreatedMessage() throws Exception {
         SessionMessageResponse m = new SessionMessageResponse(
                 42L, 2L, "alice", "hola", Instant.parse("2026-01-01T10:00:00Z"));
         when(chatService.send(eq(10L), any())).thenReturn(m);
@@ -96,9 +96,18 @@ class SessionChatControllerTest {
         mockMvc.perform(post("/api/v1/sessions/10/messages")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(new CreateMessageRequest("hola"))))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(42))
                 .andExpect(jsonPath("$.content").value("hola"));
+    }
+
+    @Test
+    void send_returns400_whenContentExceeds500() throws Exception {
+        String tooLong = "x".repeat(501);
+        mockMvc.perform(post("/api/v1/sessions/10/messages")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateMessageRequest(tooLong))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
