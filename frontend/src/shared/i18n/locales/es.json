@@ -145,6 +145,8 @@
     },
     "chat": {
       "title": "Chat",
+      "unreadBadge_one": "{{count}} mensaje sin leer",
+      "unreadBadge_other": "{{count}} mensajes sin leer",
       "headerTitle": "Chat — {{session}}",
       "inputPlaceholder": "Escribe un mensaje…",
       "waitlistNotice": "Entrarás al chat al apuntarte como jugador.",

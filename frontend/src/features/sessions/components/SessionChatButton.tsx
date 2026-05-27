@@ -33,7 +33,7 @@ export function SessionChatButton({ session }: SessionChatButtonProps) {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          'flex w-full items-center justify-between gap-3 rounded border border-dashed border-border bg-muted/20 p-4',
+          'flex w-full items-center justify-between gap-3 rounded border border-border bg-muted/20 p-4',
           'text-left transition hover:bg-muted/40',
         )}
       >
@@ -43,7 +43,7 @@ export function SessionChatButton({ session }: SessionChatButtonProps) {
         </span>
         {unread > 0 && (
           <span
-            aria-label={`${unread} ${t('sessions.chat.title').toLowerCase()}`}
+            aria-label={t('sessions.chat.unreadBadge', { count: unread })}
             className="inline-flex min-w-6 items-center justify-center rounded-full bg-red px-2 py-0.5 text-xs font-bold text-white"
           >
             {unread}
