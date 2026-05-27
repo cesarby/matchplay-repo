@@ -379,10 +379,26 @@ describe('<SessionDetailPage>', () => {
     expect(heading).toHaveTextContent('0')
   })
 
-  it('muestra el placeholder de chat', async () => {
+  it('muestra el botón de chat cuando chatUnreadCount no es null', async () => {
+    server.use(
+      http.get(`${API}/sessions/7`, () =>
+        HttpResponse.json(detail({ chatUnreadCount: 0, yourRole: 'PLAYER' })),
+      ),
+    )
+    mockUseAuth.mockReturnValue({
+      status: 'authenticated',
+      user: { userId: 2, username: 'bob' },
+      isAuthenticated: true,
+    })
+    renderDetail()
+    expect(await screen.findByRole('button', { name: /chat/i })).toBeInTheDocument()
+  })
+
+  it('oculta el botón de chat cuando chatUnreadCount es null (anónimo)', async () => {
     server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
     mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
     renderDetail()
-    expect(await screen.findByText(/próximamente/i)).toBeInTheDocument()
+    await screen.findByRole('heading', { level: 1, name: /catan night/i })
+    expect(screen.queryByRole('button', { name: /chat/i })).not.toBeInTheDocument()
   })
 })

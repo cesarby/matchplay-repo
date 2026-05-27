@@ -141,11 +141,10 @@
       "expansionsHeading_one": "Expansión ({{count}})",
       "expansionsHeading_other": "Expansiones ({{count}})",
       "expansionLoadError": "No se ha podido cargar la información de esta expansión.",
-      "expansionNoSummary": "Resumen pendiente de generar para esta expansión.",
-      "chatHeading": "Chat",
-      "chatComingSoon": "Próximamente: chat entre jugadores apuntados."
+      "expansionNoSummary": "Resumen pendiente de generar para esta expansión."
     },
     "chat": {
+      "title": "Chat",
       "headerTitle": "Chat — {{session}}",
       "inputPlaceholder": "Escribe un mensaje…",
       "waitlistNotice": "Entrarás al chat al apuntarte como jugador.",

@@ -8,7 +8,7 @@ import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
 import { CreatorActions } from '../components/CreatorActions'
 import { SessionActions } from '../components/SessionActions'
-import { SessionChatPlaceholder } from '../components/SessionChatPlaceholder'
+import { SessionChatButton } from '../components/SessionChatButton'
 import { SessionExpansionsBlock } from '../components/SessionExpansionsBlock'
 import { SessionPlayerRow } from '../components/SessionPlayerRow'
 import { useSessionDetailQuery } from '../hooks/useSessions'
@@ -256,8 +256,8 @@ export default function SessionDetailPage() {
             )}
           </section>
 
-          {/* Chat placeholder */}
-          <SessionChatPlaceholder />
+          {/* Chat */}
+          <SessionChatButton session={data} />
 
           {/* Acciones */}
           <div className="border-t border-border pt-6">
