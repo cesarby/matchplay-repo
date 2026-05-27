@@ -36,3 +36,6 @@ frontend/*.tsbuildinfo
 Thumbs.db
 # Added by code-review-graph
 .code-review-graph/
+
+# Superpowers brainstorm mockups (locales, no commitear)
+.superpowers/
