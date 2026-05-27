@@ -51,7 +51,8 @@ public class SessionMapper {
 
     public SessionDetailResponse toDetail(GameSession session,
                                           List<SessionParticipant> participants,
-                                          ParticipantRole yourRole) {
+                                          ParticipantRole yourRole,
+                                          Integer chatUnreadCount) {
         List<SessionPlayerResponse> players = participants.stream()
                 .map(this::toPlayer)
                 .toList();
@@ -92,6 +93,7 @@ public class SessionMapper {
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
                 session.getCreator() != null ? session.getCreator().getUsernameValue() : null,
+                chatUnreadCount,
                 players,
                 yourRole,
                 session.getCreatedAt(),

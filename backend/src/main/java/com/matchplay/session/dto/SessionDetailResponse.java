@@ -37,6 +37,7 @@ public record SessionDetailResponse(
         SessionStatus status,
         Long creatorId,
         String creatorUsername,
+        Integer chatUnreadCount,
         List<SessionPlayerResponse> players,
         ParticipantRole yourRole,
         Instant createdAt,

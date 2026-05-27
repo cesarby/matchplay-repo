@@ -35,6 +35,7 @@ import com.matchplay.session.entity.SessionStatus;
 import com.matchplay.session.mapper.SessionMapper;
 import com.matchplay.session.repository.GameSessionRepository;
 import com.matchplay.session.repository.GameSessionSpecifications;
+import com.matchplay.session.repository.SessionMessageRepository;
 import com.matchplay.session.repository.SessionParticipantRepository;
 import com.matchplay.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +83,7 @@ public class GameSessionServiceImpl implements GameSessionService {
 
     private final GameSessionRepository sessionRepository;
     private final SessionParticipantRepository participantRepository;
+    private final SessionMessageRepository messageRepository;
     private final GameService gameService;
     private final CityRepository cityRepository;
     private final AreaRepository areaRepository;
@@ -96,7 +98,7 @@ public class GameSessionServiceImpl implements GameSessionService {
         Map<SessionStatus, Set<SessionStatus>> m = new EnumMap<>(SessionStatus.class);
         m.put(SessionStatus.OPEN,        Set.of(SessionStatus.FULL, SessionStatus.CANCELLED));
         m.put(SessionStatus.FULL,        Set.of(SessionStatus.OPEN, SessionStatus.CANCELLED));
-        m.put(SessionStatus.IN_PROGRESS, Set.of(SessionStatus.CANCELLED));
+        m.put(SessionStatus.IN_PROGRESS, Set.of(SessionStatus.COMPLETED, SessionStatus.CANCELLED));
         m.put(SessionStatus.COMPLETED,   Set.of());
         m.put(SessionStatus.CANCELLED,   Set.of());
         return m;
@@ -194,7 +196,7 @@ public class GameSessionServiceImpl implements GameSessionService {
 
         log.info("Session created: id={}, creator={} (auto-PLAYER), scheduledAt={}, expansions={}",
                 saved.getId(), creator.getId(), saved.getScheduledAt(), expansions.size());
-        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER);
+        return mapper.toDetail(saved, List.of(creatorParticipant), ParticipantRole.PLAYER, null);
     }
 
     @Override
@@ -266,6 +268,12 @@ public class GameSessionServiceImpl implements GameSessionService {
         }
 
         session.setStatus(target);
+        if (target == SessionStatus.COMPLETED || target == SessionStatus.CANCELLED) {
+            int removed = messageRepository.deleteBySessionId(sessionId);
+            if (removed > 0) {
+                log.info("Deleted {} chat messages on status change to {}", removed, target);
+            }
+        }
         sessionRepository.save(session);
         log.info("Session status changed: id={} {} → {}", sessionId, current, target);
         return buildDetail(session);
@@ -369,14 +377,50 @@ public class GameSessionServiceImpl implements GameSessionService {
         List<SessionParticipant> participants = participantRepository
                 .findBySessionIdOrderByJoinedAtAsc(session.getId());
 
-        ParticipantRole yourRole = currentUserProvider.getCurrentUserId()
+        Optional<Long> currentUserIdOpt = currentUserProvider.getCurrentUserId();
+        ParticipantRole yourRole = currentUserIdOpt
                 .flatMap(uid -> participants.stream()
                         .filter(p -> p.getUser().getId().equals(uid))
                         .findFirst()
                         .map(SessionParticipant::getRole))
                 .orElse(null);
 
-        return mapper.toDetail(session, participants, yourRole);
+        Integer chatUnreadCount = computeChatUnreadCount(session, participants, currentUserIdOpt);
+
+        return mapper.toDetail(session, participants, yourRole, chatUnreadCount);
+    }
+
+    /**
+     * Devuelve null si el caller es anónimo o no participa (ni creador ni participante).
+     * Devuelve 0 si está al día o el chat está cerrado. Devuelve N>0 si hay mensajes
+     * posteriores a su {@code lastChatReadAt} que no son del propio caller.
+     */
+    private Integer computeChatUnreadCount(GameSession session,
+                                           List<SessionParticipant> participants,
+                                           Optional<Long> currentUserIdOpt) {
+        if (currentUserIdOpt.isEmpty()) return null;
+        Long uid = currentUserIdOpt.get();
+
+        boolean isCreator = session.getCreator().getId().equals(uid);
+        Optional<SessionParticipant> myParticipant = participants.stream()
+                .filter(p -> p.getUser().getId().equals(uid))
+                .findFirst();
+        if (!isCreator && myParticipant.isEmpty()) return null;
+
+        if (session.getStatus() == SessionStatus.COMPLETED
+                || session.getStatus() == SessionStatus.CANCELLED) {
+            return 0;
+        }
+
+        // El creador no tiene fila en session_participants → su "última lectura" no
+        // se persiste. Tratamos como "siempre al día" — 0. Pragmático para MVP.
+        Instant since = myParticipant.map(SessionParticipant::getLastChatReadAt).orElse(null);
+        if (since == null) {
+            // Nunca lo abrió: usar epoch para contar TODOS los mensajes ajenos.
+            since = Instant.EPOCH;
+        }
+        long count = messageRepository.countUnread(session.getId(), uid, since);
+        return (int) count;
     }
 
     private GameSession requireSession(Long sessionId) {
