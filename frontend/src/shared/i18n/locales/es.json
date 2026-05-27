@@ -232,6 +232,21 @@
       "guestsNegative": "No puede ser un número negativo",
       "guestsExceedMax": "Tiene que quedar al menos 1 plaza libre para otro jugador",
       "creatorCannotLeave": "No puedes salirte de tu propia partida. Si no la vas a jugar, cancélala."
+    },
+    "mine": {
+      "history": {
+        "columns": {
+          "date": "Fecha",
+          "name": "Nombre",
+          "game": "Juego",
+          "location": "Ubicación",
+          "status": "Estado"
+        },
+        "expansions": "Expansiones:",
+        "duplicate": "Duplicar",
+        "statusCompleted": "Completada",
+        "statusCancelled": "Cancelada"
+      }
     }
   },
   "landing": {

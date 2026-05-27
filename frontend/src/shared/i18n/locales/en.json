@@ -232,6 +232,21 @@
       "guestsNegative": "Cannot be a negative number",
       "guestsExceedMax": "At least 1 spot must stay free for another player",
       "creatorCannotLeave": "You can't leave your own session. If you're not going to play, cancel it."
+    },
+    "mine": {
+      "history": {
+        "columns": {
+          "date": "Date",
+          "name": "Name",
+          "game": "Game",
+          "location": "Location",
+          "status": "Status"
+        },
+        "expansions": "Expansions:",
+        "duplicate": "Duplicate",
+        "statusCompleted": "Completed",
+        "statusCancelled": "Cancelled"
+      }
     }
   },
   "landing": {
