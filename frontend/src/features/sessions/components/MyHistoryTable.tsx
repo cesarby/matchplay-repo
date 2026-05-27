@@ -86,7 +86,7 @@ export function MyHistoryTable({ rows }: MyHistoryTableProps) {
                 onClick={() => handleDuplicate(s.id)}
                 className="inline-flex items-center justify-center gap-1 rounded-md bg-red px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:opacity-90"
               >
-                ↻ {t('sessions.mine.history.duplicate')}
+                <span aria-hidden="true">↻</span> {t('sessions.mine.history.duplicate')}
               </button>
             </div>
 
