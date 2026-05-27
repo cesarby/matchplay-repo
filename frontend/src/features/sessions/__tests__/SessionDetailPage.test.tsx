@@ -41,6 +41,7 @@ function detail(overrides: Partial<SessionDetail> = {}): SessionDetail {
     status: 'OPEN',
     creatorId: 1,
     creatorUsername: 'alice',
+    chatUnreadCount: null,
     players: [
       {
         userId: 1,

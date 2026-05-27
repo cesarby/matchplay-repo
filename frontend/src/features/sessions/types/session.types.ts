@@ -35,6 +35,15 @@ export interface SessionSummary {
   creatorUsername: string | null
 }
 
+/** Mensaje del chat de coordinación de una partida. */
+export interface SessionMessage {
+  id: number
+  userId: number
+  username: string
+  content: string
+  createdAt: string // ISO Instant
+}
+
 /** Participante (jugador o waitlist) tal como lo serializa el backend. */
 export interface SessionPlayer {
   userId: number
@@ -58,6 +67,12 @@ export interface SessionDetail extends Omit<
   creatorGuests: number
   creatorId: number | null
   creatorUsername: string | null
+  /**
+   * Mensajes no leídos en el chat de esta partida.
+   * null si el caller es anónimo o no participa (chat invisible).
+   * 0 si está al día o el chat está cerrado.
+   */
+  chatUnreadCount: number | null
   players: SessionPlayer[]
   yourRole: ParticipantRole | null // null si anónimo o no apuntado
   createdAt: string
