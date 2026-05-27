@@ -993,6 +993,29 @@ class GameSessionServiceImplTest {
     }
 
     @Test
+    void getDetail_chatUnreadCount_isZeroForParticipantOnCompletedSession() {
+        GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
+        s.setStatus(SessionStatus.COMPLETED);
+        List<SessionParticipant> participants = participantsOf(s);
+        SessionParticipant me = participants.stream()
+                .filter(p -> !p.getUser().getId().equals(s.getCreator().getId()))
+                .findFirst().orElseThrow();
+
+        given(currentUserProvider.getCurrentUserId()).willReturn(Optional.of(me.getUser().getId()));
+        given(sessionRepository.findById(s.getId())).willReturn(Optional.of(s));
+        given(participantRepository.findBySessionIdOrderByJoinedAtAsc(s.getId()))
+                .willReturn(participants);
+        given(mapper.toDetail(any(), any(), any(), any())).willAnswer(inv ->
+                detailWithUnread(s.getId(), SessionStatus.COMPLETED, inv.getArgument(3)));
+
+        SessionDetailResponse out = service.findById(s.getId());
+
+        assertThat(out.chatUnreadCount()).isZero();
+        // Critical: la rama COMPLETED corta ANTES de llamar a countUnread
+        verify(messageRepository, never()).countUnread(any(), any(), any());
+    }
+
+    @Test
     void getDetail_chatUnreadCount_countsMessagesAfterLastRead_excludingOwn() {
         GameSession s = givenOpenSessionWithCreatorAnd(1, 4, 0);
         List<SessionParticipant> participants = participantsOf(s);
