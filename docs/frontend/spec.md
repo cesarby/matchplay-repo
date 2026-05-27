@@ -13,7 +13,7 @@ Referencia global: [../spec.md](../spec.md)
 |--------|---------|--------|
 | Landing pública (`/`) | [modules/landing-spec.md](modules/landing-spec.md) | Definido + implementado |
 | Auth (cliente) | [modules/auth-spec.md](modules/auth-spec.md) | Definido + implementado |
-| Partidas (sessions) | [modules/sessions-spec.md](modules/sessions-spec.md) | Definido + implementado (Fase 1 + 1.1) |
+| Partidas (sessions) | [modules/sessions-spec.md](modules/sessions-spec.md) | Definido + implementado (Fase 1 + 1.1 + session-detail-v2) |
 | Búsqueda de juegos | [modules/games-spec.md](modules/games-spec.md) | Definido + implementado (typeahead BGG) |
 | Perfil de usuario | [modules/users-spec.md](modules/users-spec.md) | Pendiente |
 | Panel Admin | [modules/admin-spec.md](modules/admin-spec.md) | Pendiente |

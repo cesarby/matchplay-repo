@@ -171,6 +171,7 @@ public enum ParticipantRole { PLAYER, WAITLIST }
 | `POST` | `/api/v1/sessions` | Crear | autenticado |
 | `PATCH` | `/api/v1/sessions/{id}` | Actualizar campos | solo creador |
 | `PATCH` | `/api/v1/sessions/{id}/status` | Cambiar estado | solo creador |
+| `POST` | `/api/v1/sessions/{id}/close` | Cerrar mesa (ajusta maxPlayers al actual) | solo creador |
 | `POST` | `/api/v1/sessions/{id}/join` | Unirse (PLAYER o WAITLIST) | autenticado, no creador |
 | `DELETE` | `/api/v1/sessions/{id}/join` | Salirse | autenticado, participante |
 
@@ -238,6 +239,7 @@ Respuesta `200`:
   "baseGameId": 13,
   "baseGameName": "Catan",
   "baseGameThumbnailUrl": "https://cf.geekdo-images.com/...",
+  "baseGameSummary": "Catan es un juego de colocación…",
   "cityCode": "MAD01",
   "cityName": "Madrid",
   "areaCode": null,
@@ -246,6 +248,7 @@ Respuesta `200`:
   "maxPlayers": 4,
   "registeredPlayers": 3,
   "waitlistCount": 2,
+  "creatorGuests": 0,
   "status": "OPEN",
   "creatorId": 1,
   "creatorUsername": "alice",
@@ -258,6 +261,8 @@ Respuesta `200`:
 
 - `yourRole`: `PLAYER` | `WAITLIST` | `null`. Null si la petición es anónima o el usuario autenticado no está apuntado.
 - `players` incluye **PLAYER y WAITLIST** ordenados por `joinedAt asc`.
+- `baseGameSummary`: resumen generado por LLM (Claude Haiku) del juego base, en el idioma del `Accept-Language` de la petición. `null` si no hay resumen cacheado o el juego no tiene descripción en BGG.
+- `creatorGuests`: número de acompañantes del creador (no usuarios registrados). Incluido en `registeredPlayers`.
 
 ### `SessionPlayerResponse`
 
@@ -355,6 +360,24 @@ Reglas extra:
 
 Respuesta `200` con `SessionDetailResponse` actualizado.
 
+### `POST /api/v1/sessions/{id}/close`
+
+**Auth:** JWT requerido. **Solo el creador.** Solo si status `OPEN`.
+
+Sin body. Efecto:
+
+- `maxPlayers := registeredPlayers` (ajusta el aforo al número actual de apuntados).
+- `status := FULL`.
+- La waitlist se mantiene intacta.
+
+Requisito: al menos 1 apuntado que no sea el creador ni sus acompañantes, es decir
+`registeredPlayers - 1 - creatorGuests >= 1`. Si no, `400 error.session.empty.cannot.close`.
+
+- Si `status != OPEN` → `409 SessionStatusTransitionException`.
+- Si no es el creador → `403 UnauthorizedActionException`.
+
+Respuesta `200` con `SessionDetailResponse`.
+
 ### `PATCH /api/v1/sessions/{id}/status`
 
 **Auth:** JWT requerido. **Solo el creador.**
@@ -428,6 +451,7 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 | `error.session.not.participant` | 403 | `leave` de usuario no apuntado |
 | `error.session.creator.cannot.leave` | 403 | `leave` invocado por el creador. Para irse debe cancelar la partida. |
 | `error.session.guests.exceed.max` | 400 | `creatorGuests` declarados superan la capacidad: `1 + creatorGuests > maxPlayers`. |
+| `error.session.empty.cannot.close` | 400 | `close` cuando no hay terceros apuntados (`registeredPlayers - 1 - creatorGuests < 1`). |
 | `error.session.status.invalid.transition` | 409 | Transición no permitida (incluye `join` en estado terminal) |
 
 ---
@@ -438,7 +462,7 @@ Todas las claves residen en `messages_es.properties` y `messages_en.properties`.
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions").permitAll()
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions/*").permitAll()
 .requestMatchers(HttpMethod.GET, "/api/v1/sessions/*/players").permitAll()
-// El resto cae en .anyRequest().authenticated()
+// POST /sessions/{id}/close, PATCH /sessions/{id}, etc. → .anyRequest().authenticated()
 ```
 
 `creator` se resuelve siempre del `CurrentUserProvider` (no se manda en el body de `POST`).

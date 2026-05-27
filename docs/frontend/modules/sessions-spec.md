@@ -147,10 +147,14 @@ features/sessions/
 ├── components/
 │   ├── SessionFilters.tsx          # filtros del listado
 │   ├── SessionActions.tsx          # botones del detail según contexto
-│   ├── SessionPlayerRow.tsx        # fila de jugador (PLAYER o WAITLIST con position)
+│   ├── SessionPlayerRow.tsx        # fila de jugador: variant player o guestOf
+│   ├── CreatorActions.tsx          # acciones del creador (Editar + Cerrar mesa)
+│   ├── EditSessionModal.tsx        # modal PATCH /sessions/{id}
+│   ├── CloseSessionModal.tsx       # modal POST /sessions/{id}/close
+│   ├── SessionExpansionsBlock.tsx  # bloque "Expansiones (N)" con accordion lazy
 │   └── CreateSessionForm.tsx       # form RHF+zod
 ├── api/
-│   └── sessionsApi.ts              # 8 endpoints
+│   └── sessionsApi.ts              # 9 endpoints (añade close)
 ├── hooks/
 │   └── useSessions.ts              # queries + mutations + sessionKeys
 ├── lib/
@@ -200,11 +204,20 @@ export interface SessionPlayer {
   joinedAt: string
 }
 
+export interface ExpansionSummary {
+  bggId: number
+  name: string
+  thumbnailUrl: string | null
+}
+
 export interface SessionDetail extends Omit<SessionSummary, 'creatorId' | 'creatorUsername'> {
   description: string | null
+  baseGameSummary: string | null    // resumen LLM del juego base, en el idioma activo
   creatorId: number | null
   creatorUsername: string | null
+  creatorGuests: number             // acompañantes del creador (no usuarios registrados)
   players: SessionPlayer[]
+  expansions: ExpansionSummary[]
   yourRole: ParticipantRole | null
   createdAt: string
   updatedAt: string
@@ -256,6 +269,7 @@ sessionsApi.listPlayers(id)      // GET    /sessions/{id}/players
 sessionsApi.create(body)         // POST   /sessions
 sessionsApi.update(id, body)     // PATCH  /sessions/{id}
 sessionsApi.changeStatus(id,b)   // PATCH  /sessions/{id}/status
+sessionsApi.close(id)            // POST   /sessions/{id}/close
 sessionsApi.join(id)             // POST   /sessions/{id}/join
 sessionsApi.leave(id)            // DELETE /sessions/{id}/join
 ```
@@ -276,17 +290,18 @@ sessionKeys = {
   lists: () => [...all, 'list'],
   list: (params) => [...lists(), params],
   details: () => [...all, 'detail'],
-  detail: (id) => [...details(), id],
+  detail: (id, lang) => [...details(), id, lang],  // lang = i18next.language
   players: (id) => [...detail(id), 'players'],
 }
 
 useSessionsQuery(params)              // staleTime 60s
-useSessionDetailQuery(id)             // enabled si id es number, staleTime 30s
+useSessionDetailQuery(id)             // enabled si id es number, staleTime 30s; key incluye i18next.language → refetch al cambiar idioma
 useSessionPlayersQuery(id)            // staleTime 15s (lighter polling)
 
 useCreateSessionMutation()
 useUpdateSessionMutation(id)
 useChangeSessionStatusMutation(id)
+useCloseSessionMutation(id)           // POST /sessions/{id}/close
 useJoinSessionMutation(id)
 useLeaveSessionMutation(id)
 ```
@@ -365,15 +380,24 @@ Las mutations comparten un helper `syncCacheFromDetail(qc, detail)` que:
 | `OPEN` | apuntado nada | `Unirme` (entra como PLAYER) |
 | `OPEN` | `PLAYER` | `Salir` |
 | `OPEN` | `WAITLIST` | `Salir` (de la cola) |
-| `OPEN` | creador | `Editar` · `Cerrar inscripciones` · `Cancelar partida` |
+| `OPEN` | creador | `<CreatorActions>`: Editar (siempre) + Cerrar mesa (solo si OPEN) |
 | `FULL` | anónimo | `Unirme` → login |
 | `FULL` | apuntado nada | `Unirme` (entra como WAITLIST) |
 | `FULL` | `PLAYER`/`WAITLIST` | `Salir` |
-| `FULL` | creador | `Editar` · `Reabrir inscripciones` · `Cancelar partida` |
+| `FULL` | creador | `<CreatorActions>`: Editar (siempre) |
 | `CANCELLED`/`COMPLETED` | * | — (sin acciones) |
 
 `isOwner = currentUser.userId === session.creatorId`. Importante: el campo es `userId`,
 no `id` (el `CurrentUser` del módulo auth usa `userId`).
+
+`<CreatorActions>` se renderiza si `isOwner && status ∈ {OPEN, FULL}`. Vive en
+`features/sessions/components/CreatorActions.tsx`. Contiene:
+
+- **`<EditSessionModal>`** — abre al pulsar "Editar". Fecha (reutiliza `<SessionDateTimePicker>`)
+  + maxPlayers (mín = `registeredPlayers`). Si hay waitlist muestra nota informativa.
+  Submit → `PATCH /sessions/{id}` con `scheduledAt` + `maxPlayers`.
+- **`<CloseSessionModal>`** — abre al pulsar "Cerrar mesa" (solo visible si `status === OPEN`).
+  Confirmación cuyo copy varía según `waitlistCount > 0`. Submit → `POST /sessions/{id}/close`.
 
 ### Renderizado de detail
 
@@ -381,6 +405,34 @@ no `id` (el `CurrentUser` del módulo auth usa `userId`).
 - Otros errores → banner genérico.
 - Players y waitlist se separan filtrando por `role` y ordenando waitlist por `position asc`.
 - SeoHead con `canonical=/sessions/:id`.
+
+**Bloques del área principal** (en orden, de arriba abajo):
+
+1. **Meta** — fecha, ubicación, plazas. El contador "Apuntados (N/M)" usa
+   `data.registeredPlayers / data.maxPlayers`.
+2. **Sobre {gameName}** — bloque con borde izquierdo amarillo y fondo `bg-yellow-soft/30`.
+   Solo se renderiza si `baseGameSummary?.trim() && baseGameName`. Título i18n
+   `sessions.detail.aboutGameHeading` ("Sobre {{game}}" / "About {{game}}").
+3. **`<SessionExpansionsBlock>`** — renderiza "Expansiones (N)" / "Expansión (1)" (plural i18n)
+   debajo del bloque "Sobre el juego". Cards horizontales clicables; solo una expandida a
+   la vez (mutex). Click → dispara `useGameDetailQuery(bggId, enabled)` lazy → muestra
+   summary del juego, o skeleton/error. `aria-expanded` + `aria-controls` vinculados.
+4. **Descripción** — texto libre de la partida.
+
+**Sidebar — filas de acompañantes**:
+
+La lista de apuntados muestra, bajo la fila del creador, una fila por cada
+`creatorGuests`. `<SessionPlayerRow>` acepta una API discriminada:
+
+```ts
+// variant jugador
+{ player: SessionPlayer; showPosition?: boolean; guestOf?: never }
+// variant acompañante (no requiere SessionPlayer)
+{ guestOf: string; player?: never; showPosition?: never }
+```
+
+La fila `guestOf` muestra "+1 acompañante de @{creator}" en estilo muted
+(`border-dashed bg-muted/30 italic`). No necesita pasar un player dummy.
 
 ---
 
@@ -545,12 +597,22 @@ sessions.card.spots / waitlist / youArePlayer / youAreWaitlist / byCreator
 sessions.list.{title, empty, loadMore}
 sessions.filters.{province, city, area, game, from, to, status, apply, clear}
 sessions.detail.{playersHeading, waitlistHeading, descriptionHeading, noDescription,
-                 join, leave, cancelSession, closeRegistrations, reopenRegistrations, edit}
+                 join, leave, cancelSession, closeRegistrations, reopenRegistrations, edit,
+                 closeButton, aboutGameHeading, guestOf,
+                 expansionsHeading_one, expansionsHeading_other,
+                 expansionLoadError, expansionNoSummary}
+sessions.edit.{title, scheduledAt, maxPlayers, waitlistNote, submit}
+sessions.close.{title, confirmNoWaitlist, confirmWithWaitlist, submit}
 sessions.create.{title, submit, submitting, fields.*}
 sessions.errors.{required, tooLong, notFound, full, alreadyJoined, joinOwn,
                  notParticipant, notOwner, scheduledInPast, maxBelowCurrent,
-                 maxAboveGame, maxBelowGameMin, invalidTransition}
+                 maxAboveGame, maxBelowGameMin, invalidTransition, emptyCannotClose}
 ```
+
+Key highlights:
+- `sessions.detail.guestOf` — ES "+1 acompañante de @{{username}}" / EN "+1 guest of @{{username}}".
+- `sessions.detail.aboutGameHeading` — ES "Sobre {{game}}" / EN "About {{game}}".
+- `sessions.detail.expansionsHeading_one/_other` — plural por count (ES "Expansión (1)" / "Expansiones (2)").
 
 `sessions.card.*` se usa también desde la landing (preview hero). No duplicar.
 
@@ -585,7 +647,6 @@ Total frontend del módulo: **33 tests**. El total global frontend tras Fase 1 =
 
 ## Pendientes / siguiente fase
 
-- **EditSessionPage** (`/sessions/:id/edit`) — botón "Editar" del detail ya enlaza pero la página no existe en v1. Cuando se haga, debe reusar `<GameWithExpansionsPicker>` y `<SessionDateTimePicker>` igual que el create.
 - **MySessionsPage** + **Profile page** — referenciadas como "Próximamente" en el `<MobileMenu>`. Dependen de `GET /sessions/mine?scope=...` (backend Fase 2) y endpoints de perfil.
 - **Sala de chat por sesión** — depende de endpoint backend Fase 2.
 - **Confirmación al cancelar** — modal "¿Seguro?" antes del `changeStatus({ CANCELLED })`. Hoy es un click directo.

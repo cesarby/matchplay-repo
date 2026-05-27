@@ -14,11 +14,9 @@ Este módulo expone al frontend la búsqueda de juegos (base y expansiones) usad
 
 ---
 
-## Endpoint
+## Endpoints
 
-```
-GET /api/v1/games
-```
+### `GET /api/v1/games` — búsqueda
 
 **Auth:** público (no requiere JWT).
 **Content-Type:** `application/json`.
@@ -89,10 +87,43 @@ GET /api/v1/games
 | 400 | `error.games.baseGameId.required` | `type=expansion` sin `baseGameId`. |
 | 400 | `error.games.size.max` | `size > 50`. |
 | 404 | `error.games.base.not.found` | `type=expansion` y `baseGameId` no existe en BGG. |
+| 404 | `error.games.not.found` | `GET /games/{bggId}` y el juego no está en el cache local. |
 | 502 | `error.games.bgg.unavailable` | BGG no responde o devuelve error. |
 | 500 | `error.internal` | Error inesperado. |
 
 Mensajes en `messages_es.properties` / `messages_en.properties`.
+
+---
+
+### `GET /api/v1/games/{bggId}` — detalle por id
+
+**Auth:** público.
+
+Lee el juego del cache local **sin consultar BGG**. Si el juego no está cacheado devuelve 404.
+
+Respuesta `200 OK` — `GameDetailResponse`:
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `bggId` | `Long` | |
+| `name` | `String` | |
+| `yearPublished` | `Integer` (nullable) | |
+| `minPlayers` | `Integer` (nullable) | |
+| `maxPlayers` | `Integer` (nullable) | |
+| `playingTime` | `Integer` (nullable) | Minutos. |
+| `thumbnailUrl` | `String` (nullable) | |
+| `imageUrl` | `String` (nullable) | |
+| `isExpansion` | `boolean` | |
+| `baseGameBggId` | `Long` (nullable) | Solo si `isExpansion=true`. |
+| `summary` | `String` (nullable) | Resumen LLM en el idioma del `Accept-Language`. |
+
+Errores:
+
+| HTTP | `code` | Cuándo |
+|------|--------|--------|
+| 404 | `error.games.not.found` | `bggId` no está en el cache local. |
+
+Tag Swagger: `"Games"` (mismo que `GET /api/v1/games` para agruparlos).
 
 ---
 
@@ -150,11 +181,13 @@ public interface GameService {
 1. `gameRepository.findById(bggId)` — hit local → devuelve.
 2. Miss → `bggClient.getThing(bggId)`.
 3. Si BGG no lo conoce → `BaseGameNotFoundException` (`404 error.games.base.not.found`).
-4. Si lo conoce → `BggGameMapper.toEntity(item)` y `gameRepository.save`.
+4. Si lo conoce → `BggGameMapper.toEntity(item)`. `toEntity` mapea `description` con `HtmlUtils.htmlUnescape` (decodifica `&#10;`, `&amp;`, etc.).
+5. Si `description` no es vacía → `aiSummaryClient.summarize(description)` → guarda `summaryEs` y `summaryEn` en la entidad. Si la llamada al LLM falla, los campos quedan `null` y el juego se cachea igual; el summary se completará implícitamente en el siguiente `findOrFetch`.
+6. `gameRepository.save`.
 
-### Schema relacionado (V7)
+### Schema relacionado
 
-`V7__game_metadata_and_session_expansions.sql` añade:
+**V7** `V7__game_metadata_and_session_expansions.sql`:
 
 ```sql
 ALTER TABLE games
@@ -166,11 +199,33 @@ ALTER TABLE games
 - `base_game_bgg_id` se rellena del primer link `boardgameexpansion` con `inbound=true` (solo en expansiones; NULL en bases).
 - Sin FK sobre `base_game_bgg_id` para evitar problemas de orden al cachear lazy.
 
+**V10** `V10__games_description_and_summary.sql`:
+
+```sql
+ALTER TABLE games
+  ADD COLUMN description TEXT NULL,
+  ADD COLUMN summary_es  VARCHAR(700) NULL,
+  ADD COLUMN summary_en  VARCHAR(700) NULL;
+```
+
+- `description`: texto plano decodificado de BGG (`HtmlUtils.htmlUnescape`).
+- `summary_es` / `summary_en`: resúmenes generados por LLM (Claude Haiku). `VARCHAR(700)` — el truncado defensivo del cliente AI asegura que el texto cabe (~650 chars en palabra).
+
+### Entidad `Game` — campos relevantes
+
+Además de `bggId`, `name`, `yearPublished`, `minPlayers`/`maxPlayers`, `playingTime`, `thumbnailUrl`, `imageUrl`, `isExpansion`, `baseGameBggId`:
+
+- `description: String` (nullable) — descripción decodificada de BGG.
+- `summaryEs: String` (nullable) — resumen LLM en español.
+- `summaryEn: String` (nullable) — resumen LLM en inglés.
+- `getSummary(String lang): String` — helper que devuelve `summaryEn` si `lang.equals("en")`, en caso contrario `summaryEs`.
+
 ### Consumidores actuales
 
 - `GameSessionServiceImpl.create()` — resolución del juego base.
 - `GameSessionServiceImpl` (create/update) — resolución de cada expansión + validación
   `isExpansion && baseGameBggId == base.bggId`.
+- `SessionMapper.toDetail` — llama a `game.getSummary(lang)` con el idioma del `LocaleContextHolder` para rellenar `SessionDetailResponse.baseGameSummary`.
 
 ### La relación base ↔ expansión vive en `games.base_game_bgg_id`
 
@@ -191,12 +246,40 @@ SELECT * FROM games WHERE base_game_bgg_id = ?;
 
 ---
 
+## Módulo AI (`com.matchplay.ai`)
+
+Encapsula la generación de resúmenes LLM. Seleccionado en runtime según la presencia de `ANTHROPIC_API_KEY`.
+
+```
+com.matchplay.ai/
+├── AiSummaryClient.java            ← interface: GameSummary summarize(String text)
+├── GameSummary.java                ← record(String es, String en) + static empty()
+├── NoopSummaryClient.java          ← devuelve empty(); usado cuando no hay API key
+├── ClaudeHaikuSummaryClient.java   ← HTTP a api.anthropic.com, modelo claude-haiku-4-5-20251001
+└── AiConfig.java                   ← @Configuration; selecciona bean según anthropic.api-key
+```
+
+`ClaudeHaikuSummaryClient` hace dos llamadas (una por idioma), `max_tokens=200`, `temperature=0.4`. Trunca la descripción de entrada a ~650 chars cortando en palabra. Cualquier excepción devuelve el campo como `null` (tolerante a fallos). Timeouts configurables vía properties.
+
+**Properties** (`application.properties`):
+
+```properties
+anthropic.api-key=${ANTHROPIC_API_KEY:}
+anthropic.connect-timeout-ms=${ANTHROPIC_CONNECT_TIMEOUT_MS:3000}
+anthropic.read-timeout-ms=${ANTHROPIC_READ_TIMEOUT_MS:10000}
+```
+
+`backend/.env.example` documenta `ANTHROPIC_API_KEY` como opcional; vacío activa el `NoopSummaryClient`.
+
+---
+
 ## Estructura de paquetes
 
 ```
 com.matchplay.game/
 ├── controller/
-│   └── GameSearchController.java
+│   ├── GameSearchController.java   ← GET /api/v1/games (búsqueda BGG)
+│   └── GameDetailController.java   ← GET /api/v1/games/{bggId} (cache local)
 ├── service/
 │   ├── GameSearchService.java      ← busca en BGG (no persiste)
 │   ├── GameSearchServiceImpl.java
@@ -207,11 +290,12 @@ com.matchplay.game/
 │   └── BggClientImpl.java
 ├── dto/
 │   ├── GameSearchResponse.java
+│   ├── GameDetailResponse.java
 │   └── GameSearchType.java
 ├── entity/
-│   └── Game.java                   ← +isExpansion, +baseGameBggId
+│   └── Game.java                   ← +isExpansion, +baseGameBggId, +description, +summaryEs, +summaryEn
 ├── repository/
 │   └── GameRepository.java
 └── mapper/
-    └── BggGameMapper.java          ← toResponse + toEntity
+    └── BggGameMapper.java          ← toResponse + toEntity (con HtmlUtils.htmlUnescape en description)
 ```

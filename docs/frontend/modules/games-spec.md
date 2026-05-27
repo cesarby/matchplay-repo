@@ -46,13 +46,14 @@ Casos futuros previstos:
 ```
 features/games/
 ├── api/
-│   └── gamesApi.ts         # search(params): Promise<PageResponse<GameSearchResult>>
+│   └── gamesApi.ts         # search + getById
 ├── hooks/
-│   └── useGames.ts         # useGamesSearchQuery(params)
+│   └── useGames.ts         # useGamesSearchQuery + useGameDetailQuery
 ├── components/
-│   └── GameTypeahead.tsx   # combobox controlled
+│   ├── GameTypeahead.tsx   # combobox controlled
+│   └── GameWithExpansionsPicker.tsx
 ├── types/
-│   └── game.types.ts       # GameSearchResult, GameSearchType
+│   └── game.types.ts       # GameSearchResult, GameSearchType, GameDetail
 └── (pages/ — futuro)
 ```
 
@@ -77,9 +78,23 @@ export interface GameSearchResult {
 }
 
 export type GameSearchType = 'BASE' | 'EXPANSION'
+
+export interface GameDetail {
+  bggId: number
+  name: string
+  yearPublished: number | null
+  minPlayers: number | null
+  maxPlayers: number | null
+  playingTime: number | null
+  thumbnailUrl: string | null
+  imageUrl: string | null
+  isExpansion: boolean
+  baseGameBggId: number | null
+  summary: string | null   // resumen LLM en el idioma del Accept-Language
+}
 ```
 
-Alineado 1:1 con `com.matchplay.game.dto.GameSearchResponse` del backend.
+`GameSearchResult` alineado 1:1 con `GameSearchResponse`. `GameDetail` alineado con `GameDetailResponse` (endpoint `GET /api/v1/games/{bggId}`).
 
 ---
 
@@ -96,9 +111,10 @@ export interface GameSearchParams {
 }
 
 gamesApi.search(params): Promise<PageResponse<GameSearchResult>>
+gamesApi.getById(bggId: number): Promise<GameDetail>
 ```
 
-Construye el query string omitiendo valores `undefined | null | ''`. Path **relativo**
+Construye el query string omitiendo valores `undefined | null | ''`. Paths **relativos**
 a `baseURL` (`/games`, no `/api/v1/games`).
 
 ---
@@ -107,12 +123,22 @@ a `baseURL` (`/games`, no `/api/v1/games`).
 
 ```ts
 useGamesSearchQuery(params: GameSearchParams)
+useGameDetailQuery(bggId: number | undefined, enabled: boolean)
 ```
 
-- `queryKey: ['games', 'search', params]` — el `params` participa, así que cambios de
-  filtros generan caches separadas.
+`useGamesSearchQuery`:
+
+- `queryKey: ['games', 'search', params]`.
 - `enabled` solo si `typeof params.q === 'string' && params.q.trim().length >= 2`.
 - `staleTime: 5 min`, `gcTime: 30 min`.
+
+`useGameDetailQuery`:
+
+- `queryKey: ['games', 'detail', bggId, i18next.language]` — incluye idioma activo para
+  refetchear al cambiar idioma (el backend sirve el summary en el idioma del `Accept-Language`).
+- `enabled` controlado externamente — se usa para lazy load (e.g., solo cuando el usuario
+  expande la card de una expansión en `<SessionExpansionsBlock>`).
+- `staleTime: 5 min`.
 
 ---
 
