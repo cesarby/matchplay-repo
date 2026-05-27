@@ -31,7 +31,7 @@ CREATE TABLE session_messages (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     session_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
-    content VARCHAR(1000) NOT NULL,
+    content VARCHAR(500) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_session_msg_session FOREIGN KEY (session_id)
         REFERENCES game_sessions(id) ON DELETE CASCADE,
@@ -46,7 +46,7 @@ ALTER TABLE session_participants
 
 Razones de diseño:
 
-- `content VARCHAR(1000)`: suficiente para un párrafo de coordinación. Cualquier mensaje más largo es señal de que el chat se está usando mal y conviene cortarlo en varios envíos.
+- `content VARCHAR(500)`: suficiente para coordinación práctica (2-3 frases largas). Cualquier mensaje más largo es señal de que el chat se está usando mal y conviene cortarlo en varios envíos.
 - `ON DELETE CASCADE` en `session_id`: cuando se borre una `game_sessions` (hoy nunca, pero por consistencia futura), los mensajes desaparecen con ella.
 - `INDEX (session_id, created_at)`: el query dominante es "dame los N mensajes más recientes de esta sesión" o "dame los posteriores a X" — este índice cubre ambos.
 - `last_chat_read_at` vive en `session_participants` (no en una tabla aparte) porque ya está keyed por `(session_id, user_id)` y la cardinalidad es la misma. Una tabla adicional sería duplicación.
@@ -56,7 +56,7 @@ Razones de diseño:
 | Método | Path | Autorización | Descripción |
 |---|---|---|---|
 | `GET` | `/api/v1/sessions/{id}/messages` | Participante (PLAYER, WAITLIST) o creador | Devuelve mensajes ordenados ASC por `created_at`. Query param opcional `since=<ISO>` para polling delta (devuelve solo mensajes con `created_at > since`). |
-| `POST` | `/api/v1/sessions/{id}/messages` | PLAYER o creador (NO waitlist) | Crea mensaje. Body `{content: string}`. Devuelve el mensaje creado. |
+| `POST` | `/api/v1/sessions/{id}/messages` | PLAYER o creador (NO waitlist) | Crea mensaje. Body `{content: string}` (max 500 chars). Devuelve el mensaje creado. |
 | `POST` | `/api/v1/sessions/{id}/messages/mark-read` | Cualquier participante | Actualiza `last_chat_read_at = NOW()` para el caller. Idempotente, sin body. Devuelve 204. |
 
 DTOs:
@@ -71,7 +71,7 @@ public record SessionMessageResponse(
 ) {}
 
 public record CreateMessageRequest(
-    @NotBlank @Size(max = 1000) String content
+    @NotBlank @Size(max = 500) String content
 ) {}
 ```
 
@@ -109,13 +109,13 @@ Nuevo `SessionChatDrawer.tsx`:
   - Header: título "Chat — {titulo de partida}" + botón cerrar.
   - Body scrollable: lista de mensajes. Cada mensaje renderiza username + timestamp relativo + content. Mensajes propios alineados a la derecha con color de acento; ajenos a la izquierda. Auto-scroll al fondo al abrir y al recibir nuevos.
   - Footer:
-    - Si soy PLAYER o creador: `<textarea>` autoresize (1-5 líneas), placeholder "Escribe un mensaje…", contador `X/1000`, botón Enviar. Enter envía, Shift+Enter newline. Botón disabled si content vacío o > 1000.
-    - Si soy WAITLIST: textarea deshabilitado con placeholder "Entrarás al chat al apuntarte como jugador".
+    - Si soy PLAYER o creador: `<textarea>` autoresize (1-5 líneas), placeholder "Escribe un mensaje…", contador `X/500`, botón Enviar. Enter envía, Shift+Enter newline. Botón disabled si content vacío o > 500.
+    - Si soy WAITLIST: **no se renderiza** el textarea ni el botón Enviar — en su lugar, un aviso muted "Entrarás al chat al apuntarte como jugador" centrado.
 
 Comportamiento:
 
 - **Al abrir**: dispara `useMarkChatReadMutation` (no espera respuesta para cerrar el badge — optimistic). Pone `chatUnreadCount = 0` localmente en la cache de TanStack Query.
-- **Polling**: `useChatMessagesQuery` con `enabled: drawerOpen`, `refetchInterval: 10_000`. Al cerrar el drawer, polling se detiene automáticamente.
+- **Polling**: `useChatMessagesQuery` con `enabled: drawerOpen`, `refetchInterval: 20_000`. Al cerrar el drawer, polling se detiene automáticamente.
 - **Al enviar**: optimistic update — insertar el mensaje localmente con un id temporal y `pending: true` antes de la respuesta. Si el POST devuelve OK, reemplazar el temporal por el real. Si falla, rollback (quitar el temporal) y mostrar toast/error inline "No se ha podido enviar".
 
 Archivos nuevos:
@@ -146,7 +146,7 @@ i18n nuevas claves bajo `sessions.chat`:
 - `title` "Chat"
 - `headerTitle` "Chat — {{session}}"
 - `inputPlaceholder` "Escribe un mensaje…"
-- `inputPlaceholderWaitlist` "Entrarás al chat al apuntarte como jugador."
+- `waitlistNotice` "Entrarás al chat al apuntarte como jugador."
 - `send` "Enviar"
 - `empty` "Sé el primero en escribir."
 - `loadError` "No se han podido cargar los mensajes."
@@ -154,7 +154,7 @@ i18n nuevas claves bajo `sessions.chat`:
 
 ## Polling y badge
 
-- **Drawer abierto**: `useChatMessagesQuery` corre cada 10s. Latencia visible 0-10s entre envío y recepción para los demás.
+- **Drawer abierto**: `useChatMessagesQuery` corre cada 20s. Latencia visible 0-20s entre envío y recepción para los demás. Cadencia elegida pensando en escalar: con muchas partidas activas en paralelo, 20s baja sensiblemente la carga frente a 10s sin afectar la sensación de coordinación.
 - **Drawer cerrado**: el badge se actualiza cuando `useSessionDetailQuery` refetchea. TanStack Query refetchea cuando el query está stale (más de 30s desde el último fetch) Y ocurre un trigger: navegación que remonta el componente, o foco de ventana (`refetchOnWindowFocus`, activado por defecto). No hay polling activo de fondo. En la práctica: al volver a la pestaña tras un rato, el badge se actualiza. Suficiente para coordinación.
 - Si en el futuro necesitamos badge en tiempo real (no es prioritario), añadir un endpoint ligero `GET /api/v1/sessions/{id}/messages/unread-count` polleable independientemente. Para MVP no.
 
@@ -165,7 +165,7 @@ i18n nuevas claves bajo `sessions.chat`:
 - Servicio:
   - `list_returnsMessagesAsc`, `list_filtersBySince`
   - `send_ok_asPlayer`, `send_ok_asCreator`
-  - `send_throws_asWaitlist`, `send_throws_asAnonymous`, `send_throws_whenCompleted`, `send_throws_whenContentExceedsMax`
+  - `send_throws_asWaitlist`, `send_throws_asAnonymous`, `send_throws_whenCompleted`, `send_throws_whenContentExceeds500`
   - `markRead_setsLastChatReadAt`
   - `closeSession_deletesAllMessages`, `cancelSession_deletesAllMessages`
   - `getDetail_chatUnreadCount_isNullForAnonymous`
