@@ -43,7 +43,7 @@ export function SessionChatButton({ session }: SessionChatButtonProps) {
             {t('sessions.chat.totalMessages', { count: session.chatMessageCount })}
           </p>
           <p className="text-xs italic text-muted-foreground">
-            {t('sessions.chat.outsiderNotice', { count: session.chatMessageCount })}
+            {t('sessions.chat.outsiderNotice')}
           </p>
         </div>
       </div>

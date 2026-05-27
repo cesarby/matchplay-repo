@@ -75,9 +75,9 @@ describe('SessionChatButton', () => {
 
   it('outsider con chatMessageCount > 0 renderiza caja informativa NO clicable', () => {
     renderButton(baseSession({ chatUnreadCount: null, chatMessageCount: 7 }))
-    // Contenido visible
-    expect(screen.getByText(/7 mensajes — apúntate/i)).toBeInTheDocument()
-    expect(screen.getByText(/7 mensajes$/i)).toBeInTheDocument()
+    // Línea 1: contador. Línea 2: CTA (sin repetir el contador).
+    expect(screen.getByText('7 mensajes')).toBeInTheDocument()
+    expect(screen.getByText(/apúntate para participar/i)).toBeInTheDocument()
     // NO debe ser un button (es role="note")
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.getByRole('note')).toBeInTheDocument()
