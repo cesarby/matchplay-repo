@@ -395,11 +395,15 @@ describe('<SessionDetailPage>', () => {
     expect(await screen.findByRole('button', { name: /chat/i })).toBeInTheDocument()
   })
 
-  it('oculta el botón de chat cuando chatUnreadCount es null (anónimo)', async () => {
+  it('muestra la caja outsider del chat cuando soy anónimo y la sesión está activa', async () => {
     server.use(http.get(`${API}/sessions/7`, () => HttpResponse.json(detail())))
     mockUseAuth.mockReturnValue({ status: 'anonymous', user: null, isAuthenticated: false })
     renderDetail()
-    await screen.findByRole('heading', { level: 1, name: /catan night/i })
-    expect(screen.queryByRole('button', { name: /chat/i })).not.toBeInTheDocument()
+    // Espera a que la página renderice
+    await screen.findByRole('heading', { name: /catan night/i })
+    // Caja outsider visible (texto del fixture default: chatMessageCount=0 → "sin mensajes aún")
+    expect(screen.getByText(/sin mensajes aún/i)).toBeInTheDocument()
+    // NO renderiza el botón "Chat" del participante (que tiene accessible name exacto "Chat")
+    expect(screen.queryByRole('button', { name: /^chat$/i })).not.toBeInTheDocument()
   })
 })
