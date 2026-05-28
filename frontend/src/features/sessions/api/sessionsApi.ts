@@ -53,7 +53,4 @@ export const sessionsApi = {
 
   leave: (id: number): Promise<SessionDetail> =>
     httpClient.delete<SessionDetail>(`${BASE}/${id}/join`).then((r) => r.data),
-
-  close: (id: number): Promise<SessionDetail> =>
-    httpClient.post<SessionDetail>(`${BASE}/${id}/close`).then((r) => r.data),
 }

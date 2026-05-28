@@ -137,7 +137,6 @@
       "closeRegistrations": "Cerrar inscripciones",
       "reopenRegistrations": "Reabrir inscripciones",
       "edit": "Editar",
-      "closeButton": "Cerrar mesa",
       "expansionsHeading_one": "Expansión ({{count}})",
       "expansionsHeading_other": "Expansiones ({{count}})",
       "expansionLoadError": "No se ha podido cargar la información de esta expansión.",

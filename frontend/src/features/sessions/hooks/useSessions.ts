@@ -107,11 +107,3 @@ export function useLeaveSessionMutation(id: number) {
     onSuccess: (detail) => syncCacheFromDetail(qc, detail),
   })
 }
-
-export function useCloseSessionMutation(id: number) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: () => sessionsApi.close(id),
-    onSuccess: (detail) => syncCacheFromDetail(qc, detail),
-  })
-}
