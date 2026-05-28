@@ -24,12 +24,13 @@ import com.matchplay.user.entity.User;
 import com.matchplay.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -47,9 +48,6 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final CurrentUserProvider currentUserProvider;
 
-    @Value("${app.auth.default-avatar-code:avatar_01}")
-    private String defaultAvatarCode;
-
     @Override
     @Transactional
     public AuthIssuance register(RegisterRequest request, String userAgent, String ipAddress) {
@@ -66,9 +64,11 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new GeoCodeNotFoundException("error.geo.city.not.found", request.cityCode()));
         Area area = areaRepository.findById(request.areaCode())
                 .orElseThrow(() -> new GeoCodeNotFoundException("error.geo.area.not.found", request.areaCode()));
-        Avatar defaultAvatar = avatarRepository.findById(defaultAvatarCode)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Default avatar not found: " + defaultAvatarCode + ". Seed the avatars table."));
+        List<Avatar> eligibleAvatars = avatarRepository.findByActiveTrueAndRequiredPointsLessThanEqual(0);
+        if (eligibleAvatars.isEmpty()) {
+            throw new IllegalStateException("No avatars available for signup. Seed the avatars table (V12).");
+        }
+        Avatar randomAvatar = eligibleAvatars.get(new SecureRandom().nextInt(eligibleAvatars.size()));
 
         User user = new User();
         user.setEmail(request.email());
@@ -80,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(Role.USER);
         user.setActive(true);
         user.setDeleted(false);
-        user.setSelectedAvatar(defaultAvatar);
+        user.setSelectedAvatar(randomAvatar);
         user.setRatingAvg(BigDecimal.ZERO);
         user.setRatingCount(0);
         user.setRewardPoints(0);
