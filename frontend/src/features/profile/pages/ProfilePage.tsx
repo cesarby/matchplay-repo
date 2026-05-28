@@ -37,11 +37,12 @@ export default function ProfilePage() {
         noindex
       />
       <div className="overflow-hidden rounded-xl bg-[#FAF7F2] shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-4 border-b border-muted bg-white px-6 py-5">
+        <div className="flex items-center gap-4 border-b border-muted bg-card px-6 py-5">
           <Avatar username={data.username} avatarCode={data.avatarCode} size={48} />
           <div>
             <h1 className="m-0 font-display text-xl font-bold">@{data.username}</h1>
-            {data.bio && <p className="m-0 text-sm italic text-muted-foreground">{data.bio}</p>}
+            <p className="m-0 text-xs text-muted-foreground">{data.email}</p>
+            {data.bio && <p className="mt-1 text-sm italic text-muted-foreground">{data.bio}</p>}
           </div>
         </div>
 
@@ -56,7 +57,7 @@ export default function ProfilePage() {
             <FavoriteGamesPicker initial={data.favoriteGames} />
           </section>
           <section className="px-6 py-5">
-            <AccountSection username={data.username} email={data.email} />
+            <AccountSection />
           </section>
         </div>
       </div>

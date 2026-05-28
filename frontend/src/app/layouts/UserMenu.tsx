@@ -76,7 +76,7 @@ export function UserMenu() {
           'transition hover:bg-foreground/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20',
         )}
       >
-        <Avatar username={user.username} avatarCode={user.avatarCode} size={32} />
+        <Avatar username={user.username} avatarCode={user.selectedAvatarCode} size={32} />
         <span className="hidden text-sm font-medium md:inline">{user.username}</span>
         <ChevronDown size={12} className="text-muted-foreground" aria-hidden="true" />
       </button>
@@ -87,7 +87,7 @@ export function UserMenu() {
           aria-label={t('nav.userMenuLabel')}
           className={cn(
             'absolute right-0 top-full z-50 mt-2 w-72',
-            'rounded-xl border border-black/5 bg-white py-1.5',
+            'rounded-xl border border-black/5 bg-card py-1.5',
             'shadow-[0_12px_32px_rgba(0,0,0,0.14)]',
           )}
         >

@@ -103,11 +103,7 @@ export function SiteHeader() {
               aria-expanded={menuOpen}
               className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full p-0.5 ring-2 ring-foreground/10 transition hover:ring-foreground/20 md:hidden"
             >
-              <Avatar
-                username={user.username}
-                avatarCode={(user as { avatarCode?: string }).avatarCode}
-                size={36}
-              />
+              <Avatar username={user.username} avatarCode={user.selectedAvatarCode} size={36} />
             </button>
           ) : (
             <button

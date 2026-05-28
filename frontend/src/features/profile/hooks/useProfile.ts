@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { useAuthStore } from '@/features/auth/store/authStore'
+
 import { profileApi } from '../api/profileApi'
 import type { UpdateProfilePayload, UserProfile } from '../types/profile.types'
 
@@ -21,9 +23,17 @@ export function useUpdateProfileMutation() {
     mutationFn: (payload: UpdateProfilePayload) => profileApi.update(payload),
     onSuccess: (profile) => {
       qc.setQueryData<UserProfile>(profileKeys.current, profile)
-      // Auth current user vive en Zustand (no TanStack), pero invalidamos
-      // por si alguna parte de la app cachea bajo ['auth','current'].
-      void qc.invalidateQueries({ queryKey: ['auth', 'current'] })
+      // FU1: el header lee avatar/bio de useAuthStore (zustand, no TanStack).
+      // El invalidate de query no sirve — hay que mergear los campos en el
+      // store directamente para que el header se re-renderice.
+      const current = useAuthStore.getState().currentUser
+      if (current) {
+        useAuthStore.getState().setCurrentUser({
+          ...current,
+          selectedAvatarCode: profile.avatarCode ?? current.selectedAvatarCode,
+          bio: profile.bio ?? undefined,
+        })
+      }
     },
   })
 }

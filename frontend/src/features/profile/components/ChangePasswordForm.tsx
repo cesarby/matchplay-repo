@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { normalizeApiError } from '@/shared/api/ApiError'
 import { cn } from '@/shared/lib/cn'
 
 import { useChangePasswordMutation } from '../hooks/useProfile'
@@ -33,7 +34,17 @@ export function ChangePasswordForm() {
           setNext('')
           setConfirm('')
         },
-        onError: () => setFeedback({ type: 'error', key: 'profile.errorWrongPassword' }),
+        onError: (error) => {
+          // FU3: diferenciar "contraseña actual incorrecta" del resto.
+          // El backend devuelve code='error.profile.password.wrong' para el caso típico.
+          const normalized = normalizeApiError(error)
+          if (normalized.code === 'error.profile.password.wrong') {
+            setFeedback({ type: 'error', key: 'profile.errorWrongPassword' })
+          } else {
+            console.error('changePassword failed', normalized)
+            setFeedback({ type: 'error', key: 'common.error' })
+          }
+        },
       },
     )
   }

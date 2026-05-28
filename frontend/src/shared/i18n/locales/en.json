@@ -372,6 +372,8 @@
     "headingBio": "Bio",
     "headingFavorites": "Favorite games (max 5)",
     "headingAccount": "Account",
+    "headingPassword": "Password",
+    "avatarChange": "Change avatar",
     "bioPlaceholder": "Something about you…",
     "bioSaveButton": "Save",
     "bioSavedToast": "Saved",

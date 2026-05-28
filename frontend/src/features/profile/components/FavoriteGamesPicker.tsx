@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { GameTypeahead } from '@/features/games/components/GameTypeahead'
@@ -21,17 +21,27 @@ export function FavoriteGamesPicker({ initial }: Props) {
   const [items, setItems] = useState<FavoriteGameSummary[]>(initial)
   const [open, setOpen] = useState(false)
 
+  // Sincroniza con el server cuando el query refresca (p.ej. volver a la página
+  // dispara un re-fetch). useState(initial) solo se inicializa una vez.
+  useEffect(() => {
+    setItems(initial)
+  }, [initial])
+
   function remove(bggId: number) {
-    const next = items.filter((g) => g.bggId !== bggId)
-    setItems(next)
-    update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+    setItems((prev) => {
+      const next = prev.filter((g) => g.bggId !== bggId)
+      update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+      return next
+    })
   }
 
   function add(game: FavoriteGameSummary) {
-    if (items.find((g) => g.bggId === game.bggId)) return
-    const next = [...items, game]
-    setItems(next)
-    update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+    setItems((prev) => {
+      if (prev.find((g) => g.bggId === game.bggId)) return prev
+      const next = [...prev, game]
+      update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+      return next
+    })
     setOpen(false)
   }
 
@@ -97,6 +107,17 @@ interface GameSearchModalProps {
 function GameSearchModal({ onClose, onSelect }: GameSearchModalProps) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<GameSearchResult | null>(null)
+
+  // FU2: cerrar con Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  // TODO autofocus once GameTypeahead exposes ref/autoFocus prop
 
   return (
     <div
