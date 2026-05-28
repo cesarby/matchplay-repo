@@ -10,6 +10,9 @@ import com.matchplay.game.exception.BggUnavailableException;
 import com.matchplay.game.exception.GameNotFoundException;
 import com.matchplay.game.exception.InvalidGameSearchException;
 import com.matchplay.geo.exception.GeoCodeNotFoundException;
+import com.matchplay.user.exception.InvalidAvatarCodeException;
+import com.matchplay.user.exception.TooManyFavoritesException;
+import com.matchplay.user.exception.WrongPasswordException;
 import com.matchplay.exception.SessionChatForbiddenException;
 import com.matchplay.exception.SessionChatWriteForbiddenException;
 import com.matchplay.exception.SessionChatClosedException;
@@ -233,6 +236,30 @@ public class GlobalExceptionHandler {
         log.warn("Geo code not found: key={}", ex.getMessageKey());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(404, "Not Found", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(InvalidAvatarCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAvatarCode(
+            InvalidAvatarCodeException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(TooManyFavoritesException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyFavorites(
+            TooManyFavoritesException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<ErrorResponse> handleWrongPassword(
+            WrongPasswordException ex, HttpServletRequest request, Locale locale) {
+        String message = resolve(ex.getMessageKey(), ex.getArgs(), locale);
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "Bad Request", ex.getMessageKey(), message, request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
