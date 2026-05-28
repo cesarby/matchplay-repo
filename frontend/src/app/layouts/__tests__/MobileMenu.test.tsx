@@ -69,12 +69,35 @@ describe('<MobileMenu>', () => {
     expect(screen.queryByText(/mis partidas/i)).not.toBeInTheDocument()
   })
 
-  it('renders disabled "Mi perfil" with coming-soon badge', () => {
+  it('renders "Mi perfil" as a link to /profile for authenticated users', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
     renderMenu()
-    expect(screen.getByText(/mi perfil/i)).toBeInTheDocument()
-    // Una pill "Próximamente" (sólo perfil)
-    expect(screen.getAllByText(/próximamente/i)).toHaveLength(1)
+    const link = screen.getByRole('link', { name: /mi perfil/i })
+    expect(link).toHaveAttribute('href', '/profile')
+  })
+
+  it('renders disabled "Mis mensajes" with coming-soon pill', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
+    renderMenu()
+    // No es link
+    expect(screen.queryByRole('link', { name: /mis mensajes/i })).not.toBeInTheDocument()
+    // Texto presente
+    expect(screen.getByText(/mis mensajes/i)).toBeInTheDocument()
+    // Pill "Pronto" (common.comingSoon en ES = "Pronto")
+    expect(screen.getByText(/^pronto$/i)).toBeInTheDocument()
+  })
+
+  it('renders "Ayuda" as a link to /help for authenticated users', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
+    renderMenu()
+    const link = screen.getByRole('link', { name: /^ayuda$/i })
+    expect(link).toHaveAttribute('href', '/help')
+  })
+
+  it('renders dark mode toggle for authenticated users', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
+    renderMenu()
+    expect(screen.getByRole('button', { name: /modo oscuro/i })).toBeInTheDocument()
   })
 
   it('shows login/register links and no logout when anonymous', () => {

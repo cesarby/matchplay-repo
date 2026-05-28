@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { Avatar } from '@/shared/components/Avatar'
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
 import { Logo } from '@/shared/components/Logo'
 import { cn } from '@/shared/lib/cn'
@@ -25,7 +26,7 @@ import { UserMenu } from './UserMenu'
  */
 export function SiteHeader() {
   const { t } = useTranslation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -93,20 +94,36 @@ export function SiteHeader() {
             )}
           </div>
 
-          {/* Burger (sólo móvil) */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label={t('nav.openMenu')}
-            aria-expanded={menuOpen}
-            className="relative inline-flex size-[42px] shrink-0 items-center justify-center rounded-xl bg-foreground text-background shadow-md md:hidden"
-          >
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-1 rounded-lg border-[1.5px] border-white/20"
-            />
-            <Dices size={20} aria-hidden="true" />
-          </button>
+          {/* Trigger móvil: avatar si autenticado, burger estilo dado si anónimo */}
+          {isAuthenticated && user ? (
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label={t('nav.openMenu')}
+              aria-expanded={menuOpen}
+              className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full p-0.5 ring-2 ring-foreground/10 transition hover:ring-foreground/20 md:hidden"
+            >
+              <Avatar
+                username={user.username}
+                avatarCode={(user as { avatarCode?: string }).avatarCode}
+                size={36}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label={t('nav.openMenu')}
+              aria-expanded={menuOpen}
+              className="relative inline-flex size-[42px] shrink-0 items-center justify-center rounded-xl bg-foreground text-background shadow-md md:hidden"
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-1 rounded-lg border-[1.5px] border-white/20"
+              />
+              <Dices size={20} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </header>
 

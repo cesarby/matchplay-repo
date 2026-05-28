@@ -3,9 +3,13 @@ import {
   ChevronRight,
   Coins,
   Dices,
+  HelpCircle,
   LogOut,
+  MessageSquare,
+  Moon,
   Plus,
   Star,
+  Sun,
   User as UserIcon,
   X,
 } from 'lucide-react'
@@ -18,6 +22,7 @@ import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Logo } from '@/shared/components/Logo'
 import { cn } from '@/shared/lib/cn'
 import { type Locale, useLocaleStore } from '@/shared/store/localeStore'
+import { useThemeStore } from '@/shared/store/themeStore'
 
 interface MobileMenuProps {
   onClose: () => void
@@ -31,9 +36,11 @@ interface MobileMenuProps {
  * font-display, avatar grande con gradiente rotado -3°, items grandes tipo
  * card y footer compacto con toggle de idioma + logout.</p>
  *
- * <p>"Mis partidas" enlaza a {@code /sessions/mine} cuando hay usuario
- * autenticado. "Mi perfil" todavía no existe (Fase 2) y se renderiza
- * deshabilitada con un pill "Próximamente".</p>
+ * <p>"Mis partidas" enlaza a {@code /sessions/mine}, "Mi perfil" a
+ * {@code /profile} y "Ayuda" a {@code /help} cuando hay usuario autenticado.
+ * "Mis mensajes" sigue deshabilitada con pill "Pronto" (Fase futura). El
+ * toggle de "Modo oscuro" escribe al {@link useThemeStore} (mismo store que
+ * usa el {@link UserMenu} de desktop).</p>
  */
 export function MobileMenu({ onClose }: MobileMenuProps) {
   const { t } = useTranslation()
@@ -72,6 +79,10 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
   const isSessionsActive = location.pathname === '/sessions'
   const isCreateActive = location.pathname.startsWith('/sessions/new')
   const isMyActive = location.pathname.startsWith('/sessions/mine')
+  const isProfileActive = location.pathname.startsWith('/profile')
+  const isHelpActive = location.pathname.startsWith('/help')
+  const theme = useThemeStore((s) => s.theme)
+  const setTheme = useThemeStore((s) => s.setTheme)
 
   return (
     <div
@@ -173,14 +184,45 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
 
         {isAuthenticated && (
           <MenuItem
-            disabled
+            to="/profile"
+            active={isProfileActive}
             icon={<UserIcon size={20} aria-hidden="true" />}
             iconBg="bg-blue-soft"
             iconColor="text-blue"
-            badge={t('nav.comingSoon')}
           >
             {t('nav.profile')}
           </MenuItem>
+        )}
+
+        {isAuthenticated && (
+          <MenuItem
+            disabled
+            icon={<MessageSquare size={20} aria-hidden="true" />}
+            iconBg="bg-blue-soft"
+            iconColor="text-blue"
+            badge={t('common.comingSoon')}
+          >
+            {t('nav.messages')}
+          </MenuItem>
+        )}
+
+        {isAuthenticated && (
+          <MenuItem
+            to="/help"
+            active={isHelpActive}
+            icon={<HelpCircle size={20} aria-hidden="true" />}
+            iconBg="bg-yellow-soft"
+            iconColor="text-yellow"
+          >
+            {t('nav.help')}
+          </MenuItem>
+        )}
+
+        {isAuthenticated && (
+          <DarkModeToggle
+            theme={theme}
+            onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          />
         )}
 
         {!isAuthenticated && (
@@ -302,6 +344,50 @@ function MenuItem({
     <Link to={to} className={className} aria-current={active ? 'page' : undefined}>
       {content}
     </Link>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// DarkModeToggle · MenuItem-style con switch a la derecha
+// ---------------------------------------------------------------------------
+
+interface DarkModeToggleProps {
+  theme: 'light' | 'dark'
+  onToggle: () => void
+}
+
+function DarkModeToggle({ theme, onToggle }: DarkModeToggleProps) {
+  const { t } = useTranslation()
+  const isDark = theme === 'dark'
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={isDark}
+      className="flex items-center gap-[15px] rounded-2xl border-[1.5px] border-border bg-card px-4 py-3.5 text-left transition hover:border-red"
+    >
+      <span
+        aria-hidden="true"
+        className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-muted text-muted-foreground"
+      >
+        {isDark ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
+      </span>
+      <span className="font-display text-[1.05rem] font-semibold">{t('nav.darkMode')}</span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          'ml-auto inline-block h-6 w-11 rounded-full transition',
+          isDark ? 'bg-foreground' : 'bg-muted',
+        )}
+      >
+        <span
+          className={cn(
+            'mt-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform',
+            isDark ? 'translate-x-[22px]' : 'translate-x-0.5',
+          )}
+        />
+      </span>
+    </button>
   )
 }
 
