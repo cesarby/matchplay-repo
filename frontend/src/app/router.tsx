@@ -17,6 +17,7 @@ const NotFoundPage = lazy(() => import('@/features/sessions/pages/NotFoundPage')
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'))
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'))
+const HelpPage = lazy(() => import('@/features/help/pages/HelpPage'))
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
             ),
           },
           { path: '/sessions/:id', element: <SessionDetailPage /> },
+          { path: '/help', element: <HelpPage /> },
           {
             path: '/profile',
             element: (

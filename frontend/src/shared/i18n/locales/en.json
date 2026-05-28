@@ -390,5 +390,10 @@
     "errorWrongPassword": "Current password is incorrect",
     "errorPasswordMismatch": "Passwords do not match",
     "errorPasswordTooShort": "Minimum 8 characters"
+  },
+  "help": {
+    "title": "Help",
+    "intro": "Here you'll find answers to common questions. This section will be expanded over time.",
+    "contactEmail": "Contact"
   }
 }

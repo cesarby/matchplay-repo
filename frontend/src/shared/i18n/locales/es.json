@@ -390,5 +390,10 @@
     "errorWrongPassword": "Contraseña actual incorrecta",
     "errorPasswordMismatch": "Las contraseñas no coinciden",
     "errorPasswordTooShort": "Mínimo 8 caracteres"
+  },
+  "help": {
+    "title": "Ayuda",
+    "intro": "Aquí encontrarás respuestas a las preguntas más frecuentes. Esta sección se irá completando.",
+    "contactEmail": "Contacto"
   }
 }
