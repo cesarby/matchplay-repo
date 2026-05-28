@@ -145,11 +145,11 @@ features/sessions/
 │   └── CreateSessionPage.tsx
 ├── components/
 │   ├── SessionFilters.tsx          # filtros del listado
-│   ├── SessionActions.tsx          # botones del detail según contexto
+│   ├── SessionActions.tsx          # botones del detail según contexto (incluye Editar→modal para creador)
 │   ├── SessionPlayerRow.tsx        # fila de jugador: variant player o guestOf (con avatar coloreado)
-│   ├── CreatorActions.tsx          # acciones del creador (Editar + Cerrar mesa)
-│   ├── EditSessionModal.tsx        # modal PATCH /sessions/{id}
-│   ├── CloseSessionModal.tsx       # modal POST /sessions/{id}/close
+│   ├── EditSessionModal.tsx        # modal PATCH /sessions/{id} (lanzado desde SessionActions)
+│   ├── MyHistoryTable.tsx          # tabla compacta del tab HISTORY de Mis sesiones
+│   ├── MySessionsTabs.tsx          # 4 pills coloreadas con count (Mis sesiones)
 │   ├── SessionExpansionsBlock.tsx  # bloque "Expansiones (N)" con accordion lazy
 │   ├── GameCover.tsx               # imagen de portada BGG o placeholder
 │   ├── GameCoverPlaceholder.tsx    # caja con gradient + icono Dices si no hay thumbnail
@@ -326,9 +326,9 @@ useSessionPlayersQuery(id)            // staleTime 15s (lighter polling)
 useCreateSessionMutation()
 useUpdateSessionMutation(id)
 useChangeSessionStatusMutation(id)
-useCloseSessionMutation(id)           // POST /sessions/{id}/close
 useJoinSessionMutation(id)
 useLeaveSessionMutation(id)
+useMySessionsQuery(tab, page)         // GET /me/sessions?tab=...&page=...
 ```
 
 Las mutations comparten un helper `syncCacheFromDetail(qc, detail)` que:
@@ -395,7 +395,6 @@ Layout v3 (editorial refactor). Diseño 2-col en `sm+` para el header, 2-col en 
 │ │ 160px    │ Catan (italic muted)                         │ │
 │ │          │ Organiza @alice                              │ │
 │ │          │ 📅 Hoy 20:00  📍 Madrid  👥 3/4 · 2 en cola │ │
-│ │          │ [CreatorActions si isOwner]                  │ │
 │ └──────────┴──────────────────────────────────────────────┘ │
 │                                                             │
 │ [Unirme a esta mesa — solo mobile, si aplica]               │  ← JoinCallToAction
@@ -430,24 +429,24 @@ Layout v3 (editorial refactor). Diseño 2-col en `sm+` para el header, 2-col en 
 | `OPEN` | apuntado nada | `Unirme` (entra como PLAYER) |
 | `OPEN` | `PLAYER` | `Salir` |
 | `OPEN` | `WAITLIST` | `Salir` (de la cola) |
-| `OPEN` | creador | `<CreatorActions>`: Editar (siempre) + Cerrar mesa (solo si OPEN) |
+| `OPEN` | creador | Editar (modal) + Cerrar inscripciones (→ FULL) + Cancelar partida (→ CANCELLED) |
 | `FULL` | anónimo | `Unirme` → login |
 | `FULL` | apuntado nada | `Unirme` (entra como WAITLIST) |
 | `FULL` | `PLAYER`/`WAITLIST` | `Salir` |
-| `FULL` | creador | `<CreatorActions>`: Editar (siempre) |
+| `FULL` | creador | Editar (modal) + Reabrir inscripciones (→ OPEN) + Cancelar partida |
 | `CANCELLED`/`COMPLETED` | * | — (sin acciones) |
 
 `isOwner = currentUser.userId === session.creatorId`. Importante: el campo es `userId`,
 no `id` (el `CurrentUser` del módulo auth usa `userId`).
 
-`<CreatorActions>` se renderiza si `isOwner && status ∈ {OPEN, FULL}`. Vive en
-`features/sessions/components/CreatorActions.tsx`. Contiene:
+Todas las acciones del creador viven en `<SessionActions>` (sidebar bajo el chat). El
+botón Editar abre `<EditSessionModal>` (state local + `useUpdateSessionMutation`); los
+otros dos son `useChangeSessionStatusMutation` directos (sin modal de confirmación —
+ver pendientes).
 
-- **`<EditSessionModal>`** — abre al pulsar "Editar". Fecha (reutiliza `<SessionDateTimePicker>`)
-  + maxPlayers (mín = `registeredPlayers`). Si hay waitlist muestra nota informativa.
-  Submit → `PATCH /sessions/{id}` con `scheduledAt` + `maxPlayers`.
-- **`<CloseSessionModal>`** — abre al pulsar "Cerrar mesa" (solo visible si `status === OPEN`).
-  Confirmación cuyo copy varía según `waitlistCount > 0`. Submit → `POST /sessions/{id}/close`.
+- **`<EditSessionModal>`** — fecha (reutiliza `<SessionDateTimePicker>`) + maxPlayers
+  (mín = `registeredPlayers`). Si hay waitlist muestra nota informativa. Submit →
+  `PATCH /sessions/{id}` con `scheduledAt` + `maxPlayers`.
 
 ### Renderizado de detail
 
@@ -461,7 +460,7 @@ no `id` (el `CurrentUser` del módulo auth usa `userId`).
 Layout 2-col en `sm+` (`grid-cols-[160px_1fr]`): `<GameCover>` izquierda, bloque de info derecha.
 En mobile: stacked, cover centrado 144px.
 
-El bloque de info incluye (de arriba abajo): badges de status + yourRole → H1 en `font-display` → nombre del juego en italic muted → "organiza @..." → meta vertical (fecha / ubicación / plazas) → `<CreatorActions>` si `isOwner`.
+El bloque de info incluye (de arriba abajo): badges de status + yourRole → H1 en `font-display` → nombre del juego en italic muted → "organiza @..." → meta vertical (fecha / ubicación / plazas). Las acciones del creador NO viven en el header (se consolidan en el sidebar via `<SessionActions>` para no duplicar botones).
 
 **Bloques del área principal** (en orden, de arriba abajo):
 
@@ -710,10 +709,15 @@ sessions.list.{title, empty, loadMore}
 sessions.filters.{province, city, area, game, from, to, status, apply, clear}
 sessions.detail.{playersHeading, waitlistHeading, descriptionHeading, noDescription,
                  join, leave, cancelSession, closeRegistrations, reopenRegistrations, edit,
-                 closeButton, aboutGameHeading, guestOf,
+                 aboutGameHeading, guestOf,
                  joinCta, joinLoginCta,
                  expansionsHeading_one, expansionsHeading_other,
                  expansionLoadError, expansionNoSummary}
+sessions.mine.{title, tabsLabel,
+               tabs.{created, createdShort, player, waitlist, waitlistShort, history},
+               empty.{created, createdCta, player, playerCta, waitlist, waitlistCta, history},
+               history.{columns.{date, name, game, location, status}, expansions, duplicate,
+                        statusCompleted, statusCancelled}}
 sessions.chat.{title, headerTitle, inputPlaceholder, waitlistNotice, send, empty, loadError,
                sendError, unreadBadge_one, unreadBadge_other,
                totalMessages_zero, totalMessages_one, totalMessages_other,
@@ -766,9 +770,65 @@ Total frontend del módulo: **33+ tests**.
 
 ---
 
+## Mis sesiones (implementado 2026-05-27)
+
+### Ruta + arquitectura
+
+- `GET /sessions/mine?tab=X&page=N` — protegida (`<ProtectedRoute>`), declarada **antes** de `/sessions/:id` para que `mine` no matchee como `:id`. Lazy-loaded en `router.tsx`.
+- Tab y page viven en query params (`useSearchParams`). Anónimos redirigen a `/login?next=/sessions/mine`.
+
+### Estructura visual (calcada del mockup `.superpowers/brainstorm/.../historial-v2.html`)
+
+`MySessionsPage` envuelve todo en una card unificada `.mp-mockup`: bg `#FAF7F2`, `rounded-xl`, `shadow-[0_6px_20px_rgba(0,0,0,0.08)]`, `overflow-hidden`. Dentro:
+
+- **Título** `<h1>` con `font-display`, padding `20px 24px 0`.
+- **`MySessionsTabs`** — barra con `bg-white` + `border-b-[#E8E2D5]` + `px-6 py-3.5`. 4 pills coloreadas:
+  - CREATED: outline yellow (text `#6B4A00`), active `bg-yellow text-foreground`.
+  - PLAYER: outline green (text `#0B5A3B`), active `bg-green text-white`.
+  - WAITLIST: outline blue (text `#1F3A6B`), active `bg-blue text-white`.
+  - HISTORY: outline muted, active `bg-[#1F1F2E] text-white`.
+  - Cada pill lleva badge `.count`: en outline `bg-black/10`, en active oscura `bg-white/{20-25}` (más claro que el pill), en active yellow `bg-black/15`.
+- **Contenido** (padding `px-6 py-4` ≈ mockup `margin: 16px 24px`):
+  - Tabs CREATED/PLAYER/WAITLIST → grid de `<SessionCard accentColor={yellow|green|blue}>` (border-left coloreada por tab).
+  - Tab HISTORY → `<MyHistoryTable>`.
+
+### `MyHistoryTable`
+
+Tabla compacta, fidelidad 1:1 al mockup. Container `bg-white` + `border-border`. Filas y sub-filas como **siblings directos** del container (no anidadas), usando `<Fragment>` por sesión. Esto permite que `last:border-b-0` aplique al último elemento real.
+
+- Header: `bg-[#F8F4EC]`, `text-[#8B7355]`, uppercase 10px tracking 0.5px, padding `11px 14px`.
+- Body row: padding `10px 14px`, `border-b border-muted` (≈ mockup `#F0EBE0`), grid `[110px_1.4fr_1.2fr_1fr_90px_100px]`.
+- Sub-fila expansiones: padding `2px 14px 10px`, `bg-[#FBF8F2]`, `text-[11px] italic text-[#8B7355]`, grid `[110px_1fr]`. ↳ `text-[#B0A99A]` no-italic; `<strong>` `text-[#6B5535]` no-italic.
+- Estado: `text-[#0B5A3B]` completada, `text-[#B83838]` cancelada (muted vs los `--p-green/red` brand brillantes del proyecto).
+- Botón Duplicar: `bg-[#D14B4B] text-white` (rojo brick muted), navega a `/sessions/new?from={id}`.
+
+### Tipos + hook + API
+
+- `MyTab = 'CREATED' | 'PLAYER' | 'WAITLIST' | 'HISTORY'`.
+- `TabCounts { created, player, waitlist, history: number }`.
+- `MySessionsResponse { items: PageResponse<SessionSummary>, counts: TabCounts }`.
+- `SessionSummary.expansionNames?: string[]` — **opcional**, no nullable. Backend omite el campo en tabs no-historial (Jackson `non_null`), llega como `undefined` al frontend. Tipar como `string[] | null` rompería las comparaciones; ver CLAUDE.md.
+- `mySessionsApi.findMine(tab, page=0, size=20)` → `GET /me/sessions`.
+- `useMySessionsQuery(tab, page)` — TanStack Query, key incluye `tab + page + i18n.language`, staleTime 30s.
+
+### Duplicar partida
+
+`MyHistoryTable` → click "Duplicar" → `/sessions/new?from={id}`. `CreateSessionForm` detecta el query param, hace fetch del detalle vía `useSessionDetailQuery(fromId)`, y precarga el form con:
+
+- **Sí**: título, descripción, juego base, expansiones, ciudad, área, maxPlayers.
+- **No**: scheduledAt (vacío), creatorGuests (0).
+
+Guard `useRef` evita re-prefill en re-renders. Spinner mientras `isLoadingSource` y `fromId != null`. Si la query falla (404 etc.), fallback silencioso a form vacío. `provinceCode` no viene en `SessionDetail`; usuario tiene que re-seleccionar provincia si la duplicada es de otra distinta (acceptable trade-off — duplicar suele ser sobre partidas propias mismo geo).
+
+### Navegación
+
+`MobileMenu` activa el item "Mis partidas" cuando `isAuthenticated` (link a `/sessions/mine`, oculto si anónimo). `SiteHeader` (desktop) muestra el item con la misma condición. `isSessionsActive` ajustado para no resaltar "Partidas" cuando `pathname.startsWith('/sessions/mine')`.
+
+---
+
 ## Pendientes / siguiente fase
 
-- **MySessionsPage** + **Profile page** — referenciadas como "Próximamente" en el `<MobileMenu>`. Dependen de `GET /sessions/mine?scope=...` (backend Fase 2) y endpoints de perfil.
+- **Profile page** — referenciada como "Próximamente" en el `<MobileMenu>`. Depende de endpoints de perfil (no implementados).
 - **Confirmación al cancelar** — modal "¿Seguro?" antes del `changeStatus({ CANCELLED })`. Hoy es un click directo.
 - **Toast de éxito** — al unirse / salir / enviar mensaje, mostrar feedback efímero. Requiere infra de toasts (no existe en v1).
 - **Optimistic updates** en join/leave — mejora la sensación de respuesta. Hoy se espera la respuesta del backend.

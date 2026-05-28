@@ -19,9 +19,11 @@ Cubre el ciclo de vida completo de una partida desde la perspectiva del backend:
 
 Lo que está **fuera de scope** en esta fase (deferred):
 
-- `/sessions/mine` con scopes (Fase 2).
 - Ratings post-evento (Fase 3).
 - Notificaciones cuando se promociona a alguien desde waitlist (Fase 2 con módulo de notificaciones).
+
+> **Mis sesiones** (`GET /api/v1/me/sessions?tab=...`) — implementado (2026-05-27).
+> Ver bloque "Mis sesiones (Fase 2 — implementado)" más abajo.
 
 ---
 
@@ -790,11 +792,49 @@ Cuando el nuevo status es `COMPLETED` o `CANCELLED`, `GameSessionServiceImpl.cha
 
 ---
 
+## Mis sesiones (Fase 2 — implementado 2026-05-27)
+
+### Endpoint
+
+`GET /api/v1/me/sessions?tab={CREATED|PLAYER|WAITLIST|HISTORY}&page=N&size=M` (auth requerida — cubierto por `anyRequest().authenticated()` en `SecurityConfig`).
+
+Devuelve `MySessionsResponse { items: PageResponse<SessionSummaryResponse>, counts: TabCounts }`. Los 4 `counts` siempre se populan en cada response (un `count()` por tab) — el frontend pinta los badges sin roundtrips extra.
+
+### Tabs y filtros
+
+| Tab | Filtro | Sort | `expansionNames` |
+|-----|--------|------|------------------|
+| `CREATED` | `creatorIs(me) AND statusActive` | `scheduledAt ASC` | omitido (null) |
+| `PLAYER` | `participantIs(me, PLAYER) AND NOT creatorIs(me) AND statusActive` | `scheduledAt ASC` | omitido |
+| `WAITLIST` | `participantIs(me, WAITLIST) AND NOT creatorIs(me) AND statusActive` | `scheduledAt ASC` | omitido |
+| `HISTORY` | `creatorIs(me) AND statusTerminal` | `scheduledAt DESC` | poblado |
+
+`statusActive` = `OPEN | FULL | IN_PROGRESS`. `statusTerminal` = `COMPLETED | CANCELLED`.
+
+**PLAYER y WAITLIST excluyen las propias** porque el creador se registra automáticamente como PLAYER en `session_participants` (ver `GameSessionServiceImpl.create`) — aparecía duplicado en CREATED+PLAYER si no se excluía vía `Specification.not(creatorIs(me))`. HISTORY filtra solo "creadas por mí en estado terminal" — partidas a las que me apunté como PLAYER y terminaron no se incluyen.
+
+### `expansionNames` en `SessionSummaryResponse`
+
+Campo `List<String> expansionNames` opcional al final del record. Solo se popula cuando el mapper se llama con `withExpansionNames=true`. Jackson lo omite del JSON cuando es `null` (default `non_null` global) — el frontend recibe `undefined` en los tabs no-historial, lo cual matchea el tipo TS `expansionNames?: string[]`.
+
+### Specifications
+
+Añadidas en `GameSessionSpecifications`:
+- `creatorIs(userId)` — equality on `creator.id`.
+- `participantIs(userId, role)` — subquery EXISTS sobre `SessionParticipant` con `session=this AND user.id=userId AND role=role`. Más barato que un JOIN cuando hay paginación.
+- `statusActive()` — IN (OPEN, FULL, IN_PROGRESS).
+- `statusTerminal()` — IN (COMPLETED, CANCELLED).
+
+### Costes
+
+4 queries `count()` por request (uno por tab) + 1 `findAll` paginado. Con índices en `creator_id` y `session_participants(user_id, role)` es asumible. Si crece la base, considerar materializar los counts (out of scope).
+
+---
+
 ## Pendientes / siguiente fase
 
 ### Fase 2 (engagement)
 
-- `GET /api/v1/sessions/mine?scope=ORGANIZING|JOINED|UPCOMING|PAST` paginado.
 - Notificación cuando un WAITLIST se promociona a PLAYER (depende de módulo de notificaciones).
 - Rate limit en `POST /sessions` y `POST .../messages` (Bucket4j por usuario).
 - Job programado para transiciones `OPEN/FULL → IN_PROGRESS → COMPLETED` por fecha.
