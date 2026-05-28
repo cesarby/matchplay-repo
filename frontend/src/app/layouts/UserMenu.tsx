@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Avatar } from '@/shared/components/Avatar'
+import { useTheme } from '@/shared/hooks/useTheme'
 import { cn } from '@/shared/lib/cn'
 
 const SUPPORTED_LANGS = ['es', 'en'] as const
@@ -24,16 +25,15 @@ const SUPPORTED_LANGS = ['es', 'en'] as const
  * Items: Mi perfil, Mis mensajes (próx), Ayuda, Idioma toggle, Modo oscuro,
  * Cerrar sesión. Esc/click fuera cierran. Toggle de idioma/tema NO cierra.
  *
- * <p>Nota: el toggle de modo oscuro usa un stub local mientras T9 implementa
- * {@code useTheme()} real con persistencia. Aquí el state es efímero.</p>
+ * <p>El toggle de modo oscuro usa {@link useTheme} con persistencia real
+ * en localStorage (clave {@code matchplay-theme}).</p>
  */
 export function UserMenu() {
   const { t, i18n } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const logout = useLogoutMutation()
   const navigate = useNavigate()
-  // Stub temporal — UP9 lo reemplaza por useTheme() con persistencia real.
-  const [theme, setTheme] = useState<'dark' | 'light'>('light')
+  const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
