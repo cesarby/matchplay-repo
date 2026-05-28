@@ -4,7 +4,8 @@
     "loading": "Cargando…",
     "error": "Algo salió mal",
     "retry": "Reintentar",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "comingSoon": "Pronto"
   },
   "nav": {
     "home": "Inicio",
@@ -18,7 +19,12 @@
     "greeting": "¡Hola, {{name}}!",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
-    "register": "Crear cuenta"
+    "register": "Crear cuenta",
+    "messages": "Mis mensajes",
+    "help": "Ayuda",
+    "language": "Idioma",
+    "darkMode": "Modo oscuro",
+    "userMenuLabel": "Menú de usuario"
   },
   "home": {
     "title": "Partidas abiertas cerca de ti",

@@ -4,7 +4,8 @@
     "loading": "Loading…",
     "error": "Something went wrong",
     "retry": "Retry",
-    "submit": "Submit"
+    "submit": "Submit",
+    "comingSoon": "Soon"
   },
   "nav": {
     "home": "Home",
@@ -18,7 +19,12 @@
     "greeting": "Hi, {{name}}!",
     "login": "Sign in",
     "logout": "Sign out",
-    "register": "Create account"
+    "register": "Create account",
+    "messages": "My messages",
+    "help": "Help",
+    "language": "Language",
+    "darkMode": "Dark mode",
+    "userMenuLabel": "User menu"
   },
   "home": {
     "title": "Open sessions near you",

@@ -4,13 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
-import { Button } from '@/shared/components/Button'
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
 import { Logo } from '@/shared/components/Logo'
 import { cn } from '@/shared/lib/cn'
 
 import { MobileMenu } from './MobileMenu'
+import { UserMenu } from './UserMenu'
 
 /**
  * Header común a todas las pantallas (Main + Auth).
@@ -26,8 +25,7 @@ import { MobileMenu } from './MobileMenu'
  */
 export function SiteHeader() {
   const { t } = useTranslation()
-  const { isAuthenticated, user } = useAuth()
-  const logout = useLogoutMutation()
+  const { isAuthenticated } = useAuth()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -78,19 +76,10 @@ export function SiteHeader() {
             )}
           </nav>
 
-          {/* Derecha desktop: usuario · logout · idioma */}
+          {/* Derecha desktop: usuario · menú o login/register · idioma */}
           <div className="hidden flex-1 items-center justify-end gap-3 text-sm md:flex">
-            {isAuthenticated && user ? (
-              <>
-                <span className="hidden text-muted-foreground sm:inline">{user.username}</span>
-                <Button
-                  variant="ghost"
-                  onClick={() => logout.mutate()}
-                  isLoading={logout.isPending}
-                >
-                  {t('nav.logout')}
-                </Button>
-              </>
+            {isAuthenticated ? (
+              <UserMenu />
             ) : (
               <>
                 <Link to="/login" className="text-foreground hover:underline">
@@ -99,9 +88,9 @@ export function SiteHeader() {
                 <Link to="/register" className="font-medium text-red hover:underline">
                   {t('nav.register')}
                 </Link>
+                <LanguageSwitcher />
               </>
             )}
-            <LanguageSwitcher />
           </div>
 
           {/* Burger (sólo móvil) */}
