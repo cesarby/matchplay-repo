@@ -75,7 +75,8 @@ class MeControllerTest {
     void getCurrent_returns200WithProfile() throws Exception {
         given(profileService.getCurrent()).willReturn(new UserProfileResponse(
                 "alice", "alice@a.es", "avatar_07", "Hello",
-                List.of(new FavoriteGameSummary(13L, "Catan", "http://thumb"))
+                List.of(new FavoriteGameSummary(13L, "Catan", "http://thumb")),
+                "28", "28079", "28079001"
         ));
 
         mockMvc.perform(get("/api/v1/me/profile"))
@@ -89,11 +90,12 @@ class MeControllerTest {
     @Test
     void update_returns200WithUpdatedProfile() throws Exception {
         given(profileService.update(any(UpdateProfileRequest.class))).willReturn(new UserProfileResponse(
-                "alice", "alice@a.es", "avatar_15", "new bio", List.of()
+                "alice", "alice@a.es", "avatar_15", "new bio", List.of(),
+                "28", "28079", "28079001"
         ));
 
         String body = objectMapper.writeValueAsString(
-                new UpdateProfileRequest("avatar_15", "new bio", null));
+                new UpdateProfileRequest("avatar_15", "new bio", null, null, null, null));
 
         mockMvc.perform(patch("/api/v1/me/profile")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +108,7 @@ class MeControllerTest {
     @Test
     void update_returns400OnInvalidAvatar() throws Exception {
         String body = objectMapper.writeValueAsString(
-                new UpdateProfileRequest("not-an-avatar", null, null));
+                new UpdateProfileRequest("not-an-avatar", null, null, null, null, null));
 
         mockMvc.perform(patch("/api/v1/me/profile")
                         .contentType(MediaType.APPLICATION_JSON)

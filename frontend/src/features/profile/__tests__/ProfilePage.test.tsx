@@ -50,6 +50,9 @@ describe('ProfilePage', () => {
           avatarCode: 'avatar_07',
           bio: 'Hello.',
           favoriteGames: [],
+          provinceCode: null,
+          cityCode: null,
+          areaCode: null,
         }),
       ),
     )

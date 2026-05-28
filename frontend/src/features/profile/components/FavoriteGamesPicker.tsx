@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { GameTypeahead } from '@/features/games/components/GameTypeahead'
@@ -21,16 +21,30 @@ export function FavoriteGamesPicker({ initial }: Props) {
   const [items, setItems] = useState<FavoriteGameSummary[]>(initial)
   const [open, setOpen] = useState(false)
 
+  // B5 deep fix: serializar las mutations PATCH /me/profile. Antes había
+  // 2-3 PATCHes concurrentes al añadir juegos rápido y la primera respuesta
+  // sobrescribía el cache disparando useEffect([initial]) que reseteaba el
+  // state local borrando los items recién añadidos.
+  const mutationChainRef = useRef<Promise<unknown>>(Promise.resolve())
+
+  function dispatchUpdate(ids: number[]) {
+    mutationChainRef.current = mutationChainRef.current
+      .catch(() => undefined)
+      .then(() => update.mutateAsync({ favoriteGameBggIds: ids }))
+  }
+
   // Sincroniza con el server cuando el query refresca (p.ej. volver a la página
-  // dispara un re-fetch). useState(initial) solo se inicializa una vez.
+  // dispara un re-fetch). NO sincronizamos mientras update.isPending — el state
+  // local es la fuente de verdad hasta que termina la última mutation.
   useEffect(() => {
+    if (update.isPending) return
     setItems(initial)
-  }, [initial])
+  }, [initial, update.isPending])
 
   function remove(bggId: number) {
     setItems((prev) => {
       const next = prev.filter((g) => g.bggId !== bggId)
-      update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+      dispatchUpdate(next.map((g) => g.bggId))
       return next
     })
   }
@@ -39,7 +53,7 @@ export function FavoriteGamesPicker({ initial }: Props) {
     setItems((prev) => {
       if (prev.find((g) => g.bggId === game.bggId)) return prev
       const next = [...prev, game]
-      update.mutate({ favoriteGameBggIds: next.map((g) => g.bggId) })
+      dispatchUpdate(next.map((g) => g.bggId))
       return next
     })
     setOpen(false)

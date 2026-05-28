@@ -8,6 +8,7 @@ import { AccountSection } from '../components/AccountSection'
 import { AvatarPicker } from '../components/AvatarPicker'
 import { BioForm } from '../components/BioForm'
 import { FavoriteGamesPicker } from '../components/FavoriteGamesPicker'
+import { LocationSection } from '../components/LocationSection'
 import { useProfileQuery } from '../hooks/useProfile'
 
 export default function ProfilePage() {
@@ -47,6 +48,13 @@ export default function ProfilePage() {
           </section>
           <section className="px-6 py-5">
             <BioForm initialBio={data.bio} />
+          </section>
+          <section className="px-6 py-5">
+            <LocationSection
+              initialProvinceCode={data.provinceCode}
+              initialCityCode={data.cityCode}
+              initialAreaCode={data.areaCode}
+            />
           </section>
           <section className="px-6 py-5">
             <FavoriteGamesPicker initial={data.favoriteGames} />

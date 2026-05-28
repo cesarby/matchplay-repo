@@ -5,6 +5,13 @@ import com.matchplay.avatar.repository.AvatarRepository;
 import com.matchplay.game.entity.Game;
 import com.matchplay.game.exception.GameNotFoundException;
 import com.matchplay.game.repository.GameRepository;
+import com.matchplay.geo.entity.Area;
+import com.matchplay.geo.entity.City;
+import com.matchplay.geo.entity.Province;
+import com.matchplay.geo.exception.GeoCodeNotFoundException;
+import com.matchplay.geo.repository.AreaRepository;
+import com.matchplay.geo.repository.CityRepository;
+import com.matchplay.geo.repository.ProvinceRepository;
 import com.matchplay.security.CurrentUserProvider;
 import com.matchplay.user.dto.FavoriteGameSummary;
 import com.matchplay.user.dto.UpdateProfileRequest;
@@ -35,6 +42,9 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserFavoriteGameRepository favoriteRepository;
     private final AvatarRepository avatarRepository;
     private final GameRepository gameRepository;
+    private final ProvinceRepository provinceRepository;
+    private final CityRepository cityRepository;
+    private final AreaRepository areaRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
@@ -56,7 +66,10 @@ public class ProfileServiceImpl implements ProfileService {
                 user.getEmail(),
                 user.getSelectedAvatar() != null ? user.getSelectedAvatar().getCode() : null,
                 user.getBio(),
-                favSummaries
+                favSummaries,
+                user.getProvince() != null ? user.getProvince().getCode() : null,
+                user.getCity() != null ? user.getCity().getCode() : null,
+                user.getArea() != null ? user.getArea().getCode() : null
         );
     }
 
@@ -92,6 +105,29 @@ public class ProfileServiceImpl implements ProfileService {
                 ufg.setCreatedAt(LocalDateTime.now());
                 favoriteRepository.save(ufg);
             }
+        }
+
+        // Ubicación: cada code se aplica independientemente si viene no-null y no
+        // blank. Las columnas son nullable=false a nivel de entity, así que NO
+        // permitimos "limpiar" — para cambiar la ubicación el FE debe enviar los
+        // 3 codes coherentes (provincia → ciudad → zona).
+        if (request.provinceCode() != null && !request.provinceCode().isBlank()) {
+            Province province = provinceRepository.findById(request.provinceCode())
+                    .orElseThrow(() -> new GeoCodeNotFoundException(
+                            "error.geo.province.not.found", request.provinceCode()));
+            user.setProvince(province);
+        }
+        if (request.cityCode() != null && !request.cityCode().isBlank()) {
+            City city = cityRepository.findById(request.cityCode())
+                    .orElseThrow(() -> new GeoCodeNotFoundException(
+                            "error.geo.city.not.found", request.cityCode()));
+            user.setCity(city);
+        }
+        if (request.areaCode() != null && !request.areaCode().isBlank()) {
+            Area area = areaRepository.findById(request.areaCode())
+                    .orElseThrow(() -> new GeoCodeNotFoundException(
+                            "error.geo.area.not.found", request.areaCode()));
+            user.setArea(area);
         }
 
         userRepository.save(user);

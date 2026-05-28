@@ -4,6 +4,13 @@ import com.matchplay.avatar.entity.Avatar;
 import com.matchplay.avatar.repository.AvatarRepository;
 import com.matchplay.game.entity.Game;
 import com.matchplay.game.repository.GameRepository;
+import com.matchplay.geo.entity.Area;
+import com.matchplay.geo.entity.City;
+import com.matchplay.geo.entity.Province;
+import com.matchplay.geo.exception.GeoCodeNotFoundException;
+import com.matchplay.geo.repository.AreaRepository;
+import com.matchplay.geo.repository.CityRepository;
+import com.matchplay.geo.repository.ProvinceRepository;
 import com.matchplay.security.CurrentUserProvider;
 import com.matchplay.user.dto.UpdateProfileRequest;
 import com.matchplay.user.dto.UserProfileResponse;
@@ -40,6 +47,9 @@ class ProfileServiceImplTest {
     @Mock UserFavoriteGameRepository favoriteRepository;
     @Mock AvatarRepository avatarRepository;
     @Mock GameRepository gameRepository;
+    @Mock ProvinceRepository provinceRepository;
+    @Mock CityRepository cityRepository;
+    @Mock AreaRepository areaRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock UserRepository userRepository;
 
@@ -55,6 +65,18 @@ class ProfileServiceImplTest {
         a.setCode(avatarCode);
         a.setName("Avatar 1");
         u.setSelectedAvatar(a);
+        Province p = new Province();
+        p.setCode("28");
+        p.setName("Madrid");
+        u.setProvince(p);
+        City c = new City();
+        c.setCode("28079");
+        c.setName("Madrid");
+        u.setCity(c);
+        Area ar = new Area();
+        ar.setCode("28079001");
+        ar.setName("Centro");
+        u.setArea(ar);
         return u;
     }
 
@@ -105,7 +127,7 @@ class ProfileServiceImplTest {
         given(avatarRepository.findById("avatar_15")).willReturn(Optional.of(newAv));
         given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
 
-        UserProfileResponse out = service.update(new UpdateProfileRequest("avatar_15", null, null));
+        UserProfileResponse out = service.update(new UpdateProfileRequest("avatar_15", null, null, null, null, null));
 
         assertThat(out.avatarCode()).isEqualTo("avatar_15");
         verify(userRepository).save(user);
@@ -117,7 +139,7 @@ class ProfileServiceImplTest {
         given(currentUserProvider.requireCurrentUser()).willReturn(user);
         given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
 
-        UserProfileResponse out = service.update(new UpdateProfileRequest(null, "new bio", null));
+        UserProfileResponse out = service.update(new UpdateProfileRequest(null, "new bio", null, null, null, null));
 
         assertThat(out.bio()).isEqualTo("new bio");
         verify(userRepository).save(user);
@@ -130,7 +152,7 @@ class ProfileServiceImplTest {
         given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
         String longBio = "x".repeat(500);
 
-        UserProfileResponse out = service.update(new UpdateProfileRequest(null, longBio, null));
+        UserProfileResponse out = service.update(new UpdateProfileRequest(null, longBio, null, null, null, null));
 
         assertThat(out.bio()).hasSize(280);
     }
@@ -149,7 +171,7 @@ class ProfileServiceImplTest {
         given(gameRepository.findById(22L)).willReturn(Optional.of(g2));
         given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
 
-        service.update(new UpdateProfileRequest(null, null, List.of(11L, 22L)));
+        service.update(new UpdateProfileRequest(null, null, List.of(11L, 22L), null, null, null));
 
         verify(favoriteRepository).deleteByUserId(42L);
         ArgumentCaptor<UserFavoriteGame> captor = ArgumentCaptor.forClass(UserFavoriteGame.class);
@@ -165,11 +187,78 @@ class ProfileServiceImplTest {
         given(currentUserProvider.requireCurrentUser()).willReturn(user);
 
         assertThatThrownBy(() -> service.update(
-                new UpdateProfileRequest(null, null, List.of(1L, 2L, 3L, 4L, 5L, 6L))))
+                new UpdateProfileRequest(null, null, List.of(1L, 2L, 3L, 4L, 5L, 6L), null, null, null)))
                 .isInstanceOf(TooManyFavoritesException.class);
 
         verify(favoriteRepository, never()).deleteByUserId(any());
         verify(favoriteRepository, never()).save(any());
+    }
+
+    @Test
+    void getCurrent_returnsLocationCodes() {
+        User user = userWith("alice", "alice@a.es", "avatar_07", null);
+        given(currentUserProvider.requireCurrentUser()).willReturn(user);
+        given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
+
+        UserProfileResponse out = service.getCurrent();
+
+        assertThat(out.provinceCode()).isEqualTo("28");
+        assertThat(out.cityCode()).isEqualTo("28079");
+        assertThat(out.areaCode()).isEqualTo("28079001");
+    }
+
+    @Test
+    void update_changesLocationCodes() {
+        User user = userWith("alice", "alice@a.es", "avatar_01", null);
+        given(currentUserProvider.requireCurrentUser()).willReturn(user);
+        given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
+
+        Province newP = new Province();
+        newP.setCode("08");
+        newP.setName("Barcelona");
+        City newC = new City();
+        newC.setCode("08019");
+        newC.setName("Barcelona");
+        Area newA = new Area();
+        newA.setCode("08019001");
+        newA.setName("Eixample");
+        given(provinceRepository.findById("08")).willReturn(Optional.of(newP));
+        given(cityRepository.findById("08019")).willReturn(Optional.of(newC));
+        given(areaRepository.findById("08019001")).willReturn(Optional.of(newA));
+
+        UserProfileResponse out = service.update(
+                new UpdateProfileRequest(null, null, null, "08", "08019", "08019001"));
+
+        assertThat(out.provinceCode()).isEqualTo("08");
+        assertThat(out.cityCode()).isEqualTo("08019");
+        assertThat(out.areaCode()).isEqualTo("08019001");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void update_unknownProvinceCode_throws() {
+        User user = userWith("alice", "alice@a.es", "avatar_01", null);
+        given(currentUserProvider.requireCurrentUser()).willReturn(user);
+        given(provinceRepository.findById("99")).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.update(
+                new UpdateProfileRequest(null, null, null, "99", null, null)))
+                .isInstanceOf(GeoCodeNotFoundException.class);
+    }
+
+    @Test
+    void update_blankLocationCodes_ignored() {
+        User user = userWith("alice", "alice@a.es", "avatar_01", null);
+        given(currentUserProvider.requireCurrentUser()).willReturn(user);
+        given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
+
+        // Blanks no deben disparar lookup — la entity es nullable=false y no se
+        // puede "limpiar" la ubicación, así que ignoramos.
+        UserProfileResponse out = service.update(
+                new UpdateProfileRequest(null, null, null, "", "", ""));
+
+        assertThat(out.provinceCode()).isEqualTo("28");
+        verify(provinceRepository, never()).findById(any());
     }
 
     @Test

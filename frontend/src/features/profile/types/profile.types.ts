@@ -10,10 +10,16 @@ export interface UserProfile {
   avatarCode: string | null
   bio: string | null
   favoriteGames: FavoriteGameSummary[]
+  provinceCode: string | null
+  cityCode: string | null
+  areaCode: string | null
 }
 
 export interface UpdateProfilePayload {
   avatarCode?: string
   bio?: string
   favoriteGameBggIds?: number[]
+  provinceCode?: string
+  cityCode?: string
+  areaCode?: string
 }
