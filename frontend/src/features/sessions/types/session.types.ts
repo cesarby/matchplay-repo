@@ -40,6 +40,8 @@ export interface SessionSummary {
   status: SessionStatus
   creatorId: number | null
   creatorUsername: string | null
+  /** Avatar code del creador (preset PNG). Opcional — undefined si no aplica. */
+  creatorAvatarCode?: string
 }
 
 /** Mensaje del chat de coordinación de una partida. */
@@ -47,6 +49,8 @@ export interface SessionMessage {
   id: number
   userId: number
   username: string
+  /** Avatar code del autor (preset PNG). Opcional — undefined si no aplica. */
+  authorAvatarCode?: string
   content: string
   createdAt: string // ISO Instant
 }
@@ -55,6 +59,8 @@ export interface SessionMessage {
 export interface SessionPlayer {
   userId: number
   username: string
+  /** Avatar code del jugador (preset PNG). Opcional — undefined si no aplica. */
+  avatarCode?: string
   role: ParticipantRole
   position: number | null // FIFO en cola; null para PLAYER
   joinedAt: string

@@ -12,6 +12,8 @@ export interface CurrentUser {
   ratingAvg: number
   rewardPoints: number
   selectedAvatarCode: string
+  /** Bio del perfil. Null/undefined si el usuario no la ha rellenado. */
+  bio?: string
 }
 
 export interface AuthResponse {
