@@ -274,7 +274,7 @@ describe('<SessionDetailPage>', () => {
     expect(screen.queryByRole('button', { name: /salir/i })).not.toBeInTheDocument()
   })
 
-  it('as creator with OPEN status shows both Edit and Close table buttons', async () => {
+  it('as creator with OPEN status shows owner actions (Editar / Cerrar inscripciones / Cancelar)', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       user: { userId: 1, username: 'alice' },
@@ -287,11 +287,13 @@ describe('<SessionDetailPage>', () => {
     )
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
-    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /cerrar mesa/i })).toBeInTheDocument()
+    // Editar es un <Link> (role="link") en SessionActions; el resto son buttons.
+    expect(screen.getByRole('link', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cerrar inscripciones/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cancelar partida/i })).toBeInTheDocument()
   })
 
-  it('as creator with FULL status shows Edit but not Close table', async () => {
+  it('as creator with FULL status shows Reabrir (no Cerrar inscripciones)', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       user: { userId: 1, username: 'alice' },
@@ -304,11 +306,13 @@ describe('<SessionDetailPage>', () => {
     )
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
-    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /cerrar mesa/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /reabrir inscripciones/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar inscripciones/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cancelar partida/i })).toBeInTheDocument()
   })
 
-  it('as visitor does not show Edit or Close table buttons', async () => {
+  it('as visitor does not show owner actions', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       user: { userId: 99, username: 'visitor' },
@@ -321,8 +325,9 @@ describe('<SessionDetailPage>', () => {
     )
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
-    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /cerrar mesa/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar inscripciones/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cancelar partida/i })).not.toBeInTheDocument()
   })
 
   it('renderiza el bloque "Sobre el juego" cuando hay baseGameSummary', async () => {

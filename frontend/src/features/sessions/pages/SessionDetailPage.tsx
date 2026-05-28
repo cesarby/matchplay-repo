@@ -6,7 +6,6 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { SeoHead } from '@/shared/components/SeoHead'
 import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
-import { CreatorActions } from '../components/CreatorActions'
 import { GameCover } from '../components/GameCover'
 import { JoinCallToAction } from '../components/JoinCallToAction'
 import { SessionActions } from '../components/SessionActions'
@@ -26,7 +25,7 @@ import { useSessionDetailQuery } from '../hooks/useSessions'
  */
 export default function SessionDetailPage() {
   const { t, i18n } = useTranslation()
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { id } = useParams<{ id: string }>()
   const sessionId = id ? Number.parseInt(id, 10) : Number.NaN
   const { data, isLoading, isError, error } = useSessionDetailQuery(
@@ -65,9 +64,6 @@ export default function SessionDetailPage() {
       </div>
     )
   }
-
-  const isCreator = !!user && user.username === data.creatorUsername
-  const canEdit = isCreator && (data.status === 'OPEN' || data.status === 'FULL')
 
   const creatorUsername = data.creatorUsername
   const players = data.players.filter((p) => p.role === 'PLAYER')
@@ -159,8 +155,6 @@ export default function SessionDetailPage() {
               )}
             </li>
           </ul>
-
-          {canEdit && <CreatorActions session={data} />}
         </div>
       </header>
 
