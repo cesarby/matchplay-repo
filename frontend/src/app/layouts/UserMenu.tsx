@@ -15,8 +15,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Avatar } from '@/shared/components/Avatar'
-import { useTheme } from '@/shared/hooks/useTheme'
 import { cn } from '@/shared/lib/cn'
+import { useThemeStore } from '@/shared/store/themeStore'
 
 const SUPPORTED_LANGS = ['es', 'en'] as const
 
@@ -25,15 +25,17 @@ const SUPPORTED_LANGS = ['es', 'en'] as const
  * Items: Mi perfil, Mis mensajes (próx), Ayuda, Idioma toggle, Modo oscuro,
  * Cerrar sesión. Esc/click fuera cierran. Toggle de idioma/tema NO cierra.
  *
- * <p>El toggle de modo oscuro usa {@link useTheme} con persistencia real
- * en localStorage (clave {@code matchplay-theme}).</p>
+ * El toggle de modo oscuro escribe al {@code useThemeStore} (zustand persist
+ * con clave `matchplay.theme`) — el {@code ThemeProvider} lo lee y aplica
+ * la class `light`/`dark` al `<html>`.
  */
 export function UserMenu() {
   const { t, i18n } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const logout = useLogoutMutation()
   const navigate = useNavigate()
-  const { theme, setTheme } = useTheme()
+  const theme = useThemeStore((s) => s.theme)
+  const setTheme = useThemeStore((s) => s.setTheme)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 

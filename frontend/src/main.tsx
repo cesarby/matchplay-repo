@@ -6,11 +6,8 @@ import { I18nProvider } from '@/app/providers/I18nProvider'
 import { QueryProvider } from '@/app/providers/QueryProvider'
 import { SeoProvider } from '@/app/providers/SeoProvider'
 import { ThemeProvider } from '@/app/providers/ThemeProvider'
-import { initThemeEarly } from '@/shared/hooks/useTheme'
 
 import './styles/globals.css'
-
-initThemeEarly()
 
 /**
  * MSW en browser solo si VITE_USE_MSW=true. Por defecto OFF (incluso en dev)
