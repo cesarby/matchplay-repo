@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -7,8 +8,21 @@ import {
   useChangeSessionStatusMutation,
   useJoinSessionMutation,
   useLeaveSessionMutation,
+  useUpdateSessionMutation,
 } from '../hooks/useSessions'
 import type { SessionDetail } from '../types/session.types'
+
+import { EditSessionModal } from './EditSessionModal'
+
+function toLocalDatetimeInput(iso: string): string {
+  const d = new Date(iso)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+}
 
 interface SessionActionsProps {
   session: SessionDetail
@@ -29,10 +43,12 @@ interface SessionActionsProps {
 export function SessionActions({ session }: SessionActionsProps) {
   const { t } = useTranslation()
   const { isAuthenticated, user } = useAuth()
+  const [editOpen, setEditOpen] = useState(false)
 
   const join = useJoinSessionMutation(session.id)
   const leave = useLeaveSessionMutation(session.id)
   const changeStatus = useChangeSessionStatusMutation(session.id)
+  const updateMut = useUpdateSessionMutation(session.id)
 
   // Si está terminal, no se puede hacer nada
   if (session.status === 'COMPLETED' || session.status === 'CANCELLED') {
@@ -58,45 +74,67 @@ export function SessionActions({ session }: SessionActionsProps) {
   // Organizador: edición + transiciones
   if (isOwner) {
     return (
-      <div className="flex flex-wrap gap-2">
-        <Link
-          to={`/sessions/${session.id}/edit`}
-          className="inline-flex items-center justify-center rounded-sm border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
-        >
-          {t('sessions.detail.edit')}
-        </Link>
-
-        {session.status === 'OPEN' && (
+      <>
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => changeStatus.mutate({ status: 'FULL' })}
-            disabled={changeStatus.isPending}
-            className="inline-flex items-center justify-center rounded-sm bg-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            onClick={() => setEditOpen(true)}
+            className="inline-flex items-center justify-center rounded-sm border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
           >
-            {t('sessions.detail.closeRegistrations')}
+            {t('sessions.detail.edit')}
           </button>
-        )}
 
-        {session.status === 'FULL' && (
+          {session.status === 'OPEN' && (
+            <button
+              type="button"
+              onClick={() => changeStatus.mutate({ status: 'FULL' })}
+              disabled={changeStatus.isPending}
+              className="inline-flex items-center justify-center rounded-sm bg-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              {t('sessions.detail.closeRegistrations')}
+            </button>
+          )}
+
+          {session.status === 'FULL' && (
+            <button
+              type="button"
+              onClick={() => changeStatus.mutate({ status: 'OPEN' })}
+              disabled={changeStatus.isPending}
+              className="inline-flex items-center justify-center rounded-sm bg-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              {t('sessions.detail.reopenRegistrations')}
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => changeStatus.mutate({ status: 'OPEN' })}
+            onClick={() => changeStatus.mutate({ status: 'CANCELLED' })}
             disabled={changeStatus.isPending}
-            className="inline-flex items-center justify-center rounded-sm bg-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-sm border border-red bg-red-soft px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-red hover:text-white disabled:opacity-50"
           >
-            {t('sessions.detail.reopenRegistrations')}
+            {t('sessions.detail.cancelSession')}
           </button>
-        )}
+        </div>
 
-        <button
-          type="button"
-          onClick={() => changeStatus.mutate({ status: 'CANCELLED' })}
-          disabled={changeStatus.isPending}
-          className="inline-flex items-center justify-center rounded-sm border border-red bg-red-soft px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-red hover:text-white disabled:opacity-50"
-        >
-          {t('sessions.detail.cancelSession')}
-        </button>
-      </div>
+        <EditSessionModal
+          open={editOpen}
+          initialScheduledAt={toLocalDatetimeInput(session.scheduledAt)}
+          initialMaxPlayers={session.maxPlayers}
+          registeredPlayers={session.registeredPlayers}
+          waitlistCount={session.waitlistCount}
+          isPending={updateMut.isPending}
+          onClose={() => setEditOpen(false)}
+          onSubmit={(payload) => {
+            updateMut.mutate(
+              {
+                scheduledAt: new Date(payload.scheduledAt).toISOString(),
+                maxPlayers: payload.maxPlayers,
+              },
+              { onSuccess: () => setEditOpen(false) },
+            )
+          }}
+        />
+      </>
     )
   }
 

@@ -149,7 +149,7 @@ describe('<SessionDetailPage>', () => {
 
     expect(await screen.findByRole('button', { name: /cerrar inscripciones/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /cancelar partida/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
   })
 
   it('renders waitlist section with positions when waitlist members exist', async () => {
@@ -288,7 +288,7 @@ describe('<SessionDetailPage>', () => {
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
     // Editar es un <Link> (role="link") en SessionActions; el resto son buttons.
-    expect(screen.getByRole('link', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /cerrar inscripciones/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /cancelar partida/i })).toBeInTheDocument()
   })
@@ -306,7 +306,7 @@ describe('<SessionDetailPage>', () => {
     )
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
-    expect(screen.getByRole('link', { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /reabrir inscripciones/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cerrar inscripciones/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /cancelar partida/i })).toBeInTheDocument()
@@ -325,7 +325,7 @@ describe('<SessionDetailPage>', () => {
     )
     renderDetail()
     await screen.findByRole('heading', { level: 1, name: 'Catan Night' })
-    expect(screen.queryByRole('link', { name: /editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cerrar inscripciones/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cancelar partida/i })).not.toBeInTheDocument()
   })
