@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { Avatar } from '@/shared/components/Avatar'
 import { SeoHead } from '@/shared/components/SeoHead'
 import { SessionStatusBadge } from '@/shared/components/SessionStatusBadge'
 
@@ -125,9 +126,16 @@ export default function SessionDetailPage() {
             <p className="text-sm italic text-muted-foreground">{data.baseGameName}</p>
           )}
           {data.creatorUsername && (
-            <p className="text-xs text-muted-foreground">
-              {t('sessions.card.byCreator', { username: data.creatorUsername })}
-            </p>
+            <div className="flex items-center justify-center gap-2 sm:justify-start">
+              <Avatar
+                username={data.creatorUsername}
+                avatarCode={data.creatorAvatarCode}
+                size={20}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('sessions.card.byCreator', { username: data.creatorUsername })}
+              </p>
+            </div>
           )}
 
           {/* Meta vertical con iconos coloreados */}
