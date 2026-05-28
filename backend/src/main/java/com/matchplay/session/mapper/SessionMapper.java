@@ -56,7 +56,10 @@ public class SessionMapper {
                 session.getStatus(),
                 session.getCreator() != null ? session.getCreator().getId() : null,
                 session.getCreator() != null ? session.getCreator().getUsernameValue() : null,
-                names
+                names,
+                session.getCreator() != null && session.getCreator().getSelectedAvatar() != null
+                        ? session.getCreator().getSelectedAvatar().getCode()
+                        : null
         );
     }
 
@@ -118,6 +121,9 @@ public class SessionMapper {
         return new SessionPlayerResponse(
                 participant.getUser().getId(),
                 participant.getUser().getUsernameValue(),
+                participant.getUser().getSelectedAvatar() != null
+                        ? participant.getUser().getSelectedAvatar().getCode()
+                        : null,
                 participant.getRole(),
                 participant.getPosition(),
                 participant.getJoinedAt()

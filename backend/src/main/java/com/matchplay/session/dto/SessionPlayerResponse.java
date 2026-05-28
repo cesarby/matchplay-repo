@@ -13,6 +13,7 @@ import java.time.Instant;
 public record SessionPlayerResponse(
         Long userId,
         String username,
+        String avatarCode,
         ParticipantRole role,
         Integer position,
         Instant joinedAt

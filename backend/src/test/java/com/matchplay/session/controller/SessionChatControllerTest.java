@@ -69,7 +69,7 @@ class SessionChatControllerTest {
     @Test
     void list_returns200WithMessages() throws Exception {
         SessionMessageResponse m = new SessionMessageResponse(
-                1L, 2L, "alice", "hola", Instant.parse("2026-01-01T10:00:00Z"));
+                1L, 2L, "alice", null, "hola", Instant.parse("2026-01-01T10:00:00Z"));
         when(chatService.list(eq(10L), eq(null))).thenReturn(List.of(m));
 
         mockMvc.perform(get("/api/v1/sessions/10/messages"))
@@ -90,7 +90,7 @@ class SessionChatControllerTest {
     @Test
     void send_returns201_withCreatedMessage() throws Exception {
         SessionMessageResponse m = new SessionMessageResponse(
-                42L, 2L, "alice", "hola", Instant.parse("2026-01-01T10:00:00Z"));
+                42L, 2L, "alice", null, "hola", Instant.parse("2026-01-01T10:00:00Z"));
         when(chatService.send(eq(10L), any())).thenReturn(m);
 
         mockMvc.perform(post("/api/v1/sessions/10/messages")

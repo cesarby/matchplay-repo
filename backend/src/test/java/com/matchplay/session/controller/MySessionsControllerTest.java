@@ -82,7 +82,7 @@ class MySessionsControllerTest {
                 1L, "S", 13L, "Catan", null, 0,
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 1, 0,
-                SessionStatus.OPEN, 1L, "me", null);
+                SessionStatus.OPEN, 1L, "me", null, null);
         return new MySessionsResponse(
                 new PageResponse<>(List.of(s), 0, 20, 1L, 1, true),
                 new TabCounts(1L, 0L, 0L, 0L)

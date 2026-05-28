@@ -55,7 +55,7 @@ class MySessionsServiceImplTest {
                 id, "S" + id, 13L, "Catan", null, 0,
                 "MAD01", "Madrid", null, null,
                 Instant.now(), 4, 1, 0,
-                SessionStatus.OPEN, USER_ID, "me", null);
+                SessionStatus.OPEN, USER_ID, "me", null, null);
     }
 
     @SuppressWarnings("unchecked")

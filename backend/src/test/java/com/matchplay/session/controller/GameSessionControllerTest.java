@@ -84,7 +84,7 @@ class GameSessionControllerTest {
                 1L, "Catan", 13L, "Catan", null, 0,
                 "MAD01", "Madrid", null, null,
                 Instant.now().plus(1, ChronoUnit.DAYS), 4, 1, 0,
-                SessionStatus.OPEN, 1L, "creator", null);
+                SessionStatus.OPEN, 1L, "creator", null, null);
 
         given(service.search(any(), any())).willReturn(
                 new PageImpl<>(List.of(s), PageRequest.of(0, 20), 1));

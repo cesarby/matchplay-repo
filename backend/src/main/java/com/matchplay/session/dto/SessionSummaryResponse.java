@@ -34,5 +34,6 @@ public record SessionSummaryResponse(
         SessionStatus status,
         Long creatorId,
         String creatorUsername,
-        List<String> expansionNames
+        List<String> expansionNames,
+        String creatorAvatarCode
 ) {}

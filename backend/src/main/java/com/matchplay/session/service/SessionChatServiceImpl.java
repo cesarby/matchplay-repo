@@ -118,6 +118,9 @@ public class SessionChatServiceImpl implements SessionChatService {
                 m.getId(),
                 m.getUser().getId(),
                 m.getUser().getUsernameValue(),
+                m.getUser().getSelectedAvatar() != null
+                        ? m.getUser().getSelectedAvatar().getCode()
+                        : null,
                 m.getContent(),
                 m.getCreatedAt()
         );
