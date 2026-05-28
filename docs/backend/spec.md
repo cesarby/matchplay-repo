@@ -13,7 +13,7 @@ Referencia global: [../spec.md](../spec.md)
 | Auth | [modules/auth-spec.md](modules/auth-spec.md) | Definido + implementado |
 | Partidas (sessions) | [modules/sessions-spec.md](modules/sessions-spec.md) | Definido + implementado (Fase 1 + 1.1) |
 | Stats públicas | (integrado en sessions, sin spec propio) | Implementado (`GET /api/v1/stats/public`) |
-| Usuarios | [modules/users-spec.md](modules/users-spec.md) | Pendiente |
+| Usuarios — Perfil | [modules/user-spec.md](modules/user-spec.md) | Definido + implementado |
 | Juegos (búsqueda BGG) | [modules/games-spec.md](modules/games-spec.md) | Definido + implementado |
 | Geo (provincias/ciudades/zonas) | [modules/geo-spec.md](modules/geo-spec.md) | Definido + implementado |
 | Admin | [modules/admin-spec.md](modules/admin-spec.md) | Pendiente |

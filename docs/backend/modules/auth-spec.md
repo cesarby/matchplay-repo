@@ -495,3 +495,16 @@ Componentes que viven fuera del módulo pero los toca este spec:
 - **i18n**: 7 claves nuevas (`error.auth.*` + `error.geo.*`).
 - **UserRepository** (módulo `user/repository/`): crear si no existe. Necesario para `UserDetailsServiceImpl`.
 - **JpaAuditingConfig** + `CurrentUserProvider`: en `config/` y `security/`.
+
+---
+
+## Perfil de usuario
+
+`GET /api/v1/me` cubierto en este spec devuelve el `CurrentUserResponse`
+ligero (con `selectedAvatarCode` y `bio`). Para el **perfil completo**
+(avatar picker, bio editable, juegos favoritos, cambio de contraseña),
+ver [user-spec.md](user-spec.md) — endpoints bajo `/api/v1/me/profile`.
+
+`AuthServiceImpl.register()` también asigna un avatar aleatorio en signup
+(no `avatar_01` fijo) — la lógica vive aquí pero se documenta en
+`user-spec.md` para mantener la feature del perfil cohesionada.
