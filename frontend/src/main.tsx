@@ -5,7 +5,6 @@ import { App } from '@/app/App'
 import { I18nProvider } from '@/app/providers/I18nProvider'
 import { QueryProvider } from '@/app/providers/QueryProvider'
 import { SeoProvider } from '@/app/providers/SeoProvider'
-import { ThemeProvider } from '@/app/providers/ThemeProvider'
 
 import './styles/globals.css'
 
@@ -33,11 +32,9 @@ void enableMocking().then(() => {
     <StrictMode>
       <SeoProvider>
         <I18nProvider>
-          <ThemeProvider>
-            <QueryProvider>
-              <App />
-            </QueryProvider>
-          </ThemeProvider>
+          <QueryProvider>
+            <App />
+          </QueryProvider>
         </I18nProvider>
       </SeoProvider>
     </StrictMode>,

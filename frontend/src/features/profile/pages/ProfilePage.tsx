@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { Avatar } from '@/shared/components/Avatar'
 import { SeoHead } from '@/shared/components/SeoHead'
 
 import { AccountSection } from '../components/AccountSection'
@@ -37,13 +36,9 @@ export default function ProfilePage() {
         noindex
       />
       <div className="overflow-hidden rounded-xl bg-[#FAF7F2] shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-4 border-b border-muted bg-card px-6 py-5">
-          <Avatar username={data.username} avatarCode={data.avatarCode} size={48} />
-          <div>
-            <h1 className="m-0 font-display text-xl font-bold">@{data.username}</h1>
-            <p className="m-0 text-xs text-muted-foreground">{data.email}</p>
-            {data.bio && <p className="mt-1 text-sm italic text-muted-foreground">{data.bio}</p>}
-          </div>
+        <div className="border-b border-muted bg-card px-6 py-5">
+          <h1 className="m-0 font-display text-xl font-bold">@{data.username}</h1>
+          <p className="m-0 text-xs text-muted-foreground">{data.email}</p>
         </div>
 
         <div className="space-y-0 divide-y divide-muted">

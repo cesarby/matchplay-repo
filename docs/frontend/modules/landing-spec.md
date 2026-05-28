@@ -738,7 +738,6 @@ Reglas:
 | Featured Games carousel | v1.1 | No esencial para conversión |
 | Blog / news real en CommunityCarousel | Cuando exista CMS o tabla `posts` | Placeholders son aceptables a corto plazo |
 | Hamburger menu mobile | v1.1 | Header simplificado funciona en mobile (solo CTAs) |
-| Toggle de tema (light/dark) en header | Cuando exista `<ThemeToggle />` en `shared/components/` | El boot ya respeta `themeStore`, falta el control UI |
 | Auto-advance del carousel | Solo si hay petición explícita | Plugin `embla-carousel-autoplay` listo para instalar. A11y prefiere control manual. |
 | A/B testing del hero (variantes copy) | Cuando haya analytics | No hay infra de tracking todavía |
 | `sessions` module completo (controllers, services, DTOs) | Próxima feature | El schema ya está creado en esta misma iteración para desbloquear stats |

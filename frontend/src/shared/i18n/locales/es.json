@@ -5,7 +5,9 @@
     "error": "Algo salió mal",
     "retry": "Reintentar",
     "submit": "Enviar",
-    "comingSoon": "Pronto"
+    "comingSoon": "Pronto",
+    "back": "Volver",
+    "close": "Cerrar"
   },
   "nav": {
     "home": "Inicio",
@@ -23,7 +25,6 @@
     "messages": "Mis mensajes",
     "help": "Ayuda",
     "language": "Idioma",
-    "darkMode": "Modo oscuro",
     "userMenuLabel": "Menú de usuario"
   },
   "home": {
@@ -172,6 +173,14 @@
       "bodyWithWaitlist": "Cerrarás esta mesa con {{count}} jugadores. Nadie nuevo podrá apuntarse, pero si alguien cancela los {{waitlist}} en cola podrán entrar.",
       "confirm": "Cerrar mesa",
       "cancel": "Cancelar"
+    },
+    "cancelConfirm": {
+      "title": "¿Cancelar la partida?",
+      "body": "Esta acción es irreversible: la partida queda como CANCELADA y se borra el chat.",
+      "bodyWithPlayers": "Esta acción es irreversible: la partida queda como CANCELADA, se borra el chat y los {{count}} apuntados se enteran al volver a la página.",
+      "note": "Los apuntados no reciben notificación (el módulo de notificaciones no está disponible aún).",
+      "keep": "No, mantener",
+      "confirm": "Sí, cancelar partida"
     },
     "edit": {
       "title": "Editar partida",

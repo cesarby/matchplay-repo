@@ -11,7 +11,7 @@ Añadir el **menú de usuario** (dropdown en desktop / drawer en mobile) ancorad
 
 | Decisión | Valor |
 |----------|-------|
-| Items del menú | Mi perfil · Mis mensajes (próx) · Ayuda · Idioma (toggle ES/EN) · Modo oscuro (toggle) · Cerrar sesión |
+| Items del menú | Mi perfil · Mis mensajes (próx) · Ayuda · Idioma (toggle ES/EN) · Cerrar sesión |
 | Layout de `/profile` | Single page con secciones (sin tabs) — Avatar, Bio, Juegos favoritos, Cuenta |
 | Avatar storage | Presets fijos: 31 PNGs en `frontend/src/assets/avatars/avatar_01..31.png`. DB guarda solo `avatar_code` (string `avatar_NN`). |
 | Asignación inicial | Aleatoria en signup (`avatar_` + `01..31`) |
@@ -20,9 +20,7 @@ Añadir el **menú de usuario** (dropdown en desktop / drawer en mobile) ancorad
 | Bio | TEXTAREA max 280 chars, contador visible. Guardar explícito (no auto-save). |
 | Juegos favoritos | Max 5. Picker BGG (reusa lógica de `<GameWithExpansionsPicker>`). Sin reorder UI. |
 | Cambio de contraseña | `POST /me/password` con `{currentPassword, newPassword}`. No invalida sesión. |
-| Dark mode persistence | `localStorage` (`matchplay-theme`). Default `light`. |
 | Idioma toggle | Dentro del menú; NO cierra el menú al cambiar. Persistencia `localStorage` (i18n-detector existente). |
-| Modo oscuro toggle | Dentro del menú; NO cierra el menú al cambiar. |
 | Mobile menu | Una sola superficie: tap en avatar → drawer fullscreen actual (MobileMenu) con los items nuevos. No popover separado. |
 | Avatar en SessionDetail | Junto a "organiza @user" en header + SessionPlayerRow apuntados + ChatMessageRow |
 | Avatar en SessionCard | NO en este sprint (el listado tiene la portada del juego como protagonista visual). Tampoco enriquecemos `SessionSummaryResponse` con `creatorAvatarCode` — YAGNI; si se necesita en follow-up, se añade entonces. |
@@ -66,15 +64,11 @@ Añadir el **menú de usuario** (dropdown en desktop / drawer en mobile) ancorad
 - **`HelpPage`** — `frontend/src/features/help/pages/HelpPage.tsx`.
   - Stub público (no requiere auth). H1 + párrafo con FAQ placeholder + email de soporte. Contenido se itera después.
 
-- **`useTheme()`** — `frontend/src/shared/hooks/useTheme.ts`.
-  - `[theme, setTheme]` con persistencia en `localStorage['matchplay-theme']`. Aplica `class="dark"` al `<html>` cuando theme === 'dark'.
-  - Inicialización en `main.tsx` o `App.tsx` antes del render para evitar flash.
-
 ### Componentes modificados (FE)
 
 - **`SiteHeader`**: el bloque `{user.username} + LogoutButton + LanguageSwitcher` se reemplaza por `<UserMenu>` (un solo componente). En mobile, el burger se mantiene cuando hay user anónimo; cuando hay user autenticado, el avatar reemplaza al burger (mismo onClick que abre el `MobileMenu` drawer).
 
-- **`MobileMenu`**: añadir items "Mi perfil" (activo, link `/profile`), "Mis mensajes" (disabled, próximamente), "Ayuda" (`/help`), toggle Modo oscuro. El item "Mi perfil" disabled actual se quita (ahora activo). Mantiene Partidas, Mis partidas, Idioma, Cerrar sesión.
+- **`MobileMenu`**: añadir items "Mi perfil" (activo, link `/profile`), "Mis mensajes" (disabled, próximamente), "Ayuda" (`/help`). El item "Mi perfil" disabled actual se quita (ahora activo). Mantiene Partidas, Mis partidas, Idioma, Cerrar sesión.
 
 - **`SessionPlayerRow`**: cambia el span letra+color por `<Avatar size=28 username avatarCode>`.
 
@@ -145,8 +139,7 @@ Items, orden fijo:
 2. **Mis mensajes** → disabled, pill "Pronto". Icono `MessageSquare`.
 3. **Ayuda** → `/help`. Icono `HelpCircle`.
 4. **Idioma** → toggle inline `[ES] [EN]` (chips). Click cambia idioma, no cierra el menú. Icono `Globe`.
-5. **Modo oscuro** → toggle switch. Click cambia tema, no cierra el menú. Icono `Moon`/`Sun` según estado.
-6. **Cerrar sesión** → ejecuta `logout`. Con separador arriba, icono `LogOut`, todo en `text-[#C8362C]`.
+5. **Cerrar sesión** → ejecuta `logout`. Con separador arriba, icono `LogOut`, todo en `text-[#C8362C]`.
 
 A11y:
 - Trigger: `aria-haspopup="menu"`, `aria-expanded={open}`.
@@ -200,7 +193,7 @@ Comportamientos:
 ### Mobile
 
 - Header mobile autenticado: el botón hamburguesa se reemplaza por el `<Avatar size=32>` del usuario. Tap → abre el `MobileMenu` drawer fullscreen actual.
-- `MobileMenu` añade los items nuevos (Mi perfil, Mis mensajes próx, Ayuda, Modo oscuro) y mantiene los actuales (Partidas, Mis partidas, Idioma, Cerrar sesión). Mismo orden visual que el dropdown desktop.
+- `MobileMenu` añade los items nuevos (Mi perfil, Mis mensajes próx, Ayuda) y mantiene los actuales (Partidas, Mis partidas, Idioma, Cerrar sesión). Mismo orden visual que el dropdown desktop.
 - Anónimo mobile: mantiene el botón hamburguesa actual.
 
 ### Edge cases
@@ -217,7 +210,7 @@ Comportamientos:
 Estructura propuesta (validar al implementar contra los archivos `es.json` y `en.json`):
 
 ```
-nav.{profile, messages, help, language, darkMode}
+nav.{profile, messages, help, language}
 
 profile.{title, headingAvatar, headingBio, headingFavorites, headingAccount,
          bioPlaceholder, bioCounter, bioSaveButton, bioSavedInline,
@@ -246,9 +239,8 @@ Para writing-plans:
 5. **FE `<UserMenu>` + integración en `SiteHeader`** (menú desktop + drawer mobile actualizado).
 6. **FE página `/profile`** con AvatarPicker, bio, favoritos picker, change password.
 7. **FE `<Avatar>` en `SessionDetailPage` header + `ChatMessageRow`**.
-8. **FE `useTheme()` + toggle dark mode integrado en menú**.
-9. **FE página `/help` stub**.
-10. **Docs**: actualizar `docs/backend/modules/auth-spec.md` o crear `users-spec.md`, y `docs/frontend/modules/profile-spec.md` (o sección en auth-spec).
+8. **FE página `/help` stub**.
+9. **Docs**: actualizar `docs/backend/modules/auth-spec.md` o crear `users-spec.md`, y `docs/frontend/modules/profile-spec.md` (o sección en auth-spec).
 
 Orden permite ir verificando incrementos visibles (apuntados con avatares es el primer impacto visual con poca infra).
 
@@ -262,7 +254,7 @@ Orden permite ir verificando incrementos visibles (apuntados con avatares es el 
 - Reorder UI de juegos favoritos (orden = orden de añadido).
 - Avatares en `SessionCard` del listado público (decidido NO en este sprint).
 - Tooltip para items "Próximamente".
-- `prefers-color-scheme` automático para dark mode (default fijo light).
+- Modo oscuro (descartado — el proyecto se queda solo en tema claro).
 - Sub-rutas dentro de `/profile` (todo en single scroll).
 
 ## Open questions

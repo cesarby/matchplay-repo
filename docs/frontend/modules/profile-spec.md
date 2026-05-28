@@ -41,7 +41,6 @@ Lo que **no** está en este módulo:
 | Storage de avatar | 31 PNGs preset en `frontend/src/assets/avatars/avatar_NN.png` (NN = 01..31) | `import.meta.glob` eager para resolver URLs en build-time, sin 31 imports estáticos. |
 | Fallback `<Avatar>` | Círculo letra+color via `pickAvatarColor(username)` (helper ya existente para sidebar / chat) | Cubre `avatarCode` undefined o code desconocido. |
 | Tipo `avatarCode` en TS | `avatarCode?: string` (opcional, no `string \| null`) | Jackson global `non_null` lo omite → llega `undefined`. Tipar como nullable rompería las comparaciones (ver CLAUDE.md). |
-| Estado del tema | `useThemeStore` zustand persist preexistente (`matchplay.theme`) — NO hook nuevo | El plan original mencionaba `useTheme()`, en implementación se reutilizó el store existente. |
 | Layout `/profile` | **Layout C** (single-scroll, sin sidebar nav) | Aprobado en spec de diseño. Mockup `.mp-mockup` con bg `#FAF7F2` + `rounded-xl` + `shadow-warm`. |
 | Grid avatar picker | 7 columnas × 5 filas en desktop (cabe los 31 con 4 huecos vacíos) | Click sobre cualquiera dispara save optimista. |
 | Bio | Textarea 280 chars + contador `n/280` + botón "Guardar" explícito | Sin save on blur — el usuario controla. |
@@ -143,34 +142,16 @@ Items (en orden):
 2. **Mis mensajes** → texto + pill "Próximamente" (clave `common.comingSoon`). Sin link.
 3. **Ayuda** → `<Link to="/help">` con icono `HelpCircle`.
 4. **Idioma** — fila con label "Idioma" + pill toggle ES / EN. Click cambia `i18n.changeLanguage` (no cierra el menú — feedback inmediato).
-5. **Modo oscuro** — fila con label "Modo oscuro" + switch. Click llama `useThemeStore.setState({ theme })` (toggle entre `light` y `dark`). Persiste en localStorage `matchplay.theme`.
-6. **Cerrar sesión** — botón rojo, `useLogoutMutation` + `navigate('/')`.
+5. **Cerrar sesión** — botón rojo, `useLogoutMutation` + `navigate('/')`.
 
 Cierre del menú:
 
 - Click fuera (overlay invisible en desktop, backdrop visible en mobile).
 - Escape.
 - Click sobre un `<Link>` (auto cierra vía React Router navigation).
-- Excepción: el toggle de idioma y el switch de tema NO cierran (feedback en sitio).
+- Excepción: el toggle de idioma NO cierra (feedback en sitio).
 
 Test (`UserMenu.test.tsx`): trigger renderiza username + avatar, dropdown muestra todos los items, click en Cerrar sesión dispara `logout`.
-
----
-
-## Integración con `useThemeStore`
-
-Store zustand preexistente (módulo de auth/landing). No se crea un hook nuevo.
-
-```ts
-// src/shared/stores/themeStore.ts (preexistente)
-interface ThemeState { theme: 'light' | 'dark' }
-useThemeStore = create(persist<ThemeState>(..., { name: 'matchplay.theme' }))
-```
-
-`UserMenu` lee `useThemeStore(s => s.theme)` y llama `useThemeStore.setState(...)`
-para alternar. La aplicación de la clase `dark` al `<html>` ya la hace un
-efecto que vive en `main.tsx` (preexistente) — el menú solo cambia el valor
-del store.
 
 ---
 
@@ -322,7 +303,6 @@ Cuando `isAuthenticated`, además de los items existentes ("Partidas", "Crear pa
 - **Mis mensajes** → texto + pill "Próximamente". Sin link.
 - **Ayuda** → `/help`.
 - **Idioma** → toggle ES/EN inline.
-- **Modo oscuro** → switch inline (lee/escribe `useThemeStore`).
 - **Cerrar sesión** → al final, separado por divider.
 
 El avatar del `SiteHeader` mobile autenticado es el trigger del MobileMenu (en vez del burger). Anónimo sigue con burger.
@@ -445,7 +425,6 @@ nav.profile           # Mi perfil
 nav.messages          # Mis mensajes
 nav.help              # Ayuda
 nav.language          # Idioma
-nav.darkMode          # Modo oscuro
 nav.logout            # Cerrar sesión
 
 common.comingSoon     # Próximamente
@@ -484,4 +463,3 @@ help.{title, subtitle, faq, contact, terms, backHome}
 - **Modal de favoritos sin focus trap ni cierre por ESC** — mismo nivel que `EditSessionModal`. Aceptable en MVP; mejorar cuando se introduzca una infra de `<Dialog>` (probablemente Radix UI) en todo el proyecto.
 - **`useChangePasswordMutation` no diferencia códigos de error 4xx** — siempre muestra `profile.account.errorWrongPassword`. Si el backend en el futuro distingue entre "password actual incorrecta" y "validación falló por longitud", habría que mapear con `mapProfileError` (no existe todavía).
 - **Toast de éxito** — `common.savedToast` se prepara pero la infra de toasts no existe en v1 (ver `sessions-spec.md`). Por ahora el feedback de "guardado" es solo el spinner desapareciendo.
-- **`useThemeStore` ya existía** — el plan original mencionaba crear `useTheme()` hook nuevo (UP9). En la implementación se reutilizó el store. Esta spec refleja la realidad.

@@ -1,13 +1,4 @@
-import {
-  ChevronDown,
-  HelpCircle,
-  Languages,
-  LogOut,
-  MessageSquare,
-  Moon,
-  Sun,
-  User,
-} from 'lucide-react'
+import { ChevronDown, HelpCircle, Languages, LogOut, MessageSquare, User } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -16,26 +7,19 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Avatar } from '@/shared/components/Avatar'
 import { cn } from '@/shared/lib/cn'
-import { useThemeStore } from '@/shared/store/themeStore'
 
 const SUPPORTED_LANGS = ['es', 'en'] as const
 
 /**
  * Dropdown del usuario autenticado. Trigger: avatar + nombre (oculto en <md).
- * Items: Mi perfil, Mis mensajes (próx), Ayuda, Idioma toggle, Modo oscuro,
- * Cerrar sesión. Esc/click fuera cierran. Toggle de idioma/tema NO cierra.
- *
- * El toggle de modo oscuro escribe al {@code useThemeStore} (zustand persist
- * con clave `matchplay.theme`) — el {@code ThemeProvider} lo lee y aplica
- * la class `light`/`dark` al `<html>`.
+ * Items: Mi perfil, Mis mensajes (próx), Ayuda, Idioma toggle, Cerrar sesión.
+ * Esc/click fuera cierran. Toggle de idioma NO cierra.
  */
 export function UserMenu() {
   const { t, i18n } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const logout = useLogoutMutation()
   const navigate = useNavigate()
-  const theme = useThemeStore((s) => s.theme)
-  const setTheme = useThemeStore((s) => s.setTheme)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -126,34 +110,6 @@ export function UserMenu() {
               ))}
             </div>
           </div>
-
-          {/* Modo oscuro toggle */}
-          <button
-            type="button"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex w-full items-center gap-3.5 px-3.5 py-2 text-left text-sm hover:bg-foreground/5"
-          >
-            {theme === 'dark' ? (
-              <Sun size={16} className="text-muted-foreground" />
-            ) : (
-              <Moon size={16} className="text-muted-foreground" />
-            )}
-            <span>{t('nav.darkMode')}</span>
-            <span
-              className={cn(
-                'ml-auto inline-block h-5 w-9 rounded-full transition',
-                theme === 'dark' ? 'bg-foreground' : 'bg-muted',
-              )}
-              aria-hidden="true"
-            >
-              <span
-                className={cn(
-                  'mt-0.5 block h-4 w-4 rounded-full bg-white shadow transition-transform',
-                  theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-0.5',
-                )}
-              />
-            </span>
-          </button>
 
           {/* Logout */}
           <button

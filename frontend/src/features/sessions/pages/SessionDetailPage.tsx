@@ -1,6 +1,6 @@
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Avatar } from '@/shared/components/Avatar'
@@ -27,6 +27,7 @@ import { useSessionDetailQuery } from '../hooks/useSessions'
 export default function SessionDetailPage() {
   const { t, i18n } = useTranslation()
   const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const sessionId = id ? Number.parseInt(id, 10) : Number.NaN
   const { data, isLoading, isError, error } = useSessionDetailQuery(
@@ -100,6 +101,14 @@ export default function SessionDetailPage() {
         description={data.description ?? data.title}
         canonical={`/sessions/${data.id}`}
       />
+
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        ← {t('common.back')}
+      </button>
 
       {/* Header 2-col en sm+: cover izq + meta dcha. Mobile: stacked centrado. */}
       <header className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr] sm:gap-6">

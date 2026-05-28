@@ -36,7 +36,7 @@ Referencia global: [../spec.md](../spec.md)
 | i18n | **react-i18next** desde el inicio, **selector manual** de idioma (no detección automática) | Usuario elige idioma |
 | Auth storage | **Access token en memoria (Zustand) + refresh token en cookie httpOnly Secure SameSite=Strict** (requiere refactor del backend) | Defensa real contra XSS |
 | SEO | **react-helmet-async + pre-rendering en build + JSON-LD + sitemap + robots + Lighthouse CI** | Desde el día 1 |
-| Dark mode | **Sí en v1** (Tailwind `dark:` + Zustand `themeStore`) | |
+| Dark mode | **No** (descartado tras prueba de UX) | Los tokens `--dark` en `tokens.css` se mantienen como recurso, sin toggle UI. |
 | Estructura | **Feature-based desde el inicio** | Escala sin reorganizar después |
 | Testing | **Vitest + React Testing Library + MSW + vitest-axe** desde el día 1 | TDD donde aplique |
 | Pre-rendering | **vite-plugin-prerender (o `prerender.io` equivalente)** para rutas públicas | Crawlers no-Google y redes sociales |
@@ -80,7 +80,6 @@ frontend/src/
 │   ├── router.tsx                # Definición de rutas + lazy
 │   ├── providers/
 │   │   ├── QueryProvider.tsx     # TanStack Query
-│   │   ├── ThemeProvider.tsx     # dark/light
 │   │   ├── I18nProvider.tsx      # react-i18next
 │   │   └── HelmetProvider.tsx    # SEO
 │   └── layouts/
@@ -288,7 +287,6 @@ Solo para lo que **no** viene del backend:
 | Store | Contenido |
 |-------|-----------|
 | `authStore` | `accessToken` (memoria), `accessTokenExpiresAt`, `currentUser`, `isAuthenticated`, acciones `login/logout/setAccessToken` |
-| `themeStore` | `theme: 'light' \| 'dark'`, action `toggleTheme` (persiste en `localStorage`) |
 | `localeStore` | `locale: 'es' \| 'en'`, action `setLocale` (persiste en `localStorage`) |
 | `uiStore` | Estado UI puntual: drawer abierto, modales globales |
 
@@ -440,8 +438,8 @@ Los 4 primarios **no son decoración**: tienen **convención semántica fija** e
 ### Tokens CSS completos
 
 Colores como **variables CSS** en `styles/tokens.css`, leídos por Tailwind config.
-Estrategia `dark` con clase `.dark` en `<html>` (no `prefers-color-scheme`), para
-que el usuario pueda forzar el tema con `themeStore`.
+Los tokens `--dark` se mantienen como recurso del proyecto pero **no hay toggle UI** —
+el modo oscuro se descartó tras la prueba de UX. La aplicación queda siempre en tema claro.
 
 ```css
 :root {
@@ -844,7 +842,7 @@ CI corre (en este orden): `typecheck` → `lint` → `test:run` → `build` → 
 |------|------------|---------|
 | Componente | PascalCase, un archivo | `SessionCard.tsx` |
 | Hook | camelCase con `use` | `useAuth.ts`, `useSessionsQuery.ts` |
-| Store Zustand | camelCase con `Store` | `authStore.ts`, `themeStore.ts` |
+| Store Zustand | camelCase con `Store` | `authStore.ts`, `localeStore.ts` |
 | Tipo / interfaz | PascalCase, sin prefijo `I` | `Session`, `SessionFilters` |
 | Constante | UPPER_SNAKE_CASE | `MAX_PAGE_SIZE = 50` |
 | Archivo test | `.test.tsx` al lado | `SessionCard.test.tsx` |

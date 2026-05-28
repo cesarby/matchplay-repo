@@ -225,6 +225,10 @@ describe('<SessionDetailPage>', () => {
     const cancel = await screen.findByRole('button', { name: /cancelar partida/i })
     await userEvent.click(cancel)
 
+    // El click abre un modal de confirmación; ahora hay que pulsar "Sí, cancelar partida".
+    const confirm = await screen.findByRole('button', { name: /sí, cancelar partida/i })
+    await userEvent.click(confirm)
+
     await waitFor(() => expect(patchedBody).toEqual({ status: 'CANCELLED' }))
   })
 

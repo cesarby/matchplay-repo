@@ -40,11 +40,13 @@ const authedUser = {
 }
 
 describe('<MobileMenu>', () => {
-  it('shows greeting, avatar initial and stats when authenticated', () => {
+  it('shows greeting, avatar and stats when authenticated', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
     renderMenu()
     expect(screen.getByText(/hola.*cesarby/i)).toBeInTheDocument()
-    expect(screen.getByText('C')).toBeInTheDocument() // initial
+    // Avatar fallback: el code 'default' no matchea ningún PNG, así que se
+    // renderiza el círculo con la inicial del username.
+    expect(screen.getByText('C')).toBeInTheDocument()
     expect(screen.getByText('4.8')).toBeInTheDocument()
     expect(screen.getByText('320')).toBeInTheDocument()
   })
@@ -92,12 +94,6 @@ describe('<MobileMenu>', () => {
     renderMenu()
     const link = screen.getByRole('link', { name: /^ayuda$/i })
     expect(link).toHaveAttribute('href', '/help')
-  })
-
-  it('renders dark mode toggle for authenticated users', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: authedUser })
-    renderMenu()
-    expect(screen.getByRole('button', { name: /modo oscuro/i })).toBeInTheDocument()
   })
 
   it('shows login/register links and no logout when anonymous', () => {

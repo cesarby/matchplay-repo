@@ -12,6 +12,7 @@ import {
 } from '../hooks/useSessions'
 import type { SessionDetail } from '../types/session.types'
 
+import { CancelSessionModal } from './CancelSessionModal'
 import { EditSessionModal } from './EditSessionModal'
 
 function toLocalDatetimeInput(iso: string): string {
@@ -44,6 +45,7 @@ export function SessionActions({ session }: SessionActionsProps) {
   const { t } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const [editOpen, setEditOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
 
   const join = useJoinSessionMutation(session.id)
   const leave = useLeaveSessionMutation(session.id)
@@ -108,13 +110,24 @@ export function SessionActions({ session }: SessionActionsProps) {
 
           <button
             type="button"
-            onClick={() => changeStatus.mutate({ status: 'CANCELLED' })}
+            onClick={() => setCancelOpen(true)}
             disabled={changeStatus.isPending}
             className="inline-flex items-center justify-center rounded-sm border border-red bg-red-soft px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-red hover:text-white disabled:opacity-50"
           >
             {t('sessions.detail.cancelSession')}
           </button>
         </div>
+
+        <CancelSessionModal
+          open={cancelOpen}
+          registeredPlayers={session.registeredPlayers}
+          waitlistCount={session.waitlistCount}
+          isPending={changeStatus.isPending}
+          onClose={() => setCancelOpen(false)}
+          onConfirm={() =>
+            changeStatus.mutate({ status: 'CANCELLED' }, { onSuccess: () => setCancelOpen(false) })
+          }
+        />
 
         <EditSessionModal
           open={editOpen}

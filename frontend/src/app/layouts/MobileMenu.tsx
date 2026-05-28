@@ -6,10 +6,8 @@ import {
   HelpCircle,
   LogOut,
   MessageSquare,
-  Moon,
   Plus,
   Star,
-  Sun,
   User as UserIcon,
   X,
 } from 'lucide-react'
@@ -19,10 +17,10 @@ import { Link, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
+import { Avatar } from '@/shared/components/Avatar'
 import { Logo } from '@/shared/components/Logo'
 import { cn } from '@/shared/lib/cn'
 import { type Locale, useLocaleStore } from '@/shared/store/localeStore'
-import { useThemeStore } from '@/shared/store/themeStore'
 
 interface MobileMenuProps {
   onClose: () => void
@@ -38,9 +36,7 @@ interface MobileMenuProps {
  *
  * <p>"Mis partidas" enlaza a {@code /sessions/mine}, "Mi perfil" a
  * {@code /profile} y "Ayuda" a {@code /help} cuando hay usuario autenticado.
- * "Mis mensajes" sigue deshabilitada con pill "Pronto" (Fase futura). El
- * toggle de "Modo oscuro" escribe al {@link useThemeStore} (mismo store que
- * usa el {@link UserMenu} de desktop).</p>
+ * "Mis mensajes" sigue deshabilitada con pill "Pronto" (Fase futura).</p>
  */
 export function MobileMenu({ onClose }: MobileMenuProps) {
   const { t } = useTranslation()
@@ -75,14 +71,11 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
     }
   }, [])
 
-  const initial = (user?.username ?? '?').slice(0, 1).toUpperCase()
   const isSessionsActive = location.pathname === '/sessions'
   const isCreateActive = location.pathname.startsWith('/sessions/new')
   const isMyActive = location.pathname.startsWith('/sessions/mine')
   const isProfileActive = location.pathname.startsWith('/profile')
   const isHelpActive = location.pathname.startsWith('/help')
-  const theme = useThemeStore((s) => s.theme)
-  const setTheme = useThemeStore((s) => s.setTheme)
 
   return (
     <div
@@ -119,12 +112,12 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
       {/* Bloque usuario (sólo si autenticado) */}
       {isAuthenticated && user && (
         <div className="relative z-10 mt-6 flex items-center gap-3.5">
-          <div
-            aria-hidden="true"
-            className="inline-flex size-16 -rotate-3 items-center justify-center rounded-[20px] bg-gradient-to-br from-red to-yellow font-display text-[1.75rem] font-extrabold text-white shadow-lg"
-          >
-            {initial}
-          </div>
+          <Avatar
+            username={user.username}
+            avatarCode={user.selectedAvatarCode}
+            size={56}
+            className="shadow-lg"
+          />
           <div>
             <div className="font-display text-xl font-bold">
               {t('nav.greeting', { name: user.username })}
@@ -216,13 +209,6 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
           >
             {t('nav.help')}
           </MenuItem>
-        )}
-
-        {isAuthenticated && (
-          <DarkModeToggle
-            theme={theme}
-            onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          />
         )}
 
         {!isAuthenticated && (
@@ -344,50 +330,6 @@ function MenuItem({
     <Link to={to} className={className} aria-current={active ? 'page' : undefined}>
       {content}
     </Link>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// DarkModeToggle · MenuItem-style con switch a la derecha
-// ---------------------------------------------------------------------------
-
-interface DarkModeToggleProps {
-  theme: 'light' | 'dark'
-  onToggle: () => void
-}
-
-function DarkModeToggle({ theme, onToggle }: DarkModeToggleProps) {
-  const { t } = useTranslation()
-  const isDark = theme === 'dark'
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={isDark}
-      className="flex items-center gap-[15px] rounded-2xl border-[1.5px] border-border bg-card px-4 py-3.5 text-left transition hover:border-red"
-    >
-      <span
-        aria-hidden="true"
-        className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-muted text-muted-foreground"
-      >
-        {isDark ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
-      </span>
-      <span className="font-display text-[1.05rem] font-semibold">{t('nav.darkMode')}</span>
-      <span
-        aria-hidden="true"
-        className={cn(
-          'ml-auto inline-block h-6 w-11 rounded-full transition',
-          isDark ? 'bg-foreground' : 'bg-muted',
-        )}
-      >
-        <span
-          className={cn(
-            'mt-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform',
-            isDark ? 'translate-x-[22px]' : 'translate-x-0.5',
-          )}
-        />
-      </span>
-    </button>
   )
 }
 

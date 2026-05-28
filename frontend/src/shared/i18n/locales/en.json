@@ -5,7 +5,9 @@
     "error": "Something went wrong",
     "retry": "Retry",
     "submit": "Submit",
-    "comingSoon": "Soon"
+    "comingSoon": "Soon",
+    "back": "Back",
+    "close": "Close"
   },
   "nav": {
     "home": "Home",
@@ -23,7 +25,6 @@
     "messages": "My messages",
     "help": "Help",
     "language": "Language",
-    "darkMode": "Dark mode",
     "userMenuLabel": "User menu"
   },
   "home": {
@@ -172,6 +173,14 @@
       "bodyWithWaitlist": "You will close this table with {{count}} players. No new players will be able to join, but if someone cancels the {{waitlist}} in queue can enter.",
       "confirm": "Close table",
       "cancel": "Cancel"
+    },
+    "cancelConfirm": {
+      "title": "Cancel session?",
+      "body": "This action is irreversible: the session is marked as CANCELLED and the chat is deleted.",
+      "bodyWithPlayers": "This action is irreversible: the session is marked as CANCELLED, the chat is deleted and the {{count}} signed-up players find out when they reload the page.",
+      "note": "Signed-up players do not get a notification (the notifications module is not available yet).",
+      "keep": "No, keep it",
+      "confirm": "Yes, cancel session"
     },
     "edit": {
       "title": "Edit session",
