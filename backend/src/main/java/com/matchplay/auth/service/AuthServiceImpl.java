@@ -138,7 +138,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getArea() != null ? user.getArea().getCode() : null,
                 user.getRatingAvg(),
                 user.getRewardPoints(),
-                user.getSelectedAvatar() != null ? user.getSelectedAvatar().getCode() : null
+                user.getSelectedAvatar() != null ? user.getSelectedAvatar().getCode() : null,
+                user.getBio()
         );
     }
 

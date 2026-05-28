@@ -14,5 +14,6 @@ public record CurrentUserResponse(
         String areaCode,
         BigDecimal ratingAvg,
         int rewardPoints,
-        String selectedAvatarCode
+        String selectedAvatarCode,
+        String bio
 ) {}
