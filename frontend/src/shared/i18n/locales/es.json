@@ -365,5 +365,30 @@
       "title": "Crear cuenta | Match&Play",
       "description": "Únete a Match&Play y empieza a descubrir y organizar partidas de juegos de mesa en tu ciudad."
     }
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "headingAvatar": "Avatar",
+    "headingBio": "Bio",
+    "headingFavorites": "Juegos favoritos (máx 5)",
+    "headingAccount": "Cuenta",
+    "bioPlaceholder": "Algo sobre ti…",
+    "bioSaveButton": "Guardar",
+    "bioSavedToast": "Guardado",
+    "favoritesAdd": "Añadir",
+    "favoritesMax": "Máximo alcanzado",
+    "usernameLabel": "Nombre de usuario",
+    "usernameHelp": "No se puede cambiar — contacta soporte",
+    "emailLabel": "Email",
+    "emailHelp": "No se puede cambiar — contacta soporte",
+    "changePasswordHeading": "Cambiar contraseña",
+    "currentPasswordLabel": "Contraseña actual",
+    "newPasswordLabel": "Nueva contraseña",
+    "confirmPasswordLabel": "Confirmar nueva contraseña",
+    "changePasswordButton": "Cambiar",
+    "passwordSuccessToast": "Contraseña cambiada",
+    "errorWrongPassword": "Contraseña actual incorrecta",
+    "errorPasswordMismatch": "Las contraseñas no coinciden",
+    "errorPasswordTooShort": "Mínimo 8 caracteres"
   }
 }

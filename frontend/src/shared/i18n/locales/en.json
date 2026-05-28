@@ -365,5 +365,30 @@
       "title": "Create account | Match&Play",
       "description": "Join Match&Play and start discovering and organising board game sessions in your city."
     }
+  },
+  "profile": {
+    "title": "My profile",
+    "headingAvatar": "Avatar",
+    "headingBio": "Bio",
+    "headingFavorites": "Favorite games (max 5)",
+    "headingAccount": "Account",
+    "bioPlaceholder": "Something about you…",
+    "bioSaveButton": "Save",
+    "bioSavedToast": "Saved",
+    "favoritesAdd": "Add",
+    "favoritesMax": "Maximum reached",
+    "usernameLabel": "Username",
+    "usernameHelp": "Cannot be changed — contact support",
+    "emailLabel": "Email",
+    "emailHelp": "Cannot be changed — contact support",
+    "changePasswordHeading": "Change password",
+    "currentPasswordLabel": "Current password",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "changePasswordButton": "Change",
+    "passwordSuccessToast": "Password changed",
+    "errorWrongPassword": "Current password is incorrect",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorPasswordTooShort": "Minimum 8 characters"
   }
 }
