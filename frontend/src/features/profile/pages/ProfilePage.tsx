@@ -57,7 +57,7 @@ export default function ProfilePage() {
             />
           </section>
           <section className="px-6 py-5">
-            <FavoriteGamesPicker initial={data.favoriteGames} />
+            <FavoriteGamesPicker />
           </section>
           <section className="px-6 py-5">
             <AccountSection />

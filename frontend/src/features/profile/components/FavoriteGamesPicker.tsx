@@ -1,60 +1,50 @@
 import { X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { GameTypeahead } from '@/features/games/components/GameTypeahead'
 import type { GameSearchResult } from '@/features/games/types/game.types'
 import { cn } from '@/shared/lib/cn'
 
-import { useUpdateProfileMutation } from '../hooks/useProfile'
+import { useProfileQuery, useUpdateProfileMutation } from '../hooks/useProfile'
 import type { FavoriteGameSummary } from '../types/profile.types'
 
 const MAX = 5
 
-interface Props {
-  initial: FavoriteGameSummary[]
-}
-
-export function FavoriteGamesPicker({ initial }: Props) {
+/**
+ * Picker de juegos favoritos. Sin state local: lee directamente del cache de
+ * TanStack (`useProfileQuery`). Los cambios disparan `useUpdateProfileMutation`
+ * con `_favoriteGamesOptimistic`, que actualiza el cache inmediatamente vía
+ * `onMutate` y revierte si el server rechaza la mutation.
+ *
+ * Este patrón elimina las race conditions que tenía la versión anterior con
+ * state local + useEffect de sincronización.
+ */
+export function FavoriteGamesPicker() {
   const { t } = useTranslation()
+  const { data } = useProfileQuery()
   const update = useUpdateProfileMutation()
-  const [items, setItems] = useState<FavoriteGameSummary[]>(initial)
   const [open, setOpen] = useState(false)
 
-  // B5 deep fix: serializar las mutations PATCH /me/profile. Antes había
-  // 2-3 PATCHes concurrentes al añadir juegos rápido y la primera respuesta
-  // sobrescribía el cache disparando useEffect([initial]) que reseteaba el
-  // state local borrando los items recién añadidos.
-  const mutationChainRef = useRef<Promise<unknown>>(Promise.resolve())
-
-  function dispatchUpdate(ids: number[]) {
-    mutationChainRef.current = mutationChainRef.current
-      .catch(() => undefined)
-      .then(() => update.mutateAsync({ favoriteGameBggIds: ids }))
-  }
-
-  // Sincroniza con el server cuando el query refresca (p.ej. volver a la página
-  // dispara un re-fetch). NO sincronizamos mientras update.isPending — el state
-  // local es la fuente de verdad hasta que termina la última mutation.
-  useEffect(() => {
-    if (update.isPending) return
-    setItems(initial)
-  }, [initial, update.isPending])
+  const items: FavoriteGameSummary[] = data?.favoriteGames ?? []
 
   function remove(bggId: number) {
-    setItems((prev) => {
-      const next = prev.filter((g) => g.bggId !== bggId)
-      dispatchUpdate(next.map((g) => g.bggId))
-      return next
+    const next = items.filter((g) => g.bggId !== bggId)
+    update.mutate({
+      favoriteGameBggIds: next.map((g) => g.bggId),
+      _favoriteGamesOptimistic: next,
     })
   }
 
   function add(game: FavoriteGameSummary) {
-    setItems((prev) => {
-      if (prev.find((g) => g.bggId === game.bggId)) return prev
-      const next = [...prev, game]
-      dispatchUpdate(next.map((g) => g.bggId))
-      return next
+    if (items.find((g) => g.bggId === game.bggId)) {
+      setOpen(false)
+      return
+    }
+    const next = [...items, game]
+    update.mutate({
+      favoriteGameBggIds: next.map((g) => g.bggId),
+      _favoriteGamesOptimistic: next,
     })
     setOpen(false)
   }
@@ -122,7 +112,6 @@ function GameSearchModal({ onClose, onSelect }: GameSearchModalProps) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<GameSearchResult | null>(null)
 
-  // FU2: cerrar con Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -130,8 +119,6 @@ function GameSearchModal({ onClose, onSelect }: GameSearchModalProps) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  // TODO autofocus once GameTypeahead exposes ref/autoFocus prop
 
   return (
     <div
