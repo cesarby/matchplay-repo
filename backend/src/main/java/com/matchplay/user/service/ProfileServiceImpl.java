@@ -91,17 +91,25 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (request.favoriteGameBggIds() != null) {
-            if (request.favoriteGameBggIds().size() > MAX_FAVORITES) {
+            // Deduplicate por si el cliente manda el mismo bggId 2+ veces (defensa
+            // en profundidad — no debería pasar, pero rompería la UNIQUE constraint
+            // (user_id, game_id) igualmente).
+            List<Long> uniqueIds = request.favoriteGameBggIds().stream().distinct().toList();
+            if (uniqueIds.size() > MAX_FAVORITES) {
                 throw new TooManyFavoritesException();
             }
             favoriteRepository.deleteByUserId(user.getId());
-            for (Long bggId : request.favoriteGameBggIds()) {
+            // CRÍTICO: flush() obliga a Hibernate a ejecutar el DELETE en la DB
+            // ANTES de los siguientes INSERTs. Sin esto, el persistence context
+            // acumula el delete y los inserts colisionan con la UNIQUE constraint
+            // uk_user_favorite_games_user_game si el usuario ya tenía favoritos
+            // — síntoma visible: 500 al añadir, optimistic update se revierte,
+            // "el favorito aparece y desaparece rápido".
+            favoriteRepository.flush();
+            for (Long bggId : uniqueIds) {
                 // findOrFetch carga el juego desde BGG si aún no está en la tabla
-                // games local. Esto cubre el caso típico: usuario busca un juego
-                // en BGG y lo añade a favoritos sin haberlo usado antes en una
-                // partida (sino, findById fallaba con 404 y el FE revertía el
-                // optimistic update — el síntoma visible "el favorito aparece y
-                // desaparece rápido").
+                // games local. Cubre el caso típico: usuario busca un juego en BGG
+                // y lo añade a favoritos sin haberlo usado antes en una partida.
                 Game game = gameService.findOrFetch(bggId);
                 UserFavoriteGame ufg = new UserFavoriteGame();
                 ufg.setUser(user);
