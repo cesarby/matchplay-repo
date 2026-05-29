@@ -377,6 +377,9 @@
   },
   "profile": {
     "title": "Mi perfil",
+    "feedback": {
+      "genericError": "No se ha podido guardar. Inténtalo de nuevo en un momento."
+    },
     "headingAvatar": "Avatar",
     "headingBio": "Bio",
     "headingFavorites": "Juegos favoritos (máx 5)",

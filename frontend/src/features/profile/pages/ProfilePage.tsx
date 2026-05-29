@@ -9,6 +9,7 @@ import { AvatarPicker } from '../components/AvatarPicker'
 import { BioForm } from '../components/BioForm'
 import { FavoriteGamesPicker } from '../components/FavoriteGamesPicker'
 import { LocationSection } from '../components/LocationSection'
+import { ProfileFeedbackBanner } from '../components/ProfileFeedbackBanner'
 import { useProfileQuery } from '../hooks/useProfile'
 
 export default function ProfilePage() {
@@ -36,6 +37,7 @@ export default function ProfilePage() {
         description={t('profile.title')}
         noindex
       />
+      <ProfileFeedbackBanner />
       <div className="overflow-hidden rounded-xl bg-[#FAF7F2] shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
         <div className="border-b border-muted bg-card px-6 py-5">
           <h1 className="m-0 font-display text-xl font-bold">@{data.username}</h1>

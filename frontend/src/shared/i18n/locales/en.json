@@ -377,6 +377,9 @@
   },
   "profile": {
     "title": "My profile",
+    "feedback": {
+      "genericError": "Couldn't save. Please try again in a moment."
+    },
     "headingAvatar": "Avatar",
     "headingBio": "Bio",
     "headingFavorites": "Favorite games (max 5)",

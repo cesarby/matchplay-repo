@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import i18next from 'i18next'
 
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { normalizeApiError } from '@/shared/api/ApiError'
 
 import { profileApi } from '../api/profileApi'
+import { useProfileFeedbackStore } from '../store/profileFeedbackStore'
 import type { UpdateProfilePayload, UserProfile } from '../types/profile.types'
 
 export const profileKeys = {
@@ -74,8 +77,19 @@ export function useUpdateProfileMutation() {
       if (context?.prev) {
         qc.setQueryData<UserProfile>(profileKeys.current, context.prev)
       }
+      // Empuja el error al banner visible en /profile. Antes esto era un
+      // console.error silencioso — durante semanas un 500 del backend hacía
+      // que los favoritos "aparecieran y desaparecieran" sin que el usuario
+      // viera el motivo. Ahora cualquier fallo se ve en pantalla.
+      const apiError = normalizeApiError(err)
+      const message =
+        apiError.message ||
+        i18next.t('profile.feedback.genericError', {
+          defaultValue: 'Algo salió mal, prueba de nuevo.',
+        })
+      useProfileFeedbackStore.getState().show(message, 'error')
       // eslint-disable-next-line no-console
-      console.error('useUpdateProfileMutation failed, rolled back cache', err)
+      console.error('useUpdateProfileMutation failed', apiError, err)
     },
 
     onSuccess: (profile) => {
