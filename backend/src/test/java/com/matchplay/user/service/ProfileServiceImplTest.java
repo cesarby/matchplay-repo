@@ -3,7 +3,7 @@ package com.matchplay.user.service;
 import com.matchplay.avatar.entity.Avatar;
 import com.matchplay.avatar.repository.AvatarRepository;
 import com.matchplay.game.entity.Game;
-import com.matchplay.game.repository.GameRepository;
+import com.matchplay.game.service.GameService;
 import com.matchplay.geo.entity.Area;
 import com.matchplay.geo.entity.City;
 import com.matchplay.geo.entity.Province;
@@ -46,7 +46,7 @@ class ProfileServiceImplTest {
     @Mock CurrentUserProvider currentUserProvider;
     @Mock UserFavoriteGameRepository favoriteRepository;
     @Mock AvatarRepository avatarRepository;
-    @Mock GameRepository gameRepository;
+    @Mock GameService gameService;
     @Mock ProvinceRepository provinceRepository;
     @Mock CityRepository cityRepository;
     @Mock AreaRepository areaRepository;
@@ -167,8 +167,8 @@ class ProfileServiceImplTest {
         Game g2 = new Game();
         g2.setBggId(22L);
         g2.setName("Game 2");
-        given(gameRepository.findById(11L)).willReturn(Optional.of(g1));
-        given(gameRepository.findById(22L)).willReturn(Optional.of(g2));
+        given(gameService.findOrFetch(11L)).willReturn(g1);
+        given(gameService.findOrFetch(22L)).willReturn(g2);
         given(favoriteRepository.findByUserIdOrderByCreatedAtAsc(42L)).willReturn(List.of());
 
         service.update(new UpdateProfileRequest(null, null, List.of(11L, 22L), null, null, null));

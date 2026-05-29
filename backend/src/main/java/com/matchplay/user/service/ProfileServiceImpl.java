@@ -3,8 +3,7 @@ package com.matchplay.user.service;
 import com.matchplay.avatar.entity.Avatar;
 import com.matchplay.avatar.repository.AvatarRepository;
 import com.matchplay.game.entity.Game;
-import com.matchplay.game.exception.GameNotFoundException;
-import com.matchplay.game.repository.GameRepository;
+import com.matchplay.game.service.GameService;
 import com.matchplay.geo.entity.Area;
 import com.matchplay.geo.entity.City;
 import com.matchplay.geo.entity.Province;
@@ -41,7 +40,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final CurrentUserProvider currentUserProvider;
     private final UserFavoriteGameRepository favoriteRepository;
     private final AvatarRepository avatarRepository;
-    private final GameRepository gameRepository;
+    private final GameService gameService;
     private final ProvinceRepository provinceRepository;
     private final CityRepository cityRepository;
     private final AreaRepository areaRepository;
@@ -97,8 +96,13 @@ public class ProfileServiceImpl implements ProfileService {
             }
             favoriteRepository.deleteByUserId(user.getId());
             for (Long bggId : request.favoriteGameBggIds()) {
-                Game game = gameRepository.findById(bggId)
-                        .orElseThrow(() -> new GameNotFoundException(bggId));
+                // findOrFetch carga el juego desde BGG si aún no está en la tabla
+                // games local. Esto cubre el caso típico: usuario busca un juego
+                // en BGG y lo añade a favoritos sin haberlo usado antes en una
+                // partida (sino, findById fallaba con 404 y el FE revertía el
+                // optimistic update — el síntoma visible "el favorito aparece y
+                // desaparece rápido").
+                Game game = gameService.findOrFetch(bggId);
                 UserFavoriteGame ufg = new UserFavoriteGame();
                 ufg.setUser(user);
                 ufg.setGame(game);
