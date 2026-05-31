@@ -1,26 +1,21 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 
 import { MobileTabBar } from './MobileTabBar'
+import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 
 /**
- * Layout principal. Mientras dura F1 del rediseño brutal, la landing (`/`)
- * provee SU PROPIO header (LandingHeader) y NO debe llevar el SiteHeader
- * café-style global. En F2 unificamos al header brutal y este caso especial
- * desaparece.
+ * Layout principal. Renderiza el shell brutal global en TODAS las rutas:
  *
- * Lo mismo con el footer: en mobile el lugar lo ocupa la MobileTabBar.
- * En desktop el footer global queda OCULTO en la landing (la landing
- * imprime su propio CTA final + tendrá footer brutal propio en F2).
+ * - `SiteHeader` brutal — auth-aware (CTAs login/register o UserMenu).
+ * - `SiteFooter` brutal — 4 columnas + barra inferior.
+ * - `MobileTabBar` sticky bottom — `md:hidden` interna.
  *
- * MobileTabBar es GLOBAL: aparece en TODAS las pantallas mobile (`md:hidden`),
- * incluida la landing. Se renderiza al final del layout para quedar sticky-
- * bottom sobre el contenido scrollable.
+ * Tras F2.4 ya no hay caso especial para la landing: usa el mismo
+ * SiteHeader y SiteFooter que el resto. El LandingHeader interno fue
+ * eliminado en F2.4.
  */
 export function MainLayout() {
-  const { pathname } = useLocation()
-  const isLanding = pathname === '/'
-
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Skip-link a11y — invisible hasta recibir focus */}
@@ -31,17 +26,13 @@ export function MainLayout() {
         Saltar al contenido
       </a>
 
-      {!isLanding && <SiteHeader />}
+      <SiteHeader />
 
       <main id="main" className="flex-1">
         <Outlet />
       </main>
 
-      {!isLanding && (
-        <footer className="hidden border-t bg-card py-4 text-center text-sm text-muted-foreground md:block">
-          © {new Date().getFullYear()} Matchplay
-        </footer>
-      )}
+      <SiteFooter />
 
       <MobileTabBar />
     </div>

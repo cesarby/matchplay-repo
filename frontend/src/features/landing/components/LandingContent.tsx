@@ -10,8 +10,6 @@ import { DiscoveryCards } from './DiscoveryCards'
 import { GamesMarquee } from './GamesMarquee'
 import { Hero } from './Hero'
 import { HeroSessionPreview } from './HeroSessionPreview'
-import { LandingFooter } from './LandingFooter'
-import { LandingHeader } from './LandingHeader'
 import { TopStrip } from './TopStrip'
 import { TrustStrip } from './TrustStrip'
 
@@ -75,7 +73,6 @@ export function LandingContent() {
       />
 
       <TopStrip />
-      <LandingHeader />
       <Hero />
 
       {/* Session preview — visible inline solo en mobile (en desktop ya va en el Hero) */}
@@ -88,7 +85,7 @@ export function LandingContent() {
       <GamesMarquee />
       <CommunityCarousel />
       <CtaFinal />
-      <LandingFooter />
+      {/* SiteFooter lo monta MainLayout (global) — antes vivía aquí como LandingFooter (F2.3) */}
     </div>
   )
 }

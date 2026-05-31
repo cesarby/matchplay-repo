@@ -18,7 +18,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { Avatar } from '@/shared/components/Avatar'
-import { Logo } from '@/shared/components/Logo'
 import { cn } from '@/shared/lib/cn'
 import { type Locale, useLocaleStore } from '@/shared/store/localeStore'
 
@@ -27,16 +26,19 @@ interface MobileMenuProps {
 }
 
 /**
- * Menú móvil a pantalla completa con vibe board-game-café.
+ * Menú móvil brutal a pantalla completa.
  *
- * <p>Sigue el mockup {@code mobile-menu-C-fullscreen.html}: decoración con
- * cuadrados rotados rojo/amarillo en las esquinas, saludo personalizado en
- * font-display, avatar grande con gradiente rotado -3°, items grandes tipo
- * card y footer compacto con toggle de idioma + logout.</p>
+ * Overlay full-screen con shell brutalismo lúdico: header con logo y X
+ * brutal, bloque usuario con avatar `ringBrutal` y stats (rating/coins) en
+ * chips brutales, items grandes tipo card con icono coloreado, footer con
+ * toggle de idioma + logout.
  *
- * <p>"Mis partidas" enlaza a {@code /sessions/mine}, "Mi perfil" a
- * {@code /profile} y "Ayuda" a {@code /help} cuando hay usuario autenticado.
- * "Mis mensajes" sigue deshabilitada con pill "Pronto" (Fase futura).</p>
+ * Funcionalidad conservada de la versión café:
+ *  - Esc cierra (handler global).
+ *  - Cambio de ruta cierra (initialPath ref).
+ *  - Bloqueo de scroll del body.
+ *  - aria-current="page" en el item activo.
+ *  - "Mis mensajes" disabled con pill "Pronto" (fase futura).
  */
 export function MobileMenu({ onClose }: MobileMenuProps) {
   const { t } = useTranslation()
@@ -44,8 +46,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
   const logout = useLogoutMutation()
   const location = useLocation()
 
-  // Cerrar SOLO cuando cambia la ruta (no en el mount inicial, que sería
-  // un cierre inmediato apenas abrir el menú).
+  // Cerrar SOLO cuando cambia la ruta (no en el mount inicial).
   const initialPath = useRef(location.pathname)
   useEffect(() => {
     if (location.pathname !== initialPath.current) {
@@ -82,30 +83,36 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
       role="dialog"
       aria-modal="true"
       aria-label={t('nav.openMenu')}
-      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background-alt p-5 md:hidden"
+      className="landing-bg fixed inset-0 z-50 flex flex-col overflow-hidden p-5 md:hidden"
     >
-      {/* Decoración: cuadrados rotados (replicando el mockup) */}
+      {/* Decoración brutal: cuadrados rotados con borde ink */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute right-[-60px] top-[-60px] size-[220px] rotate-[15deg] rounded-[32px] bg-red opacity-[0.08]"
+        className="brutal pointer-events-none absolute right-[-60px] top-[-60px] size-[180px] rotate-[15deg] rounded-3xl bg-red opacity-[0.12]"
       />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-80px] left-[-40px] size-[180px] -rotate-12 rounded-[28px] bg-yellow opacity-15"
+        className="brutal pointer-events-none absolute bottom-[-80px] left-[-40px] size-[160px] -rotate-12 rounded-3xl bg-yellow opacity-25"
       />
 
-      {/* Header del menú */}
+      {/* Header del menú: logo brutal + X */}
       <div className="relative z-10 flex items-center justify-between">
-        <Link to="/" aria-label="Matchplay — inicio">
-          <Logo variant="text-only" className="h-9" />
+        <Link to="/" className="flex items-center gap-2" aria-label="Matchplay — inicio">
+          <span className="brutal-sm flex size-9 items-center justify-center rounded-md bg-red font-display text-lg font-black text-background">
+            M
+          </span>
+          <span className="font-display text-xl font-black tracking-tight">
+            matchplay
+            <span className="text-red">.</span>
+          </span>
         </Link>
         <button
           type="button"
           onClick={onClose}
           aria-label={t('nav.closeMenu')}
-          className="inline-flex size-[42px] items-center justify-center rounded-xl border-[1.5px] border-border bg-card"
+          className="brutal-sm inline-flex size-[42px] items-center justify-center rounded-md bg-background"
         >
-          <X size={20} aria-hidden="true" />
+          <X size={20} strokeWidth={2.5} aria-hidden="true" />
         </button>
       </div>
 
@@ -116,19 +123,19 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             username={user.username}
             avatarCode={user.selectedAvatarCode}
             size={56}
-            className="shadow-lg"
+            ringBrutal
           />
           <div>
-            <div className="font-display text-xl font-bold">
+            <div className="font-display text-xl font-black">
               {t('nav.greeting', { name: user.username })}
             </div>
-            <div className="mt-1 inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-semibold">
-                <Star size={12} aria-hidden="true" className="text-yellow" />
+            <div className="mt-1.5 inline-flex items-center gap-2 font-brutal text-[10px] uppercase tracking-widest">
+              <span className="brutal-sm inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-bold">
+                <Star size={11} aria-hidden="true" className="text-yellow" />
                 {user.ratingAvg.toFixed(1)}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-semibold">
-                <Coins size={12} aria-hidden="true" className="text-green" />
+              <span className="brutal-sm inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 font-bold">
+                <Coins size={11} aria-hidden="true" className="text-green" />
                 {user.rewardPoints}
               </span>
             </div>
@@ -145,8 +152,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
           to="/sessions"
           active={isSessionsActive}
           icon={<Dices size={20} aria-hidden="true" />}
-          iconBg="bg-red-soft"
-          iconColor="text-red"
+          accent="red"
         >
           {t('nav.sessions')}
         </MenuItem>
@@ -156,8 +162,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             to="/sessions/new"
             active={isCreateActive}
             icon={<Plus size={20} aria-hidden="true" />}
-            iconBg="bg-yellow-soft"
-            iconColor="text-yellow"
+            accent="yellow"
           >
             {t('nav.createSession')}
           </MenuItem>
@@ -168,8 +173,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             to="/sessions/mine"
             active={isMyActive}
             icon={<CalendarCheck size={20} aria-hidden="true" />}
-            iconBg="bg-green-soft"
-            iconColor="text-green"
+            accent="green"
           >
             {t('nav.mySessions')}
           </MenuItem>
@@ -180,8 +184,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             to="/profile"
             active={isProfileActive}
             icon={<UserIcon size={20} aria-hidden="true" />}
-            iconBg="bg-blue-soft"
-            iconColor="text-blue"
+            accent="blue"
           >
             {t('nav.profile')}
           </MenuItem>
@@ -191,8 +194,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
           <MenuItem
             disabled
             icon={<MessageSquare size={20} aria-hidden="true" />}
-            iconBg="bg-blue-soft"
-            iconColor="text-blue"
+            accent="blue"
             badge={t('common.comingSoon')}
           >
             {t('nav.messages')}
@@ -204,8 +206,7 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             to="/help"
             active={isHelpActive}
             icon={<HelpCircle size={20} aria-hidden="true" />}
-            iconBg="bg-yellow-soft"
-            iconColor="text-yellow"
+            accent="yellow"
           >
             {t('nav.help')}
           </MenuItem>
@@ -213,20 +214,10 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
 
         {!isAuthenticated && (
           <>
-            <MenuItem
-              to="/login"
-              icon={<UserIcon size={20} aria-hidden="true" />}
-              iconBg="bg-blue-soft"
-              iconColor="text-blue"
-            >
+            <MenuItem to="/login" icon={<UserIcon size={20} aria-hidden="true" />} accent="blue">
               {t('nav.login')}
             </MenuItem>
-            <MenuItem
-              to="/register"
-              icon={<Plus size={20} aria-hidden="true" />}
-              iconBg="bg-red-soft"
-              iconColor="text-red"
-            >
+            <MenuItem to="/register" icon={<Plus size={20} aria-hidden="true" />} accent="red">
               {t('nav.register')}
             </MenuItem>
           </>
@@ -241,9 +232,9 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
             type="button"
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
-            className="flex flex-[1.4] items-center justify-center gap-2 rounded-2xl border-[1.5px] border-red bg-red px-4 py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-60"
+            className="brutal brutal-press flex flex-[1.4] items-center justify-center gap-2 rounded-xl bg-red px-4 py-3.5 font-display text-sm font-bold text-background disabled:opacity-60"
           >
-            <LogOut size={16} aria-hidden="true" />
+            <LogOut size={16} strokeWidth={2.5} aria-hidden="true" />
             {t('nav.logout')}
           </button>
         ) : (
@@ -255,16 +246,24 @@ export function MobileMenu({ onClose }: MobileMenuProps) {
 }
 
 // ---------------------------------------------------------------------------
-// MenuItem · card grande con icono coloreado
+// MenuItem · card brutal con icono coloreado
 // ---------------------------------------------------------------------------
+
+type Accent = 'red' | 'yellow' | 'green' | 'blue'
+
+const ACCENT_CLASSES: Record<Accent, { bg: string; text: string }> = {
+  red: { bg: 'bg-red', text: 'text-background' },
+  yellow: { bg: 'bg-yellow', text: 'text-foreground' },
+  green: { bg: 'bg-green', text: 'text-background' },
+  blue: { bg: 'bg-blue', text: 'text-background' },
+}
 
 interface MenuItemProps {
   to?: string
   active?: boolean
   disabled?: boolean
   icon: React.ReactNode
-  iconBg: string
-  iconColor: string
+  accent: Accent
   badge?: string
   children: React.ReactNode
 }
@@ -274,28 +273,30 @@ function MenuItem({
   active = false,
   disabled = false,
   icon,
-  iconBg,
-  iconColor,
+  accent,
   badge,
   children,
 }: MenuItemProps) {
+  const accentClasses = ACCENT_CLASSES[accent]
+
   const content = (
     <>
       <span
         aria-hidden="true"
         className={cn(
-          'inline-flex size-[42px] shrink-0 items-center justify-center rounded-[11px]',
-          active ? 'bg-white/10 text-white' : `${iconBg} ${iconColor}`,
+          'brutal-sm inline-flex size-11 shrink-0 items-center justify-center rounded-lg',
+          accentClasses.bg,
+          accentClasses.text,
         )}
       >
         {icon}
       </span>
-      <span className="font-display text-[1.05rem] font-semibold">{children}</span>
+      <span className="font-display text-base font-bold">{children}</span>
       {badge && (
         <span
           className={cn(
-            'ml-auto rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider',
-            active ? 'bg-white/15 text-white/80' : 'bg-muted text-muted-foreground',
+            'brutal-sm ml-auto rounded-md px-2 py-0.5 font-brutal text-[10px] font-bold uppercase tracking-widest',
+            active ? 'bg-background text-foreground' : 'bg-muted text-muted-foreground',
           )}
         >
           {badge}
@@ -304,18 +305,19 @@ function MenuItem({
       {!badge && (
         <ChevronRight
           size={16}
+          strokeWidth={2.5}
           aria-hidden="true"
-          className={cn('ml-auto', active ? 'text-white/50' : 'text-muted-foreground')}
+          className={cn('ml-auto', active ? 'text-background' : 'text-muted-foreground')}
         />
       )}
     </>
   )
 
   const className = cn(
-    'flex items-center gap-[15px] rounded-2xl border-[1.5px] px-4 py-3.5 transition',
-    active && 'border-foreground bg-foreground text-background',
-    !active && !disabled && 'border-border bg-card hover:border-red',
-    disabled && 'cursor-not-allowed border-border bg-card opacity-55',
+    'brutal flex items-center gap-3 rounded-xl px-4 py-3 transition-colors',
+    active && 'bg-foreground text-background',
+    !active && !disabled && 'bg-background hover:bg-yellow/40',
+    disabled && 'cursor-not-allowed bg-background opacity-55',
   )
 
   if (disabled || !to) {
@@ -355,7 +357,7 @@ function LanguageToggle() {
     <div
       role="group"
       aria-label="Cambiar idioma"
-      className="inline-flex gap-1 rounded-xl bg-muted p-[3px]"
+      className="brutal inline-flex gap-1 rounded-xl bg-background p-1"
     >
       {LOCALES.map(({ code, label }) => (
         <button
@@ -364,7 +366,7 @@ function LanguageToggle() {
           aria-pressed={locale === code}
           onClick={() => handleChange(code)}
           className={cn(
-            'rounded-lg px-3 py-2 text-xs font-bold',
+            'rounded-lg px-3 py-2 font-brutal text-xs font-bold uppercase tracking-wider',
             locale === code ? 'bg-foreground text-background' : 'text-muted-foreground',
           )}
         >

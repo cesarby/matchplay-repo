@@ -2,16 +2,22 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 /**
- * Footer brutal de la landing. Visible en desktop y mobile.
+ * Footer brutal global. Visible en desktop y mobile, en TODAS las rutas.
  *
- * Bloque marca (col-span-1 desktop, full-width mobile) + 3 columnas de enlaces
- * + barra inferior con copyright + claim.
+ * Estructura:
+ *  - Bloque marca (col-span-1 desktop, full-width mobile) — logo + slogan.
+ *  - 3 columnas de enlaces (Producto, Empresa, Legal).
+ *  - Barra inferior con copyright + claim.
  *
- * En mobile va por encima de la MobileTabBar (sticky) — al hacer scroll al
- * fondo, el footer aparece antes y la tabbar se queda sobre él pegada al
- * borde inferior del viewport.
+ * En mobile el padding inferior (`pb-28`) deja sitio a la MobileTabBar
+ * sticky que se monta encima de los últimos pixels del footer. Sin esto
+ * la copyright bar quedaría tapada por la tabbar.
+ *
+ * Lo monta MainLayout para que aparezca en todas las pantallas. Antes
+ * vivía en `features/landing/` (LandingFooter) — fue promocionado a
+ * shell global como parte de F2 (D7).
  */
-export function LandingFooter() {
+export function SiteFooter() {
   const { t } = useTranslation()
   const year = new Date().getFullYear()
 
