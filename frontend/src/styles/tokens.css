@@ -1,5 +1,6 @@
-/* Design tokens — board-game-café theme.
- * Aprobado el 2026-05-24, ver docs/frontend/spec.md.
+/* Design tokens — board-game-café theme, rev. brutalismo lúdico.
+ * Paleta saturada aprobada el 2026-05-31, ver
+ * docs/superpowers/specs/2026-05-31-landing-brutalist-design.md (D2, D7).
  * Colores expresados como "R G B" para usarlos con rgb(var(--x) / <alpha>).
  */
 
@@ -11,43 +12,67 @@
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Brutal primitive tokens — usados por .brutal* y derivados.
+   * Mobile-first: estos valores aplican <768px. En `md:` se sobreescriben
+   * con offsets más gruesos porque los elementos desktop son mayores y
+   * piden más profundidad visual. Match exacto con los mockups originales:
+   *   - concept-B-brutalist-mobile.html:  3/3/2 border, 5/7/3 shadow
+   *   - concept-B-brutalist-desktop.html: 3/4/2 border, 6/10/4 shadow */
+  --brutal-border-width: 3px;
+  --brutal-border-width-lg: 3px;
+  --brutal-border-width-sm: 2px;
+  --brutal-shadow-offset: 5px;
+  --brutal-shadow-offset-lg: 7px;
+  --brutal-shadow-offset-sm: 3px;
+  --brutal-bg-dots: radial-gradient(rgb(14 14 12 / 0.07) 1px, transparent 1px);
+  --brutal-bg-dots-size: 22px 22px;
 }
 
-/* ============ LIGHT — crema/papel ============ */
+/* Desktop override — `md:` breakpoint de Tailwind (≥768px). */
+@media (min-width: 768px) {
+  :root {
+    --brutal-border-width-lg: 4px;
+    --brutal-shadow-offset: 6px;
+    --brutal-shadow-offset-lg: 10px;
+    --brutal-shadow-offset-sm: 4px;
+  }
+}
+
+/* ============ LIGHT — crema/papel brutal ============ */
 :root,
 .light {
-  --background: 250 246 238;
-  /* Tono de la misma familia que background, un escalón más oscuro / cálido.
-     Se usa en hero sections y secciones que necesitan contraste sutil sin
-     romper la jerarquía monocromática. */
-  --background-alt: 244 236 220;
-  --foreground: 31 26 20;
-  --card: 255 252 246;
-  --card-foreground: 31 26 20;
-  --muted: 240 234 224;
-  --muted-foreground: 110 97 79;
-  --border: 229 220 201;
+  --background: 251 246 232; /* #FBF6E8 cream — brutal paper */
+  /* Tono de la misma familia, un escalón más oscuro. Hero/secciones contraste sutil. */
+  --background-alt: 241 233 210; /* #F1E9D2 paper */
+  --foreground: 14 14 12; /* #0E0E0C ink — negro brutal */
+  --card: 251 246 232; /* mismo que background — cards usan colores planos */
+  --card-foreground: 14 14 12;
+  --muted: 241 233 210;
+  --muted-foreground: 90 85 75; /* #5A554B */
+  --border: 14 14 12; /* ink — bordes brutalistas son negros */
 
-  --p-red: 200 54 44;
-  --p-blue: 31 111 178;
-  --p-green: 47 143 79;
-  --p-yellow: 232 169 59;
+  --p-red: 230 57 70; /* #E63946 */
+  --p-blue: 46 134 222; /* #2E86DE */
+  --p-green: 6 167 125; /* #06A77D */
+  --p-yellow: 255 190 11; /* #FFBE0B */
 
+  /* soft variants se mantienen para superficies no-brutal (badges, hover bg, etc.) */
   --p-red-soft: 252 232 229;
   --p-blue-soft: 226 240 252;
   --p-green-soft: 226 245 232;
   --p-yellow-soft: 253 243 219;
 
-  --shadow: 0 1px 2px rgba(31, 26, 20, 0.04), 0 4px 16px rgba(31, 26, 20, 0.06);
-  --shadow-hover: 0 10px 30px rgba(200, 54, 44, 0.18);
-  --shadow-warm: 0 2px 4px rgba(110, 97, 79, 0.1);
+  --shadow: 0 1px 2px rgba(14, 14, 12, 0.04), 0 4px 16px rgba(14, 14, 12, 0.06);
+  --shadow-hover: 0 10px 30px rgba(230, 57, 70, 0.18);
+  --shadow-warm: 0 2px 4px rgba(90, 85, 75, 0.1);
 }
 
-/* ============ DARK — madera ============ */
+/* ============ DARK — madera (sin migración brutal en v1) ============
+ * Mantiene los valores cafetería-suave de la rev anterior. La migración a
+ * brutal en dark queda diferida (ver §2 D5 del spec). */
 .dark {
   --background: 26 22 17;
-  /* Un escalón más claro que background en oscuro: jerarquía invertida pero
-     misma idea de "sección hero" con contraste sutil. */
   --background-alt: 34 28 21;
   --foreground: 242 235 221;
   --card: 37 32 26;
