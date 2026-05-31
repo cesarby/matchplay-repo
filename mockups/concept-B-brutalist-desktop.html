@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Matchplay · Concept B — Brutalismo lúdico (Desktop)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800;12..96,900&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+          mono:    ['"Space Mono"', 'monospace'],
+          sans:    ['Inter', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          cream: '#FBF6E8',  // paper
+          paper: '#F1E9D2',
+          ink:   '#0E0E0C',
+          mute:  '#5A554B',
+          red:    '#E63946',
+          yellow: '#FFBE0B',
+          green:  '#06A77D',
+          blue:   '#2E86DE',
+          plum:   '#7C3AED',
+          coral:  '#FF6B6B',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background: #FBF6E8; color: #0E0E0C; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(#0E0E0C12 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Brutalist primitives */
+  .brutal { border: 3px solid #0E0E0C; box-shadow: 6px 6px 0 0 #0E0E0C; }
+  .brutal-lg { border: 4px solid #0E0E0C; box-shadow: 10px 10px 0 0 #0E0E0C; }
+  .brutal-sm { border: 2px solid #0E0E0C; box-shadow: 4px 4px 0 0 #0E0E0C; }
+  .brutal-inner { border: 3px solid #0E0E0C; }
+  /* Custom chevron with breathing room on select */
+  select.brutal-inner {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230E0E0C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-position: right 14px center;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+  }
+  .brutal-hover { transition: transform .18s ease, box-shadow .18s ease; }
+  .brutal-hover:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 0 #0E0E0C; }
+  .brutal-press:active { transform: translate(3px,3px); box-shadow: 3px 3px 0 0 #0E0E0C; }
+
+  /* Sticker entry */
+  .pop-in { animation: pop .65s cubic-bezier(.5,1.6,.4,1) both; }
+  @keyframes pop { from { opacity:0; transform: scale(.6) rotate(-10deg);} to { opacity:1; transform: none;} }
+
+  /* Wiggle on hover */
+  .wiggle:hover { animation: wiggle .5s ease-in-out; }
+  @keyframes wiggle {
+    0%,100% { transform: rotate(0); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+  }
+
+  /* Marquee */
+  .marquee-wrap { overflow: hidden; }
+  .marquee { display: flex; gap: 2rem; animation: scroll 22s linear infinite; }
+  @keyframes scroll { from { transform: translateX(0);} to { transform: translateX(-50%);} }
+  .marquee-rev { animation-direction: reverse; }
+
+  /* Dice rolling */
+  .dice { display: inline-block; animation: roll 3s ease-in-out infinite; }
+  @keyframes roll {
+    0%,15% { transform: rotate(0); }
+    25% { transform: rotate(90deg); }
+    50% { transform: rotate(180deg); }
+    75% { transform: rotate(270deg); }
+    85%,100% { transform: rotate(360deg); }
+  }
+
+  /* Blink underline */
+  .stamp { position: relative; display: inline-block; }
+  .stamp::before {
+    content: ''; position: absolute; inset: -6px -10px;
+    background: #FFBE0B; transform: rotate(-1.2deg); z-index: -1;
+    box-shadow: 4px 4px 0 0 #0E0E0C;
+  }
+
+  /* Slice tag */
+  .tag-cut {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(20px) rotate(-1deg); transition: opacity .8s, transform .8s; }
+  .reveal.in { opacity:1; transform: translateY(0) rotate(0); }
+
+  /* Dice grid */
+  .dgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .dcell { aspect-ratio: 1/1; border: 2px solid #0E0E0C; border-radius: 4px; }
+
+  /* Float */
+  .float { animation: floaty 5s ease-in-out infinite; }
+  @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-4deg);} 50% { transform: translateY(-12px) rotate(-2deg);} }
+
+  /* Big checker for hero deco */
+  .checker {
+    background-image:
+      linear-gradient(45deg, #0E0E0C 25%, transparent 25%),
+      linear-gradient(-45deg, #0E0E0C 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #0E0E0C 75%),
+      linear-gradient(-45deg, transparent 75%, #0E0E0C 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  }
+
+  :focus-visible { outline: 3px solid #2E86DE; outline-offset: 3px; border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pop-in, .marquee, .dice, .float { animation: none !important; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body class="font-sans">
+
+<!-- ===================== TOP STRIP MARQUEE ===================== -->
+<div class="bg-ink text-cream py-2 marquee-wrap font-mono text-xs uppercase tracking-widest border-b-4 border-ink">
+  <div class="marquee">
+    <div class="flex items-center gap-8 px-4">
+      <span>★ 142 partidas abiertas</span><span class="text-yellow">●</span>
+      <span>★ 387 jugadores</span><span class="text-red">●</span>
+      <span>★ 24 ciudades activas</span><span class="text-green">●</span>
+      <span>★ Es gratis. Siempre.</span><span class="text-blue">●</span>
+      <span>★ Tu mesa, tu turno</span><span class="text-yellow">●</span>
+    </div>
+    <div class="flex items-center gap-8 px-4" aria-hidden="true">
+      <span>★ 142 partidas abiertas</span><span class="text-yellow">●</span>
+      <span>★ 387 jugadores</span><span class="text-red">●</span>
+      <span>★ 24 ciudades activas</span><span class="text-green">●</span>
+      <span>★ Es gratis. Siempre.</span><span class="text-blue">●</span>
+      <span>★ Tu mesa, tu turno</span><span class="text-yellow">●</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="px-6 pt-6">
+  <div class="max-w-7xl mx-auto bg-cream brutal rounded-2xl px-6 py-3 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2">
+      <span class="relative inline-flex items-center justify-center w-10 h-10 bg-red text-cream font-display font-black text-xl brutal-sm rounded-md">M</span>
+      <span class="font-display font-black text-2xl tracking-tight">matchplay<span class="text-red">.</span></span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-wider">
+      <a href="#discovery" class="hover:text-red transition-colors">Explorar</a>
+      <a href="#how" class="hover:text-red transition-colors">Cómo va</a>
+      <a href="#community" class="hover:text-red transition-colors">Comunidad</a>
+      <a href="#" class="hover:text-red transition-colors">Ayuda</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <button class="text-sm font-bold px-4 py-2 rounded-md hover:bg-yellow/40 transition-colors">Entrar</button>
+      <button class="text-sm font-bold px-4 py-2 bg-red text-white brutal-sm brutal-hover rounded-md">Crear cuenta</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="relative px-6 pt-16 pb-24 overflow-hidden">
+  <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8 items-center">
+
+    <!-- Floating stickers -->
+    <span class="pop-in absolute top-10 right-[16%] bg-yellow brutal rounded-full px-4 py-2 font-display font-black text-sm rotate-[8deg] z-20 hidden lg:inline-flex">
+      Sin registro pa' mirar 👀
+    </span>
+    <div class="col-span-12 lg:col-span-7 relative z-10">
+      <div class="reveal inline-flex items-center gap-2 bg-cream brutal-sm rounded-full px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-wider mb-6">
+        <span class="w-2 h-2 rounded-full bg-green animate-pulse"></span>
+        Hay 142 mesas abiertas YA
+      </div>
+
+      <h1 class="reveal font-display font-black leading-[0.95] tracking-tight">
+        <span class="block text-[5.5rem] lg:text-[7rem]">Tira el dado.</span>
+        <span class="block text-[5.5rem] lg:text-[7rem]">Mueve <span class="stamp">ficha</span>.</span>
+        <span class="block text-[5.5rem] lg:text-[7rem] text-red">Juega <span class="dice inline-block">🎲</span> ya.</span>
+      </h1>
+
+      <p class="reveal mt-8 text-xl max-w-xl font-medium">
+        Partidas de juegos de mesa con gente <span class="bg-yellow px-1.5 rounded font-bold">cerca de ti</span>. Sin grupos privados, sin esperar mensaje de nadie.
+      </p>
+
+      <div class="reveal mt-8 flex flex-wrap gap-4">
+        <a href="#" class="inline-flex items-center gap-2 bg-red text-white font-display font-bold text-lg px-7 py-4 rounded-xl brutal brutal-hover brutal-press">
+          Explorar partidas
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="inline-flex items-center gap-2 bg-cream text-ink font-display font-bold text-lg px-7 py-4 rounded-xl brutal brutal-hover brutal-press">
+          Crear cuenta
+        </a>
+      </div>
+
+      <!-- QuickSearch BRUTAL -->
+      <form class="reveal mt-10 bg-cream brutal-lg rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_1.3fr_auto] gap-3">
+        <label class="sr-only" for="prov">Provincia</label>
+        <select id="prov" class="bg-white brutal-inner rounded-lg px-4 py-3 font-bold text-sm">
+          <option>Provincia</option><option>Madrid</option><option>Barcelona</option><option>Valencia</option>
+        </select>
+        <label class="sr-only" for="city">Ciudad</label>
+        <select id="city" class="bg-white brutal-inner rounded-lg px-4 py-3 font-bold text-sm">
+          <option>Ciudad</option><option>Madrid centro</option>
+        </select>
+        <label class="sr-only" for="game">Juego</label>
+        <input id="game" type="text" placeholder="¿A qué te apetece jugar?" class="bg-white brutal-inner rounded-lg px-4 py-3 font-bold text-sm placeholder:font-medium placeholder:text-mute">
+        <button class="bg-ink text-cream rounded-lg px-6 py-3 font-display font-bold brutal-sm brutal-hover brutal-press flex items-center justify-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          ¡Buscar!
+        </button>
+      </form>
+    </div>
+
+    <!-- Sticker session card -->
+    <div class="col-span-12 lg:col-span-5 relative z-10">
+      <div class="float bg-cream brutal-lg rounded-2xl p-6 max-w-md mx-auto wiggle">
+        <div class="flex items-center justify-between mb-4">
+          <span class="bg-ink text-cream font-mono text-xs font-bold uppercase px-3 py-1 rounded-md tag-cut">Mesa #042</span>
+          <span class="bg-green text-white font-mono text-xs font-bold uppercase px-3 py-1 rounded-md brutal-sm">●  Abierto</span>
+        </div>
+
+        <div class="bg-paper brutal-inner rounded-xl p-3 mb-5">
+          <div class="dgrid">
+            <div class="dcell bg-red"></div><div class="dcell bg-yellow"></div>
+            <div class="dcell bg-blue"></div><div class="dcell bg-green"></div>
+            <div class="dcell bg-yellow"></div><div class="dcell bg-red"></div>
+            <div class="dcell bg-green"></div><div class="dcell bg-blue"></div>
+            <div class="dcell bg-blue"></div><div class="dcell bg-green"></div>
+            <div class="dcell bg-red"></div><div class="dcell bg-yellow"></div>
+          </div>
+        </div>
+
+        <h3 class="font-display font-black text-2xl leading-tight">Wingspan + Europa</h3>
+        <p class="font-mono text-xs mt-2 text-mute uppercase tracking-wider">Mesa Wood · Sáb 15 Jun · 18:00</p>
+
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex -space-x-1.5">
+            <span class="w-9 h-9 rounded-full bg-red text-white font-bold flex items-center justify-center brutal-sm">A</span>
+            <span class="w-9 h-9 rounded-full bg-yellow text-ink font-bold flex items-center justify-center brutal-sm">M</span>
+            <span class="w-9 h-9 rounded-full bg-blue text-white font-bold flex items-center justify-center brutal-sm">C</span>
+            <span class="w-9 h-9 rounded-full bg-cream font-bold flex items-center justify-center brutal-sm border-dashed">+1</span>
+          </div>
+          <span class="font-mono text-xs font-bold">3/4 plazas</span>
+        </div>
+
+        <button class="mt-5 w-full bg-red text-white font-display font-bold text-lg py-3 rounded-lg brutal brutal-hover brutal-press">
+          ¡Apúntame!
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRUST STRIP ===================== -->
+<section aria-label="Estadísticas" class="px-6 pb-24">
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="reveal bg-red text-white brutal-lg brutal-hover rounded-2xl p-7 -rotate-1">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-mono text-xs font-bold uppercase tracking-widest">Partidas activas</span>
+        <span class="w-10 h-10 bg-white text-red brutal-sm rounded-md flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+      </div>
+      <p class="font-display font-black text-7xl leading-none">142</p>
+      <p class="mt-3 font-medium text-white/85">Hay mesa esperándote ahora mismo.</p>
+    </div>
+
+    <div class="reveal bg-blue text-white brutal-lg brutal-hover rounded-2xl p-7 rotate-1" style="transition-delay:.08s">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-mono text-xs font-bold uppercase tracking-widest">Jugadores</span>
+        <span class="w-10 h-10 bg-white text-blue brutal-sm rounded-md flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </span>
+      </div>
+      <p class="font-display font-black text-7xl leading-none">387</p>
+      <p class="mt-3 font-medium text-white/85">Gente real, en tu ciudad.</p>
+    </div>
+
+    <div class="reveal bg-green text-white brutal-lg brutal-hover rounded-2xl p-7 -rotate-1" style="transition-delay:.16s">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-mono text-xs font-bold uppercase tracking-widest">Ciudades</span>
+        <span class="w-10 h-10 bg-white text-green brutal-sm rounded-md flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </span>
+      </div>
+      <p class="font-display font-black text-7xl leading-none">24</p>
+      <p class="mt-3 font-medium text-white/85">Y subiendo cada semana.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DISCOVERY ===================== -->
+<section id="how" class="px-6 pb-24">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="reveal text-center max-w-3xl mx-auto mb-14">
+      <span class="bg-ink text-cream font-mono text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md brutal-sm inline-block mb-5">// Cómo va //</span>
+      <h2 class="font-display font-black text-5xl lg:text-6xl leading-[0.95]">
+        Tres formas. <span class="bg-red text-white px-3 rounded-md">Cero excusas.</span>
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-7">
+
+      <article class="reveal bg-yellow brutal-lg brutal-hover rounded-2xl p-7 group">
+        <div class="flex items-center justify-between mb-5">
+          <span class="font-mono font-black text-2xl">01.</span>
+          <div class="w-14 h-14 bg-cream brutal rounded-xl flex items-center justify-center group-hover:rotate-[-12deg] transition-transform">
+            <!-- users-round (lucide) — siluetas más limpias -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 21a8 8 0 0 0-16 0"/>
+              <circle cx="10" cy="8" r="5"/>
+              <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="font-display font-black text-2xl leading-tight mb-3">Encuentra jugadores</h3>
+        <p class="font-medium leading-relaxed">Filtra por provincia, ciudad y juego favorito. Sin redes sociales. Sin mensajes que nadie lee.</p>
+      </article>
+
+      <article class="reveal bg-green text-white brutal-lg brutal-hover rounded-2xl p-7 group" style="transition-delay:.08s">
+        <div class="flex items-center justify-between mb-5">
+          <span class="font-mono font-black text-2xl">02.</span>
+          <div class="w-14 h-14 bg-cream text-ink brutal rounded-xl flex items-center justify-center group-hover:rotate-[12deg] transition-transform">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><circle cx="16" cy="16" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+          </div>
+        </div>
+        <h3 class="font-display font-black text-2xl leading-tight mb-3">Descubre partidas abiertas</h3>
+        <p class="font-medium leading-relaxed">142 mesas con plazas libres hoy. Pulsa "Apúntame" y listo.</p>
+      </article>
+
+      <article class="reveal bg-red text-white brutal-lg brutal-hover rounded-2xl p-7 group" style="transition-delay:.16s">
+        <div class="flex items-center justify-between mb-5">
+          <span class="font-mono font-black text-2xl">03.</span>
+          <div class="w-14 h-14 bg-cream text-ink brutal rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+        </div>
+        <h3 class="font-display font-black text-2xl leading-tight mb-3">Organiza quedadas</h3>
+        <p class="font-medium leading-relaxed">Crea tu mesa, define plazas, juego y fecha. La comunidad se apunta sola.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MARQUEE DE JUEGOS ===================== -->
+<div class="bg-ink text-cream py-5 marquee-wrap border-y-4 border-ink">
+  <div class="marquee font-display font-black text-3xl">
+    <div class="flex items-center gap-10 px-6">
+      <span>CATAN</span><span class="text-yellow">✦</span>
+      <span>WINGSPAN</span><span class="text-red">✦</span>
+      <span>TERRAFORMING MARS</span><span class="text-green">✦</span>
+      <span>CARCASSONNE</span><span class="text-blue">✦</span>
+      <span>DUNE IMPERIUM</span><span class="text-yellow">✦</span>
+      <span>7 WONDERS</span><span class="text-red">✦</span>
+      <span>AZUL</span><span class="text-green">✦</span>
+      <span>BRASS BIRMINGHAM</span><span class="text-blue">✦</span>
+    </div>
+    <div class="flex items-center gap-10 px-6" aria-hidden="true">
+      <span>CATAN</span><span class="text-yellow">✦</span>
+      <span>WINGSPAN</span><span class="text-red">✦</span>
+      <span>TERRAFORMING MARS</span><span class="text-green">✦</span>
+      <span>CARCASSONNE</span><span class="text-blue">✦</span>
+      <span>DUNE IMPERIUM</span><span class="text-yellow">✦</span>
+      <span>7 WONDERS</span><span class="text-red">✦</span>
+      <span>AZUL</span><span class="text-green">✦</span>
+      <span>BRASS BIRMINGHAM</span><span class="text-blue">✦</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COMMUNITY CAROUSEL ===================== -->
+<section id="community" class="px-6 py-24 relative">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="reveal mb-14">
+      <span class="bg-blue text-white font-mono text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md brutal-sm inline-block mb-5">// La comunidad //</span>
+      <h2 class="font-display font-black text-5xl lg:text-6xl leading-[0.95] max-w-2xl">
+        Mesas que pasan <span class="bg-yellow px-3 rounded-md">ahora</span>.
+      </h2>
+    </div>
+
+    <div class="reveal bg-cream brutal-lg rounded-3xl p-8 lg:p-12 relative">
+      <div class="grid grid-cols-12 gap-8 items-center">
+
+        <div class="col-span-12 lg:col-span-7">
+          <span class="bg-ink text-cream font-mono text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-md">Madrid · Hoy 19:00</span>
+          <h3 class="font-display font-black text-3xl lg:text-4xl leading-tight mt-5">"Empezamos partida casual de Terraforming Mars. Buscamos un cuarto."</h3>
+          <p class="mt-4 text-lg">Mesa abierta a nivel intermedio o experto. Snacks. Paciencia. Tiempo. ~3h.</p>
+
+          <div class="mt-6 flex items-center gap-4">
+            <div class="flex -space-x-1.5">
+              <span class="w-11 h-11 rounded-full bg-red text-white font-bold flex items-center justify-center brutal-sm">L</span>
+              <span class="w-11 h-11 rounded-full bg-green text-white font-bold flex items-center justify-center brutal-sm">P</span>
+              <span class="w-11 h-11 rounded-full bg-yellow text-ink font-bold flex items-center justify-center brutal-sm">R</span>
+            </div>
+            <p class="font-bold">Lara, Pablo y Rocío te esperan.</p>
+          </div>
+
+          <button class="mt-7 inline-flex items-center gap-2 bg-red text-white font-display font-bold text-lg px-7 py-3.5 rounded-xl brutal brutal-hover brutal-press">
+            ¡Apúntame a esta!
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="col-span-12 lg:col-span-5">
+          <div class="float bg-paper brutal-lg rounded-2xl p-5 rotate-[3deg]">
+            <div class="flex items-center justify-between mb-4">
+              <span class="bg-ink text-cream font-mono text-xs font-bold uppercase px-3 py-1 rounded-md">Mesa #042</span>
+              <span class="font-mono font-bold text-sm text-green">3/4</span>
+            </div>
+            <div class="dgrid">
+              <div class="dcell bg-red"></div><div class="dcell bg-yellow"></div>
+              <div class="dcell bg-green"></div><div class="dcell bg-blue"></div>
+              <div class="dcell bg-yellow"></div><div class="dcell bg-red"></div>
+              <div class="dcell bg-blue"></div><div class="dcell bg-green"></div>
+            </div>
+            <p class="mt-4 font-display font-black text-lg">Terraforming Mars</p>
+            <p class="font-mono text-xs uppercase tracking-wider text-mute">Hoy · 19:00 · Madrid centro</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel controls -->
+      <div class="mt-10 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="h-3 w-10 bg-ink rounded-full"></span>
+          <span class="h-3 w-3 bg-ink/20 rounded-full"></span>
+          <span class="h-3 w-3 bg-ink/20 rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="w-12 h-12 bg-cream brutal-sm brutal-hover brutal-press rounded-xl flex items-center justify-center" aria-label="Anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="w-12 h-12 bg-ink text-cream brutal-sm brutal-hover brutal-press rounded-xl flex items-center justify-center" aria-label="Siguiente">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA FINAL ===================== -->
+<section class="px-6 pb-24">
+  <div class="reveal max-w-5xl mx-auto bg-yellow brutal-lg rounded-3xl p-12 lg:p-16 text-center relative">
+    <div class="checker absolute inset-3 rounded-2xl opacity-[0.04] pointer-events-none"></div>
+    <div class="relative">
+      <h2 class="font-display font-black text-5xl lg:text-6xl leading-[0.95]">
+        ¡Tu próxima mesa <br/> está a un <span class="bg-red text-white px-3 rounded-md">clic</span>!
+      </h2>
+      <p class="mt-5 text-lg font-medium max-w-xl mx-auto">Regístrate gratis y empieza a apuntarte. Sin tarjeta. Sin compromiso. Sin esperas.</p>
+      <a href="#" class="mt-8 inline-flex items-center gap-2 bg-ink text-cream font-display font-bold text-lg px-8 py-4 rounded-xl brutal brutal-hover brutal-press">
+        Crear cuenta gratis
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="bg-ink text-cream border-t-4 border-ink">
+  <div class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+    <div class="col-span-2 lg:col-span-1">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-9 h-9 bg-red rounded-md font-display font-black text-lg flex items-center justify-center brutal-sm">M</span>
+        <span class="font-display font-black text-xl">matchplay<span class="text-red">.</span></span>
+      </div>
+      <p class="text-cream/70">Tira el dado. Mueve ficha. Juega ya.</p>
+    </div>
+    <div>
+      <p class="font-display font-bold mb-3 uppercase tracking-wider">Producto</p>
+      <ul class="space-y-2 text-cream/70">
+        <li><a href="#" class="hover:text-yellow">Explorar</a></li>
+        <li><a href="#" class="hover:text-yellow">Crear partida</a></li>
+        <li><a href="#" class="hover:text-yellow">Comunidad</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-display font-bold mb-3 uppercase tracking-wider">Empresa</p>
+      <ul class="space-y-2 text-cream/70">
+        <li><a href="#" class="hover:text-yellow">Sobre nosotros</a></li>
+        <li><a href="#" class="hover:text-yellow">Contacto</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-display font-bold mb-3 uppercase tracking-wider">Legal</p>
+      <ul class="space-y-2 text-cream/70">
+        <li><a href="#" class="hover:text-yellow">Términos</a></li>
+        <li><a href="#" class="hover:text-yellow">Privacidad</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-cream/15">
+    <div class="max-w-7xl mx-auto px-6 py-5 text-xs text-cream/60 flex items-center justify-between font-mono uppercase tracking-widest">
+      <span>© 2026 Matchplay</span>
+      <span>Hecho a mano en España</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
