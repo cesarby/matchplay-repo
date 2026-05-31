@@ -283,28 +283,47 @@
     }
   },
   "landing": {
+    "topStrip": {
+      "activeSessions": "{{count}} partidas abiertas",
+      "activePlayers": "{{count}} jugadores",
+      "cities": "{{count}} ciudades activas",
+      "free": "Es gratis. Siempre.",
+      "turn": "Tu mesa, tu turno"
+    },
+    "nav": {
+      "ariaLabel": "Navegación principal",
+      "explore": "Explorar",
+      "how": "Cómo va",
+      "community": "Comunidad",
+      "help": "Ayuda",
+      "login": "Entrar",
+      "signup": "Crear cuenta",
+      "menuOpen": "Abrir menú"
+    },
     "hero": {
-      "eyebrow": "Jugadores, partidas y quedadas cerca de ti",
-      "title": "Partidas de juegos de mesa <1>cerca de ti</1>",
-      "subtitle": "MatchPlay te ayuda a descubrir partidas abiertas, conectar con jugadores de tu zona y organizar quedadas para tus juegos favoritos.",
-      "visual": {
-        "ownChip": "Tu Partida",
-        "openChip": "Abierto",
-        "title": "Noche de Catan",
-        "meta": "Mesa de esta Noche · + 1 Expansión",
-        "city": "Madrid",
-        "date": "Hoy",
-        "time": "20:00",
-        "spots": "3/4",
-        "ariaLabel": "Vista previa del tablero de la partida"
+      "eyebrow": "Hay {{count}} mesas abiertas YA",
+      "eyebrowShort": "Mesas abiertas YA",
+      "sticker": "Sin registro pa' mirar 👀",
+      "title": "<line>Tira el dado.</line><line>Mueve <1>ficha</1>.</line><line><3>Juega <2>🎲</2> ya.</3></line>",
+      "subtitle": "Partidas de juegos de mesa con gente <1>cerca de ti</1>. Sin grupos privados, sin esperar mensaje de nadie.",
+      "preview": {
+        "id": "Mesa #042",
+        "open": "Abierto",
+        "title": "Wingspan + Europa",
+        "meta": "Mesa Wood · Sáb 15 Jun · 18:00",
+        "boardAlt": "Vista previa del tablero",
+        "spots": "3/4 plazas",
+        "cta": "¡Apúntame!"
       }
     },
     "quickSearch": {
       "label": "Buscar una partida",
       "province": "Provincia",
       "city": "Ciudad",
-      "game": "Juego (opcional)",
-      "submit": "Buscar"
+      "game": "Juego",
+      "gamePlaceholder": "¿A qué te apetece jugar?",
+      "submit": "¡Buscar!",
+      "empty": "Sin resultados"
     },
     "cta": {
       "explore": "Explorar partidas",
@@ -313,51 +332,96 @@
     },
     "stats": {
       "ariaLabel": "Estadísticas de la comunidad",
-      "activeSessions": "partidas activas",
-      "activePlayers": "jugadores en la comunidad",
-      "cities": "ciudades activas"
+      "activeSessions": "Partidas activas",
+      "activeSessionsCaption": "Hay mesa esperándote ahora mismo.",
+      "activePlayers": "Jugadores",
+      "activePlayersCaption": "Gente real, en tu ciudad.",
+      "cities": "Ciudades",
+      "citiesCaption": "Y subiendo cada semana."
     },
     "discovery": {
-      "eyebrow": "Descubre cómo te ayuda",
-      "title": "Una forma más fácil de encontrar mesa y comunidad",
-      "subtitle": "Si buscas jugadores para juegos de mesa o quieres organizar partidas en tu ciudad, MatchPlay reúne en un mismo sitio el descubrimiento de mesas abiertas, la creación de eventos y la conexión con gente cercana que comparte tus mismos intereses.",
+      "eyebrow": "// Cómo va //",
+      "title": "Tres formas. <1>Cero excusas.</1>",
       "cards": {
         "one": {
-          "title": "Encuentra jugadores de juegos de mesa en tu zona",
-          "description": "Explora perfiles y partidas activas para encontrar gente con la que jugar cerca de ti, tanto si te apetecen eurogames, fillers, cooperativos o clásicos de siempre."
+          "title": "Encuentra jugadores",
+          "description": "Filtra por provincia, ciudad y juego favorito. Sin redes sociales. Sin mensajes que nadie lee."
         },
         "two": {
-          "title": "Descubre partidas abiertas y únete a la que encaje contigo",
-          "description": "Consulta partidas de juegos de mesa ya publicadas, revisa la zona, la fecha y el juego, y apúntate a la mesa que mejor encaje con tu horario y tu grupo ideal."
+          "title": "Descubre partidas abiertas",
+          "description": "Mesas con plazas libres hoy. Pulsa \"Apúntame\" y listo."
         },
         "three": {
-          "title": "Organiza quedadas para tus juegos favoritos",
-          "description": "Publica tus propias quedadas de juegos de mesa, define plazas y ubicación, y deja que otros jugadores de tu comunidad encuentren tu mesa y se unan."
+          "title": "Organiza quedadas",
+          "description": "Crea tu mesa, define plazas, juego y fecha. La comunidad se apunta sola."
         }
       }
     },
     "community": {
-      "eyebrow": "Novedades y actualidad",
-      "title": "Descubre noticias, ideas y momentos de la comunidad",
+      "ariaLabel": "Carousel de la comunidad",
+      "eyebrow": "// La comunidad //",
+      "title": "Mesas que pasan <1>ahora</1>.",
       "prev": "Slide anterior",
       "next": "Slide siguiente",
       "goTo": "Ir al slide {{n}}",
+      "slidePosition": "Slide {{n}} de {{total}}",
+      "waiting": "Lara, Pablo y Rocío te esperan.",
+      "cta": "¡Apúntame a esta!",
       "slides": {
         "one": {
-          "eyebrow": "Comunidad",
-          "title": "Historias y novedades para jugadores de mesa",
-          "description": "Comparte anuncios, novedades del proyecto y contenidos pensados para quienes disfrutan organizando y descubriendo nuevas mesas."
+          "badge": "Madrid · Hoy 19:00",
+          "quote": "\"Empezamos partida casual de Terraforming Mars. Buscamos un cuarto.\"",
+          "body": "Mesa abierta a nivel intermedio o experto. Snacks. Paciencia. Tiempo. ~3h.",
+          "game": "Terraforming Mars",
+          "meta": "Mesa #042"
         },
         "two": {
-          "eyebrow": "Actualidad",
-          "title": "Noticias, mejoras y vida de la comunidad",
-          "description": "Este espacio puede reunir actualizaciones del producto, novedades destacadas y noticias relacionadas con la comunidad de juegos de mesa."
+          "badge": "Barcelona · Sáb 17:00",
+          "quote": "\"Probamos Brass Birmingham por primera vez. Nos faltan dos.\"",
+          "body": "Mesa abierta a cualquier nivel. Tenemos manual a mano y paciencia para explicar. ~2h30.",
+          "game": "Brass Birmingham",
+          "meta": "Mesa #086"
         },
         "three": {
-          "eyebrow": "Contenido",
-          "title": "Ideas, recomendaciones y temas para compartir",
-          "description": "También puede servir para publicar recomendaciones, iniciativas de la comunidad o contenido editorial más allá de las partidas en curso."
+          "badge": "Valencia · Vie 20:30",
+          "quote": "\"Sesión de Wingspan Europa con cena ligera previa. Hay sitio para uno más.\"",
+          "body": "Ambiente relajado, partida tranquila. Llevad ganas y poco más. ~2h.",
+          "game": "Wingspan + Europa",
+          "meta": "Mesa #103"
         }
+      }
+    },
+    "ctaFinal": {
+      "heading": "¡Tu próxima mesa<br/>está a un <1>clic</1>!",
+      "body": "Regístrate gratis y empieza a apuntarte. Sin tarjeta. Sin compromiso. Sin esperas.",
+      "cta": "Crear cuenta gratis"
+    },
+    "tabBar": {
+      "ariaLabel": "Navegación inferior",
+      "home": "Inicio",
+      "explore": "Explorar",
+      "create": "Crear partida",
+      "mine": "Mis partidas",
+      "account": "Cuenta"
+    },
+    "footer": {
+      "tagline": "Tira el dado. Mueve ficha. Juega ya.",
+      "madeWith": "Hecho a mano en España",
+      "product": {
+        "title": "Producto",
+        "explore": "Explorar",
+        "create": "Crear partida",
+        "community": "Comunidad"
+      },
+      "company": {
+        "title": "Empresa",
+        "about": "Sobre nosotros",
+        "contact": "Contacto"
+      },
+      "legal": {
+        "title": "Legal",
+        "terms": "Términos",
+        "privacy": "Privacidad"
       }
     }
   },

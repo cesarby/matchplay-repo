@@ -75,14 +75,19 @@ describe('<QuickSearch>', () => {
     expect(location).toContain('cityCode=MAD01')
   })
 
-  it('includes game query param when text is entered', async () => {
+  it('does NOT add a game param when only text is typed (no selection from BGG)', async () => {
+    // El campo "juego" ahora es un typeahead BGG: para añadir `gameId` a la
+    // URL hay que SELECCIONAR un resultado del dropdown. Texto suelto no
+    // aporta porque el listado no soporta búsqueda full-text.
     const user = userEvent.setup()
     renderSearch()
 
-    await user.type(screen.getByPlaceholderText(/juego/i), 'Catan')
+    await user.type(screen.getByPlaceholderText(/apetece jugar/i), 'Catan')
     await user.click(screen.getByRole('button', { name: /buscar/i }))
 
-    expect(screen.getByTestId('location').textContent).toContain('q=Catan')
+    const location = screen.getByTestId('location').textContent ?? ''
+    expect(location).not.toContain('gameId=')
+    expect(location).not.toContain('q=')
   })
 
   it('city select is disabled until province is selected', () => {

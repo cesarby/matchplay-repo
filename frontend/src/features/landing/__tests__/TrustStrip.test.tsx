@@ -40,8 +40,10 @@ describe('<TrustStrip>', () => {
       data: { activeSessions: 142, activePlayers: 387, cities: 24 },
     })
     renderStrip()
-    expect(screen.getByText('142')).toBeInTheDocument()
-    expect(screen.getByText('387')).toBeInTheDocument()
-    expect(screen.getByText('24')).toBeInTheDocument()
+    // Cada número se imprime DOS veces (mobile layout + desktop layout, uno
+    // oculto vía CSS responsive). getAllByText cubre ambos casos.
+    expect(screen.getAllByText('142').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('387').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('24').length).toBeGreaterThan(0)
   })
 })

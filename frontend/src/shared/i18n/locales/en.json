@@ -283,28 +283,47 @@
     }
   },
   "landing": {
+    "topStrip": {
+      "activeSessions": "{{count}} open sessions",
+      "activePlayers": "{{count}} players",
+      "cities": "{{count}} active cities",
+      "free": "Free. Always.",
+      "turn": "Your table, your turn"
+    },
+    "nav": {
+      "ariaLabel": "Main navigation",
+      "explore": "Explore",
+      "how": "How it works",
+      "community": "Community",
+      "help": "Help",
+      "login": "Sign in",
+      "signup": "Sign up",
+      "menuOpen": "Open menu"
+    },
     "hero": {
-      "eyebrow": "Players, sessions and meetups near you",
-      "title": "Board game sessions <1>near you</1>",
-      "subtitle": "MatchPlay helps you discover open sessions, connect with players in your area and organise meetups for your favourite games.",
-      "visual": {
-        "ownChip": "Your Session",
-        "openChip": "Open",
-        "title": "Catan Night",
-        "meta": "Tonight's Table · + 1 Expansion",
-        "city": "Madrid",
-        "date": "Today",
-        "time": "20:00",
-        "spots": "3/4",
-        "ariaLabel": "Preview of the game board"
+      "eyebrow": "{{count}} open tables RIGHT NOW",
+      "eyebrowShort": "Open tables NOW",
+      "sticker": "Browse without an account 👀",
+      "title": "<line>Roll the dice.</line><line>Move your <1>piece</1>.</line><line><3>Play <2>🎲</2> now.</3></line>",
+      "subtitle": "Board game sessions with people <1>near you</1>. No private groups, no waiting for someone's reply.",
+      "preview": {
+        "id": "Table #042",
+        "open": "Open",
+        "title": "Wingspan + Europe",
+        "meta": "Wood Table · Sat 15 Jun · 18:00",
+        "boardAlt": "Board preview",
+        "spots": "3/4 spots",
+        "cta": "Sign me up!"
       }
     },
     "quickSearch": {
       "label": "Search for a session",
       "province": "Province",
       "city": "City",
-      "game": "Game (optional)",
-      "submit": "Search"
+      "game": "Game",
+      "gamePlaceholder": "What do you feel like playing?",
+      "submit": "Search!",
+      "empty": "No results"
     },
     "cta": {
       "explore": "Explore sessions",
@@ -313,51 +332,96 @@
     },
     "stats": {
       "ariaLabel": "Community statistics",
-      "activeSessions": "active sessions",
-      "activePlayers": "players in the community",
-      "cities": "active cities"
+      "activeSessions": "Active sessions",
+      "activeSessionsCaption": "There's a table waiting for you right now.",
+      "activePlayers": "Players",
+      "activePlayersCaption": "Real people, in your city.",
+      "cities": "Cities",
+      "citiesCaption": "And growing every week."
     },
     "discovery": {
-      "eyebrow": "Discover how it helps you",
-      "title": "An easier way to find a table and community",
-      "subtitle": "Whether you're looking for board game players or want to organise sessions in your city, MatchPlay brings together open table discovery, event creation and connection with nearby people who share your interests.",
+      "eyebrow": "// How it works //",
+      "title": "Three ways. <1>Zero excuses.</1>",
       "cards": {
         "one": {
-          "title": "Find board game players in your area",
-          "description": "Browse profiles and active sessions to find people to play with near you, whether you're into euros, fillers, co-ops or classic games."
+          "title": "Find players",
+          "description": "Filter by province, city and favourite game. No social networks. No messages no one reads."
         },
         "two": {
-          "title": "Discover open sessions and join the one that fits",
-          "description": "Browse published board game sessions, check the location, date and game, and sign up for the table that best fits your schedule and ideal group."
+          "title": "Discover open sessions",
+          "description": "Tables with free spots today. Hit \"Sign me up\" and done."
         },
         "three": {
-          "title": "Organise meetups for your favourite games",
-          "description": "Post your own board game meetups, set spots and location, and let other players in your community find your table and join."
+          "title": "Organise meetups",
+          "description": "Create your table, set spots, game and date. The community joins on its own."
         }
       }
     },
     "community": {
-      "eyebrow": "News and updates",
-      "title": "Discover news, ideas and community moments",
+      "ariaLabel": "Community carousel",
+      "eyebrow": "// The community //",
+      "title": "Tables happening <1>now</1>.",
       "prev": "Previous slide",
       "next": "Next slide",
       "goTo": "Go to slide {{n}}",
+      "slidePosition": "Slide {{n}} of {{total}}",
+      "waiting": "Lara, Pablo and Rocío are waiting.",
+      "cta": "Sign me up!",
       "slides": {
         "one": {
-          "eyebrow": "Community",
-          "title": "Stories and news for board gamers",
-          "description": "Share announcements, project updates and content designed for those who enjoy organising and discovering new tables."
+          "badge": "Madrid · Today 19:00",
+          "quote": "\"Starting a casual game of Terraforming Mars. Looking for a fourth.\"",
+          "body": "Table open to intermediate or expert level. Snacks. Patience. Time. ~3h.",
+          "game": "Terraforming Mars",
+          "meta": "Table #042"
         },
         "two": {
-          "eyebrow": "Updates",
-          "title": "News, improvements and community life",
-          "description": "This space can bring together product updates, featured news and stories related to the board game community."
+          "badge": "Barcelona · Sat 17:00",
+          "quote": "\"Trying Brass Birmingham for the first time. Need two more.\"",
+          "body": "Open to any level. We've got the rulebook handy and patience to explain. ~2h30.",
+          "game": "Brass Birmingham",
+          "meta": "Table #086"
         },
         "three": {
-          "eyebrow": "Content",
-          "title": "Ideas, recommendations and topics to share",
-          "description": "It can also be used to publish recommendations, community initiatives or editorial content beyond the current sessions."
+          "badge": "Valencia · Fri 20:30",
+          "quote": "\"Wingspan Europe session with a light dinner first. Room for one more.\"",
+          "body": "Relaxed vibe, easy-going game. Bring enthusiasm, that's all. ~2h.",
+          "game": "Wingspan + Europe",
+          "meta": "Table #103"
         }
+      }
+    },
+    "ctaFinal": {
+      "heading": "Your next table<br/>is one <1>click</1> away!",
+      "body": "Sign up free and start joining. No card. No commitment. No waiting.",
+      "cta": "Create free account"
+    },
+    "tabBar": {
+      "ariaLabel": "Bottom navigation",
+      "home": "Home",
+      "explore": "Explore",
+      "create": "Create session",
+      "mine": "My sessions",
+      "account": "Account"
+    },
+    "footer": {
+      "tagline": "Roll the dice. Move your piece. Play now.",
+      "madeWith": "Handcrafted in Spain",
+      "product": {
+        "title": "Product",
+        "explore": "Explore",
+        "create": "Create session",
+        "community": "Community"
+      },
+      "company": {
+        "title": "Company",
+        "about": "About",
+        "contact": "Contact"
+      },
+      "legal": {
+        "title": "Legal",
+        "terms": "Terms",
+        "privacy": "Privacy"
       }
     }
   },

@@ -1,90 +1,127 @@
-import { Users, Dices, PlusCircle, type LucideIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { Dices, PlusCircle, UsersRound, type LucideIcon } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 interface DiscoveryCard {
+  numberKey: string
   titleKey: string
   descriptionKey: string
   Icon: LucideIcon
-  accentColor: string // Tailwind class for border-left color
-  iconBg: string
-  iconColor: string
+  /** Background del card. */
+  bg: 'bg-yellow' | 'bg-green' | 'bg-red'
+  /** Color del texto principal (yellow → ink, green/red → background). */
+  textColor: 'text-foreground' | 'text-background'
+  /** Clase responsive de rotación del icono en hover (solo desktop). */
+  iconHoverClass: string
+  /** Reveal delay para escalonar entrada (segundos). */
+  delay: number
 }
 
 const CARDS: DiscoveryCard[] = [
   {
+    numberKey: '01.',
     titleKey: 'landing.discovery.cards.one.title',
     descriptionKey: 'landing.discovery.cards.one.description',
-    Icon: Users,
-    accentColor: 'border-yellow',
-    iconBg: 'bg-yellow-soft',
-    iconColor: 'text-foreground',
+    Icon: UsersRound,
+    bg: 'bg-yellow',
+    textColor: 'text-foreground',
+    iconHoverClass: 'group-hover:-rotate-12',
+    delay: 0,
   },
   {
+    numberKey: '02.',
     titleKey: 'landing.discovery.cards.two.title',
     descriptionKey: 'landing.discovery.cards.two.description',
     Icon: Dices,
-    accentColor: 'border-green',
-    iconBg: 'bg-green-soft',
-    iconColor: 'text-foreground',
+    bg: 'bg-green',
+    textColor: 'text-background',
+    iconHoverClass: 'group-hover:rotate-12',
+    delay: 0.08,
   },
   {
+    numberKey: '03.',
     titleKey: 'landing.discovery.cards.three.title',
     descriptionKey: 'landing.discovery.cards.three.description',
     Icon: PlusCircle,
-    accentColor: 'border-red',
-    iconBg: 'bg-red-soft',
-    iconColor: 'text-foreground',
+    bg: 'bg-red',
+    textColor: 'text-background',
+    iconHoverClass: 'group-hover:scale-110',
+    delay: 0.16,
   },
 ]
 
 /**
- * Sección con 3 cards de propuesta de valor.
- * Cinta lateral semántica (amarillo/verde/rojo) vía border-left.
- * Iconos decorativos con aria-hidden.
- * Contraste: text-foreground sobre bg-*-soft (15:1+ AAA).
+ * Sección "Cómo va" — 3 cards brutal, cada una con su color sólido.
+ * Sin links al final (decisión: las cards son explicativas, no navegables).
+ *
+ * Hover: el icono interno gira/escala (solo desktop — md:brutal-hover).
+ * Mobile usa solo brutal-press.
  */
 export function DiscoveryCards() {
   const { t } = useTranslation()
 
   return (
-    <section className="py-16" aria-labelledby="discovery-title">
-      <div className="container">
+    <section className="px-4 pb-8 md:px-6 md:pb-24" aria-labelledby="discovery-title">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="mb-10 text-center">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-red">
+        <div className="reveal mb-5 md:mx-auto md:mb-14 md:max-w-3xl md:text-center">
+          <span className="brutal-sm mb-3 inline-block rounded-md bg-foreground px-2 py-0.5 font-brutal text-[10px] font-bold uppercase tracking-widest text-background md:mb-5 md:px-4 md:py-1.5 md:text-base">
             {t('landing.discovery.eyebrow')}
-          </p>
+          </span>
           <h2
             id="discovery-title"
-            className="font-display text-3xl font-bold text-foreground lg:text-4xl"
+            className="font-display text-3xl font-black leading-[0.95] md:text-5xl lg:text-6xl"
           >
-            {t('landing.discovery.title')}
+            <Trans
+              i18nKey="landing.discovery.title"
+              components={{
+                1: <span className="rounded bg-red px-2 text-background md:rounded-md md:px-3" />,
+              }}
+            />
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-            {t('landing.discovery.subtitle')}
-          </p>
         </div>
 
-        {/* Grid de cards */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {CARDS.map(({ titleKey, descriptionKey, Icon, accentColor, iconBg, iconColor }) => (
-            <article
-              key={titleKey}
-              className={`relative overflow-hidden rounded border-l-[6px] bg-card p-6 shadow-[var(--shadow)] transition-shadow duration-200 hover:shadow-[var(--shadow-hover)] ${accentColor}`}
-            >
-              {/* Icono decorativo */}
-              <div
-                className={`mb-4 flex size-12 items-center justify-center rounded-2xl ${iconBg}`}
+        {/* Cards */}
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-3 md:gap-7">
+          {CARDS.map(
+            ({
+              numberKey,
+              titleKey,
+              descriptionKey,
+              Icon,
+              bg,
+              textColor,
+              iconHoverClass,
+              delay,
+            }) => (
+              <article
+                key={titleKey}
+                className={`reveal brutal-lg md:brutal-hover group rounded-2xl p-5 md:p-7 ${bg} ${textColor}`}
+                style={delay > 0 ? { transitionDelay: `${delay}s` } : undefined}
               >
-                <Icon size={22} aria-hidden={true} className={iconColor} />
-              </div>
-
-              <h3 className="font-display text-lg font-bold text-foreground">{t(titleKey)}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t(descriptionKey)}
-              </p>
-            </article>
-          ))}
+                <div className="mb-3 flex items-center justify-between md:mb-5">
+                  <span className="font-brutal text-xl font-black md:text-2xl">{numberKey}</span>
+                  <div
+                    className={`brutal flex size-11 items-center justify-center rounded-lg bg-background text-foreground transition-transform md:size-14 md:rounded-xl ${iconHoverClass}`}
+                  >
+                    <Icon
+                      size={22}
+                      strokeWidth={2.4}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      className="md:size-7"
+                    />
+                  </div>
+                </div>
+                <h3 className="font-display text-xl font-black leading-tight md:mb-3 md:text-2xl">
+                  {t(titleKey)}
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed md:mt-0 md:text-base">
+                  {t(descriptionKey)}
+                </p>
+              </article>
+            ),
+          )}
         </div>
       </div>
     </section>
