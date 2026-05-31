@@ -18,6 +18,12 @@ interface AvatarProps {
   avatarCode?: string | null
   size?: number
   className?: string
+  /**
+   * Si true, envuelve el avatar con borde ink 2px y sombra brutal-sm para
+   * integrarlo en superficies brutalismo lúdico. Opt-in para no afectar
+   * los usos café existentes. Spec §4 (.brutal-sm).
+   */
+  ringBrutal?: boolean
 }
 
 /**
@@ -31,9 +37,19 @@ interface AvatarProps {
  * `size` en píxeles (default 32). El componente fija width/height inline para
  * controlar el tamaño exacto sin depender de Tailwind size utilities (que
  * tienen incrementos discretos).
+ *
+ * `ringBrutal` añade chrome brutal alrededor del avatar (borde ink + sombra
+ * sólida sm) — para integración en headers/menus brutales.
  */
-export function Avatar({ username, avatarCode, size = 32, className }: AvatarProps) {
+export function Avatar({
+  username,
+  avatarCode,
+  size = 32,
+  className,
+  ringBrutal = false,
+}: AvatarProps) {
   const url = avatarCode ? urlForCode(avatarCode) : null
+  const brutalClass = ringBrutal ? 'brutal-sm' : ''
 
   if (url) {
     return (
@@ -42,7 +58,7 @@ export function Avatar({ username, avatarCode, size = 32, className }: AvatarPro
         alt={username}
         width={size}
         height={size}
-        className={cn('rounded-full object-cover', className)}
+        className={cn('rounded-full object-cover', brutalClass, className)}
         style={{ width: size, height: size }}
       />
     )
@@ -54,6 +70,7 @@ export function Avatar({ username, avatarCode, size = 32, className }: AvatarPro
       className={cn(
         'inline-flex items-center justify-center rounded-full font-bold text-white',
         pickAvatarColor(username),
+        brutalClass,
         className,
       )}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }}

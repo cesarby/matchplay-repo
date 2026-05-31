@@ -9,10 +9,21 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean
 }
 
+/**
+ * Botón brutalismo lúdico.
+ *
+ * API estable (3 variantes), look brutal:
+ * - `primary`   → bg-red text-background. CTA principal.
+ * - `secondary` → bg-blue text-background. Acción secundaria.
+ * - `ghost`     → transparente con border ink. Acción terciaria.
+ *
+ * Todas las variantes llevan `brutal brutal-press md:brutal-hover`.
+ * Spec §17.5 (Botón brutal) del diseño global.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-red text-white hover:opacity-90 disabled:opacity-50',
-  secondary: 'bg-blue text-white hover:opacity-90 disabled:opacity-50',
-  ghost: 'bg-transparent text-foreground hover:bg-muted',
+  primary: 'bg-red text-background',
+  secondary: 'bg-blue text-background',
+  ghost: 'bg-background text-foreground',
 }
 
 export const Button = forwardRef<HTMLButtonElement, Props>(
@@ -22,7 +33,10 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
       disabled={disabled || isLoading}
       aria-busy={isLoading}
       className={cn(
-        'inline-flex items-center justify-center rounded-sm px-4 py-2 font-medium transition',
+        'brutal brutal-press md:brutal-hover',
+        'inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3',
+        'font-display text-base font-bold',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         VARIANTS[variant],
         className,
       )}
